@@ -1,5 +1,3 @@
-version: '3.8'
-
 services:
   # 主开发容器
   app:
@@ -7,15 +5,17 @@ services:
       context: .
       dockerfile: Dockerfile
     env_file:
-      - ../../.env
+      - ../.env
     volumes:
-      - ../..:/workspace:cached
-      # 缓存卷以提高性能
-      - quick-code-node_modules:/workspace/user-frontend/node_modules
-      - quick-code-admin-node_modules:/workspace/admin-frontend/node_modules
+      - ..:/workspace:cached
+      # 缓存卷以提高性能 - 如需启用请确保权限配置正确
+      # - quick-code-node_modules:/workspace/user-frontend/node_modules:delegated
+      # - quick-code-admin-node_modules:/workspace/admin-frontend/node_modules:delegated
       - quick-code-maven-cache:/home/vscode/.m2
     working_dir: /workspace
     command: sleep infinity
+    # 添加用户权限配置
+    user: "1000:1000"
     environment:
       # 数据库配置
       - DB_HOST=${DB_HOST:-mysql}
@@ -83,7 +83,7 @@ services:
     image: mysql:8.0
     restart: unless-stopped
     env_file:
-      - ../../.env
+      - ../.env
     environment:
       MYSQL_ROOT_PASSWORD: ${DB_ROOT_PASSWORD:-root_password}
       MYSQL_DATABASE: ${DB_NAME:-quick_code}
@@ -108,7 +108,7 @@ services:
     image: redis:7.0-alpine
     restart: unless-stopped
     env_file:
-      - ../../.env
+      - ../.env
     command: redis-server --requirepass ${REDIS_PASSWORD:-redis_pass} --appendonly yes
     volumes:
       - redis-data:/data
@@ -122,7 +122,7 @@ services:
     image: minio/minio:latest
     restart: unless-stopped
     env_file:
-      - ../../.env
+      - ../.env
     environment:
       MINIO_ROOT_USER: ${MINIO_ACCESS_KEY:-minioadmin}
       MINIO_ROOT_PASSWORD: ${MINIO_SECRET_KEY:-minioadmin123}

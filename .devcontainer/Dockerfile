@@ -3,7 +3,7 @@ FROM mcr.microsoft.com/vscode/devcontainers/base:ubuntu-22.04
 
 # 设置环境变量
 ENV DEBIAN_FRONTEND=noninteractive
-ENV NODE_VERSION=18.19.0
+ENV NODE_VERSION=20.18.0
 ENV JAVA_VERSION=17
 ENV MAVEN_VERSION=3.9.6
 
@@ -52,21 +52,14 @@ RUN curl -fsSL https://download.docker.com/linux/ubuntu/gpg | gpg --dearmor -o /
     && rm -rf /var/lib/apt/lists/*
 
 # 安装Node.js和npm
-RUN curl -fsSL https://deb.nodesource.com/setup_18.x | bash - \
-    && apt-get install -y nodejs \
-    && npm install -g npm@latest
+RUN curl -fsSL https://deb.nodesource.com/setup_20.x | bash - \
+    && apt-get install -y nodejs
 
 # 安装全局Node.js工具
 RUN npm install -g \
-    @vue/cli \
-    @vitejs/create-vue \
     typescript \
-    ts-node \
-    eslint \
-    prettier \
     pm2 \
-    serve \
-    http-server
+    serve
 
 # 安装Java 17
 RUN apt-get update && apt-get install -y openjdk-17-jdk \
@@ -123,24 +116,16 @@ RUN mkdir -p /home/$USERNAME/.m2 \
     && chown -R $USERNAME:$USERNAME /home/$USERNAME/.m2 \
     && chown -R $USERNAME:$USERNAME /home/$USERNAME/.gradle
 
-# 安装Oh My Zsh（如果使用zsh）
+# Oh My Zsh 将通过 devcontainer features 安装，跳过手动安装
 USER $USERNAME
-RUN if [ -x "$(command -v zsh)" ]; then \
-        sh -c "$(curl -fsSL https://raw.github.com/ohmyzsh/ohmyzsh/master/tools/install.sh)" "" --unattended; \
-    fi
 
 # 配置Git（基础配置，用户可以覆盖）
 RUN git config --global init.defaultBranch main \
     && git config --global core.autocrlf input \
     && git config --global pull.rebase false
 
-# 预安装一些常用的npm包到全局缓存
-RUN npm install -g \
-        @types/node \
-        vite \
-        vitest \
-        @vue/test-utils \
-        cypress
+# 验证npm安装
+RUN npm --version
 
 # 创建Maven目录
 RUN mkdir -p /home/$USERNAME/.m2
