@@ -1,0 +1,212 @@
+{
+  "name": "速码网开发环境",
+  "dockerComposeFile": "docker-compose.yml",
+  "service": "app",
+  "workspaceFolder": "/workspace",
+  
+  // 配置VSCode设置
+  "customizations": {
+    "vscode": {
+      // 推荐的扩展
+      "extensions": [
+        // Vue.js开发
+        "Vue.volar",
+        "Vue.vscode-typescript-vue-plugin",
+        "bradlc.vscode-tailwindcss",
+        
+        // Java开发
+        "vscjava.vscode-java-pack",
+        "vscjava.vscode-spring-initializr",
+        "vscjava.vscode-spring-boot-dashboard",
+        "vmware.vscode-spring-boot",
+        
+        // TypeScript/JavaScript
+        "ms-vscode.vscode-typescript-next",
+        "esbenp.prettier-vscode",
+        "dbaeumer.vscode-eslint",
+        
+        // 数据库
+        "cweijan.vscode-mysql-client2",
+        "cweijan.vscode-redis-client",
+        
+        // Docker和容器
+        "ms-azuretools.vscode-docker",
+        "ms-vscode-remote.remote-containers",
+        
+        // Git和版本控制
+        "eamodio.gitlens",
+        "mhutchie.git-graph",
+        
+        // 通用工具
+        "humao.rest-client",
+        "ms-vscode.vscode-json",
+        "redhat.vscode-yaml",
+        "ms-vscode.vscode-markdown",
+        "yzhang.markdown-all-in-one",
+        
+        // 代码质量
+        "sonarsource.sonarlint-vscode",
+        "streetsidesoftware.code-spell-checker"
+      ],
+      
+      // VSCode设置
+      "settings": {
+        // 编辑器设置
+        "editor.formatOnSave": true,
+        "editor.codeActionsOnSave": {
+          "source.fixAll.eslint": true,
+          "source.organizeImports": true
+        },
+        "editor.tabSize": 2,
+        "editor.insertSpaces": true,
+        "editor.detectIndentation": false,
+        
+        // 文件设置
+        "files.autoSave": "onFocusChange",
+        "files.trimTrailingWhitespace": true,
+        "files.insertFinalNewline": true,
+        
+        // TypeScript设置
+        "typescript.preferences.importModuleSpecifier": "relative",
+        "typescript.updateImportsOnFileMove.enabled": "always",
+        
+        // Java设置
+        "java.configuration.updateBuildConfiguration": "automatic",
+        "java.compile.nullAnalysis.mode": "automatic",
+        "java.format.settings.url": "https://raw.githubusercontent.com/google/styleguide/gh-pages/eclipse-java-google-style.xml",
+        
+        // Vue设置
+        "vue.codeActions.enabled": true,
+        "vue.complete.casing.tags": "kebab",
+        "vue.complete.casing.props": "camel",
+        
+        // Prettier设置
+        "prettier.semi": true,
+        "prettier.singleQuote": true,
+        "prettier.trailingComma": "es5",
+        "prettier.printWidth": 100,
+        
+        // ESLint设置
+        "eslint.validate": [
+          "javascript",
+          "javascriptreact",
+          "typescript",
+          "typescriptreact",
+          "vue"
+        ],
+        
+        // 终端设置
+        "terminal.integrated.defaultProfile.linux": "bash",
+        "terminal.integrated.profiles.linux": {
+          "bash": {
+            "path": "/bin/bash",
+            "args": ["-l"]
+          }
+        },
+        
+        // Git设置
+        "git.autofetch": true,
+        "git.confirmSync": false,
+        "git.enableSmartCommit": true,
+        
+        // 搜索设置
+        "search.exclude": {
+          "**/node_modules": true,
+          "**/target": true,
+          "**/dist": true,
+          "**/build": true,
+          "**/.git": true
+        },
+        
+        // 文件关联
+        "files.associations": {
+          "*.vue": "vue",
+          "*.yml": "yaml",
+          "*.yaml": "yaml"
+        }
+      }
+    }
+  },
+  
+  // 端口转发
+  "forwardPorts": [
+    3000,  // 用户端前端
+    3001,  // 管理后台前端
+    8080,  // 后端API
+    3306,  // MySQL
+    6379,  // Redis
+    9000,  // MinIO
+    9001   // MinIO Console
+  ],
+  
+  // 端口属性
+  "portsAttributes": {
+    "3000": {
+      "label": "用户端前端",
+      "onAutoForward": "notify"
+    },
+    "3001": {
+      "label": "管理后台前端", 
+      "onAutoForward": "notify"
+    },
+    "8080": {
+      "label": "后端API",
+      "onAutoForward": "notify"
+    },
+    "3306": {
+      "label": "MySQL数据库",
+      "onAutoForward": "silent"
+    },
+    "6379": {
+      "label": "Redis缓存",
+      "onAutoForward": "silent"
+    },
+    "9000": {
+      "label": "MinIO对象存储",
+      "onAutoForward": "silent"
+    },
+    "9001": {
+      "label": "MinIO管理控制台",
+      "onAutoForward": "silent"
+    }
+  },
+  
+  // 容器创建后执行的命令
+  "postCreateCommand": "bash .devcontainer/scripts/post-create.sh",
+  
+  // 容器启动后执行的命令
+  "postStartCommand": "bash .devcontainer/scripts/post-start.sh",
+  
+  // 挂载点
+  "mounts": [
+    // 缓存node_modules以提高性能
+    "source=quick-code-node_modules,target=${containerWorkspaceFolder}/user-frontend/node_modules,type=volume",
+    "source=quick-code-admin-node_modules,target=${containerWorkspaceFolder}/admin-frontend/node_modules,type=volume",
+    // 缓存Maven依赖
+    "source=quick-code-maven-cache,target=/home/vscode/.m2,type=volume",
+    // Git配置持久化
+    "source=${localEnv:HOME}/.gitconfig,target=/home/vscode/.gitconfig,type=bind,consistency=cached"
+  ],
+  
+  // 容器用户
+  "remoteUser": "vscode",
+  
+  // 功能特性
+  "features": {
+    "ghcr.io/devcontainers/features/common-utils:2": {
+      "installZsh": true,
+      "configureZshAsDefaultShell": true,
+      "installOhMyZsh": true,
+      "upgradePackages": true
+    },
+    "ghcr.io/devcontainers/features/git:1": {
+      "ppa": true,
+      "version": "latest"
+    },
+    "ghcr.io/devcontainers/features/docker-in-docker:2": {
+      "version": "latest",
+      "enableNonRootDocker": true,
+      "moby": true
+    }
+  }
+}
