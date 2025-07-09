@@ -135,31 +135,15 @@ RUN git config --global init.defaultBranch main \
     && git config --global pull.rebase false
 
 # 预安装一些常用的npm包到全局缓存
-RUN npm config set registry https://registry.npmmirror.com \
-    && npm install -g \
+RUN npm install -g \
         @types/node \
         vite \
         vitest \
         @vue/test-utils \
         cypress
 
-# 创建Maven设置文件（使用阿里云镜像）
-RUN mkdir -p /home/$USERNAME/.m2 && cat > /home/$USERNAME/.m2/settings.xml << 'EOF'
-<?xml version="1.0" encoding="UTF-8"?>
-<settings xmlns="http://maven.apache.org/SETTINGS/1.0.0"
-          xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-          xsi:schemaLocation="http://maven.apache.org/SETTINGS/1.0.0 
-          http://maven.apache.org/xsd/settings-1.0.0.xsd">
-  <mirrors>
-    <mirror>
-      <id>aliyunmaven</id>
-      <mirrorOf>*</mirrorOf>
-      <name>阿里云公共仓库</name>
-      <url>https://maven.aliyun.com/repository/public</url>
-    </mirror>
-  </mirrors>
-</settings>
-EOF
+# 创建Maven目录
+RUN mkdir -p /home/$USERNAME/.m2
 
 # 切换回root用户进行最后的配置
 USER root

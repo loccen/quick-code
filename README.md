@@ -51,13 +51,19 @@ git clone <repository-url>
 cd quick-code
 ```
 
-#### 2. 启动 Dev Container
+#### 2. 验证配置（推荐）
+```bash
+# 验证所有配置是否正确
+./scripts/validate-config.sh
+```
+
+#### 3. 启动 Dev Container
 1. 在 VSCode 中打开项目文件夹
 2. 按 `Ctrl+Shift+P` (Windows/Linux) 或 `Cmd+Shift+P` (Mac)
 3. 输入 "Dev Containers: Reopen in Container"
 4. 等待容器构建和启动（首次启动需要几分钟）
 
-#### 3. 验证环境
+#### 4. 验证环境
 容器启动后，所有服务应该自动可用：
 
 - **用户端前端**: http://localhost:3000
