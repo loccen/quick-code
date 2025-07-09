@@ -62,13 +62,13 @@ show_help() {
 # 启动开发环境
 start_dev() {
     log_header "启动开发环境"
-    
+
     # 检查是否在容器内
     if [ ! -f /.dockerenv ]; then
         log_error "请在devcontainer内运行此脚本"
         exit 1
     fi
-    
+
     # 启动用户端前端
     if [ -f "user-frontend/package.json" ]; then
         log_info "启动用户端前端 (端口: 3000)..."
@@ -77,7 +77,7 @@ start_dev() {
         echo $! > ../logs/user-frontend.pid
         cd ..
     fi
-    
+
     # 启动管理后台前端
     if [ -f "admin-frontend/package.json" ]; then
         log_info "启动管理后台前端 (端口: 3001)..."
@@ -86,19 +86,20 @@ start_dev() {
         echo $! > ../logs/admin-frontend.pid
         cd ..
     fi
-    
+
     # 启动后端服务
     if [ -f "backend/pom.xml" ]; then
         log_info "启动后端服务 (端口: 8080)..."
         cd backend
-        mvn spring-boot:run > ../logs/backend.log 2>&1 &
+        # 确保JAVA_HOME环境变量正确设置并传递给子进程
+        JAVA_HOME=/usr/lib/jvm/java-17-openjdk-arm64 PATH=$JAVA_HOME/bin:$PATH mvn spring-boot:run > ../logs/backend.log 2>&1 &
         echo $! > ../logs/backend.pid
         cd ..
     fi
-    
+
     # 等待服务启动
     sleep 5
-    
+
     log_success "开发环境启动完成！"
     echo ""
     echo "服务地址:"
@@ -115,34 +116,34 @@ start_dev() {
 # 停止开发环境
 stop_dev() {
     log_header "停止开发环境"
-    
+
     # 创建logs目录
     mkdir -p logs
-    
+
     # 停止前端服务
     if [ -f "logs/user-frontend.pid" ]; then
         log_info "停止用户端前端..."
         kill $(cat logs/user-frontend.pid) 2>/dev/null || true
         rm -f logs/user-frontend.pid
     fi
-    
+
     if [ -f "logs/admin-frontend.pid" ]; then
         log_info "停止管理后台前端..."
         kill $(cat logs/admin-frontend.pid) 2>/dev/null || true
         rm -f logs/admin-frontend.pid
     fi
-    
+
     # 停止后端服务
     if [ -f "logs/backend.pid" ]; then
         log_info "停止后端服务..."
         kill $(cat logs/backend.pid) 2>/dev/null || true
         rm -f logs/backend.pid
     fi
-    
+
     # 杀死可能残留的进程
     pkill -f "vite" 2>/dev/null || true
     pkill -f "spring-boot:run" 2>/dev/null || true
-    
+
     log_success "开发环境已停止"
 }
 
@@ -157,41 +158,41 @@ restart_dev() {
 # 查看服务状态
 show_status() {
     log_header "服务状态"
-    
+
     # 检查前端服务
     if [ -f "logs/user-frontend.pid" ] && kill -0 $(cat logs/user-frontend.pid) 2>/dev/null; then
         echo -e "用户端前端:     ${GREEN}运行中${NC}"
     else
         echo -e "用户端前端:     ${RED}已停止${NC}"
     fi
-    
+
     if [ -f "logs/admin-frontend.pid" ] && kill -0 $(cat logs/admin-frontend.pid) 2>/dev/null; then
         echo -e "管理后台前端:   ${GREEN}运行中${NC}"
     else
         echo -e "管理后台前端:   ${RED}已停止${NC}"
     fi
-    
+
     # 检查后端服务
     if [ -f "logs/backend.pid" ] && kill -0 $(cat logs/backend.pid) 2>/dev/null; then
         echo -e "后端服务:       ${GREEN}运行中${NC}"
     else
         echo -e "后端服务:       ${RED}已停止${NC}"
     fi
-    
+
     # 检查数据库连接
     if mysql -h mysql -u quick_code_user -pquick_code_pass -e "SELECT 1" >/dev/null 2>&1; then
         echo -e "MySQL数据库:    ${GREEN}连接正常${NC}"
     else
         echo -e "MySQL数据库:    ${RED}连接失败${NC}"
     fi
-    
+
     # 检查Redis连接
     if redis-cli -h redis -a redis_pass ping >/dev/null 2>&1; then
         echo -e "Redis缓存:      ${GREEN}连接正常${NC}"
     else
         echo -e "Redis缓存:      ${RED}连接失败${NC}"
     fi
-    
+
     # 检查MinIO连接
     if curl -f http://minio:9000/minio/health/live >/dev/null 2>&1; then
         echo -e "MinIO存储:      ${GREEN}连接正常${NC}"
@@ -203,14 +204,14 @@ show_status() {
 # 查看日志
 show_logs() {
     log_header "服务日志"
-    
+
     echo "选择要查看的日志:"
     echo "1) 用户端前端"
     echo "2) 管理后台前端"
     echo "3) 后端服务"
     echo "4) 全部日志"
     read -p "请选择 (1-4): " choice
-    
+
     case $choice in
         1)
             if [ -f "logs/user-frontend.log" ]; then
@@ -249,42 +250,42 @@ show_logs() {
 # 清理缓存和临时文件
 clean_cache() {
     log_header "清理缓存和临时文件"
-    
+
     # 清理前端缓存
     if [ -d "user-frontend/node_modules/.cache" ]; then
         log_info "清理用户端前端缓存..."
         rm -rf user-frontend/node_modules/.cache
     fi
-    
+
     if [ -d "admin-frontend/node_modules/.cache" ]; then
         log_info "清理管理后台前端缓存..."
         rm -rf admin-frontend/node_modules/.cache
     fi
-    
+
     # 清理构建文件
     if [ -d "user-frontend/dist" ]; then
         log_info "清理用户端前端构建文件..."
         rm -rf user-frontend/dist
     fi
-    
+
     if [ -d "admin-frontend/dist" ]; then
         log_info "清理管理后台前端构建文件..."
         rm -rf admin-frontend/dist
     fi
-    
+
     # 清理后端构建文件
     if [ -d "backend/target" ]; then
         log_info "清理后端构建文件..."
         rm -rf backend/target
     fi
-    
+
     # 清理日志文件
     if [ -d "logs" ]; then
         log_info "清理日志文件..."
         rm -f logs/*.log
         rm -f logs/*.pid
     fi
-    
+
     log_success "缓存清理完成"
 }
 
@@ -292,7 +293,7 @@ clean_cache() {
 main() {
     # 创建必要的目录
     mkdir -p logs
-    
+
     case "${1:-help}" in
         start)
             start_dev

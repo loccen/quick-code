@@ -9,17 +9,20 @@
     "vscode": {
       // 推荐的扩展
       "extensions": [
+        // AI开发助手
+        "augmentcode.augment",
+
         // Vue.js开发
         "Vue.volar",
         "Vue.vscode-typescript-vue-plugin",
         "bradlc.vscode-tailwindcss",
-        
+
         // Java开发
         "vscjava.vscode-java-pack",
         "vscjava.vscode-spring-initializr",
         "vscjava.vscode-spring-boot-dashboard",
         "vmware.vscode-spring-boot",
-        
+
         // TypeScript/JavaScript
         "ms-vscode.vscode-typescript-next",
         "esbenp.prettier-vscode",
@@ -54,8 +57,8 @@
         // 编辑器设置
         "editor.formatOnSave": true,
         "editor.codeActionsOnSave": {
-          "source.fixAll.eslint": true,
-          "source.organizeImports": true
+          "source.fixAll.eslint": "explicit",
+          "source.organizeImports": "explicit"
         },
         "editor.tabSize": 2,
         "editor.insertSpaces": true,
@@ -180,9 +183,9 @@
   // 挂载点
   "mounts": [
     // 缓存Maven依赖
-    "source=quick-code-maven-cache,target=/home/vscode/.m2,type=volume",
-    // Git配置持久化
-    "source=${localEnv:HOME}/.gitconfig,target=/home/vscode/.gitconfig,type=bind,consistency=cached"
+    "source=quick-code-maven-cache,target=/home/vscode/.m2,type=volume"
+    // Git配置持久化 - 暂时禁用以避免权限冲突
+    // "source=${localEnv:HOME}/.gitconfig,target=/home/vscode/.gitconfig,type=bind,consistency=cached"
   ],
   
   // 容器用户

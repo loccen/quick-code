@@ -124,20 +124,26 @@ compile_backend_project() {
 configure_git() {
     log_info "配置Git..."
 
+    # 检查是否可以写入Git配置
+    if ! git config --global user.name "test" 2>/dev/null; then
+        log_warning "无法写入Git全局配置，可能是权限问题，跳过Git配置"
+        return 0
+    fi
+
     # 设置Git配置（如果还没有配置）
-    if [ -z "$(git config --global user.name)" ]; then
-        git config --global user.name "loccen"
-        git config --global user.email "loccen@foxmail.com"
+    if [ -z "$(git config --global user.name 2>/dev/null)" ] || [ "$(git config --global user.name)" = "test" ]; then
+        git config --global user.name "loccen" 2>/dev/null || log_warning "无法设置Git用户名"
+        git config --global user.email "loccen@foxmail.com" 2>/dev/null || log_warning "无法设置Git邮箱"
         log_info "已设置默认Git用户信息，请根据需要修改"
     fi
 
-    # 设置Git别名
-    git config --global alias.st status
-    git config --global alias.co checkout
-    git config --global alias.br branch
-    git config --global alias.ci commit
-    git config --global alias.unstage 'reset HEAD --'
-    git config --global alias.last 'log -1 HEAD'
+    # 设置Git别名（忽略错误）
+    git config --global alias.st status 2>/dev/null || true
+    git config --global alias.co checkout 2>/dev/null || true
+    git config --global alias.br branch 2>/dev/null || true
+    git config --global alias.ci commit 2>/dev/null || true
+    git config --global alias.unstage 'reset HEAD --' 2>/dev/null || true
+    git config --global alias.last 'log -1 HEAD' 2>/dev/null || true
 
     log_success "Git配置完成"
 }
