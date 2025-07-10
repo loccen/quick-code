@@ -1,0 +1,150 @@
+# 速码网测试环境配置文件
+server:
+  port: 0  # 随机端口，避免测试冲突
+
+spring:
+  application:
+    name: quick-code-backend-test
+
+  profiles:
+    active: test
+
+  # 测试数据源配置 - 使用H2内存数据库
+  datasource:
+    driver-class-name: org.h2.Driver
+    url: jdbc:h2:mem:testdb;DB_CLOSE_DELAY=-1;DB_CLOSE_ON_EXIT=FALSE;MODE=MySQL
+    username: sa
+    password: 
+    hikari:
+      minimum-idle: 1
+      maximum-pool-size: 5
+      auto-commit: true
+      idle-timeout: 30000
+      pool-name: QuickCodeTestHikariCP
+      max-lifetime: 1800000
+      connection-timeout: 30000
+
+  # JPA配置
+  jpa:
+    hibernate:
+      ddl-auto: create-drop  # 测试时自动创建和删除表
+    show-sql: false  # 测试时不显示SQL
+    properties:
+      hibernate:
+        dialect: org.hibernate.dialect.H2Dialect
+        format_sql: false
+        use_sql_comments: false
+
+  # Redis配置 - 使用嵌入式Redis或禁用
+  data:
+    redis:
+      host: localhost
+      port: 6379
+      password: 
+      timeout: 2000ms
+      lettuce:
+        pool:
+          max-active: 8
+          max-idle: 8
+          min-idle: 0
+
+  # 缓存配置
+  cache:
+    type: simple  # 使用简单缓存替代Redis
+
+  # 邮件配置 - 测试时禁用
+  mail:
+    host: localhost
+    port: 25
+    username: test
+    password: test
+    properties:
+      mail:
+        smtp:
+          auth: false
+          starttls:
+            enable: false
+
+# 应用自定义配置
+app:
+  name: 速码网测试
+  version: 1.0.0-TEST
+  description: 速码网测试环境
+  base-url: http://localhost:8080
+  frontend-url: http://localhost:3000
+  admin-url: http://localhost:3001
+
+  # JWT配置 - 测试用短期token
+  jwt:
+    secret: test-jwt-secret-key-for-testing-only
+    expiration: 1  # 1小时
+    refresh-expiration: 1  # 1天
+
+  # 文件存储配置 - 测试时使用临时目录
+  file:
+    upload-path: /tmp/test-uploads
+    max-size: 10MB
+    allowed-types: .zip,.rar,.tar.gz,.7z
+
+  # MinIO配置 - 测试时禁用或使用mock
+  minio:
+    endpoint: http://localhost:9000
+    access-key: testkey
+    secret-key: testsecret
+    bucket: test-bucket
+    region: us-east-1
+
+  # 业务配置 - 测试用配置
+  business:
+    point:
+      register-reward: 100
+      upload-reward: 100
+      docker-bonus: 100
+      platform-rate: 0.3
+
+    review:
+      auto-approve: true  # 测试时自动审核
+      timeout-hours: 1
+
+    deploy:
+      demo-expire-hours: 1
+      max-instances: 2
+      domain-prefix: test-demo
+      base-domain: test.local
+
+# 监控配置 - 测试时简化
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info
+  endpoint:
+    health:
+      show-details: always
+
+# 日志配置 - 测试时使用简化配置
+logging:
+  level:
+    com.quickcode: DEBUG
+    org.springframework.security: DEBUG
+    org.hibernate.SQL: DEBUG
+    org.hibernate.type.descriptor.sql.BasicBinder: TRACE
+  pattern:
+    console: "%d{HH:mm:ss.SSS} [%thread] %-5level %logger{36} - %msg%n"
+
+# 测试专用配置
+test:
+  # 数据库初始化
+  database:
+    init-mode: always
+    schema-locations: classpath:schema-test.sql
+    data-locations: classpath:data-test.sql
+
+  # 外部服务Mock配置
+  external-services:
+    payment:
+      mock-enabled: true
+    email:
+      mock-enabled: true
+    sms:
+      mock-enabled: true
