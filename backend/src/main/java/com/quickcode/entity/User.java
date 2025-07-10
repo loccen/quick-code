@@ -37,7 +37,7 @@ import lombok.NoArgsConstructor;
 @Table(name = "users",
     indexes = {@Index(name = "idx_username", columnList = "username"),
         @Index(name = "idx_email", columnList = "email"),
-        @Index(name = "idx_status", columnList = "status"),
+        @Index(name = "idx_user_status", columnList = "status"),
         @Index(name = "idx_created_time", columnList = "created_time")})
 public class User extends BaseEntity {
 

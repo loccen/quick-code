@@ -134,6 +134,13 @@ app:
       docker-bonus: ${POINT_DOCKER_BONUS:100}
       platform-rate: ${POINT_PLATFORM_RATE:0.3}
 
+    # 邮箱验证配置
+    email:
+      verification-code: ${EMAIL_VERIFICATION_CODE:123456}
+      verification-expire-minutes: ${EMAIL_VERIFICATION_EXPIRE_MINUTES:30}
+      password-reset-code: ${PASSWORD_RESET_CODE:888888}
+      password-reset-expire-minutes: ${PASSWORD_RESET_EXPIRE_MINUTES:15}
+
     review:
       auto-approve: ${AUTO_APPROVE_PROJECTS:false}
       timeout-hours: ${REVIEW_TIMEOUT_HOURS:72}

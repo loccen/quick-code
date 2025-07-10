@@ -32,7 +32,7 @@ spring:
         format_sql: false
         use_sql_comments: false
 
-  # Redis配置 - 使用嵌入式Redis或禁用
+  # Redis配置 - 测试时禁用Redis
   data:
     redis:
       host: localhost
@@ -48,6 +48,12 @@ spring:
   # 缓存配置
   cache:
     type: simple  # 使用简单缓存替代Redis
+
+  # 自动配置排除
+  autoconfigure:
+    exclude:
+      - org.springframework.boot.autoconfigure.data.redis.RedisAutoConfiguration
+      - org.springframework.boot.autoconfigure.data.redis.RedisRepositoriesAutoConfiguration
 
   # 邮件配置 - 测试时禁用
   mail:
@@ -98,6 +104,13 @@ app:
       upload-reward: 100
       docker-bonus: 100
       platform-rate: 0.3
+
+    # 邮箱验证配置 - 测试用固定验证码
+    email:
+      verification-code: 123456
+      verification-expire-minutes: 30
+      password-reset-code: 888888
+      password-reset-expire-minutes: 15
 
     review:
       auto-approve: true  # 测试时自动审核

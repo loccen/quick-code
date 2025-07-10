@@ -8,20 +8,27 @@ import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 import java.time.LocalDateTime;
+import java.util.List;
 import java.util.Optional;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
+import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageImpl;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
 import org.springframework.security.crypto.password.PasswordEncoder;
+import com.quickcode.entity.Permission;
 import com.quickcode.entity.Role;
 import com.quickcode.entity.User;
 import com.quickcode.repository.RoleRepository;
 import com.quickcode.repository.UserRepository;
 import com.quickcode.service.impl.UserServiceImpl;
-import com.quickcode.testutil.BaseUnitTest;
 import com.quickcode.testutil.TestDataFactory;
 
 /**
@@ -30,8 +37,9 @@ import com.quickcode.testutil.TestDataFactory;
  * @author QuickCode Team
  * @since 1.0.0
  */
+@ExtendWith(MockitoExtension.class)
 @DisplayName("UserService单元测试")
-class UserServiceTest extends BaseUnitTest {
+class UserServiceTest {
 
   @Mock
   private UserRepository userRepository;
@@ -49,9 +57,7 @@ class UserServiceTest extends BaseUnitTest {
   private Role testRole;
 
   @BeforeEach
-  @Override
-  protected void setupUnitTest() {
-    super.setupUnitTest();
+  void setUp() {
     testUser = TestDataFactory.createTestUser();
     testUser.setId(1L); // 设置ID用于测试
     testRole = TestDataFactory.createTestRole();
@@ -620,6 +626,392 @@ class UserServiceTest extends BaseUnitTest {
 
       verify(userRepository).findById(userId);
       verify(userRepository).save(testUser);
+    }
+  }
+
+  @Nested
+  @DisplayName("角色权限相关测试")
+  class RolePermissionTests {
+
+    @Test
+    @DisplayName("应该成功为用户分配角色")
+    void shouldAssignRoleToUserSuccessfully() {
+      // Arrange
+      Long userId = testUser.getId();
+      String roleCode = "USER";
+
+      when(userRepository.findById(userId)).thenReturn(Optional.of(testUser));
+      when(roleRepository.findByRoleCode(roleCode)).thenReturn(Optional.of(testRole));
+      when(userRepository.save(any(User.class)))
+          .thenAnswer(invocation -> invocation.getArgument(0));
+
+      // Act
+      userService.assignRole(userId, roleCode);
+
+      // Assert
+      verify(userRepository).findById(userId);
+      verify(roleRepository).findByRoleCode(roleCode);
+      verify(userRepository).save(testUser);
+    }
+
+    @Test
+    @DisplayName("应该在用户不存在时抛出异常")
+    void shouldThrowExceptionWhenUserNotFoundForRoleAssignment() {
+      // Arrange
+      Long userId = 999L;
+      String roleCode = "USER";
+
+      when(userRepository.findById(userId)).thenReturn(Optional.empty());
+
+      // Act & Assert
+      assertThatThrownBy(() -> userService.assignRole(userId, roleCode))
+          .isInstanceOf(IllegalArgumentException.class).hasMessage("用户不存在: " + userId);
+
+      verify(userRepository).findById(userId);
+      verify(roleRepository, never()).findByRoleCode(anyString());
+      verify(userRepository, never()).save(any(User.class));
+    }
+
+    @Test
+    @DisplayName("应该在角色不存在时抛出异常")
+    void shouldThrowExceptionWhenRoleNotFoundForAssignment() {
+      // Arrange
+      Long userId = testUser.getId();
+      String roleCode = "NONEXISTENT";
+
+      when(userRepository.findById(userId)).thenReturn(Optional.of(testUser));
+      when(roleRepository.findByRoleCode(roleCode)).thenReturn(Optional.empty());
+
+      // Act & Assert
+      assertThatThrownBy(() -> userService.assignRole(userId, roleCode))
+          .isInstanceOf(IllegalArgumentException.class).hasMessage("角色不存在: " + roleCode);
+
+      verify(userRepository).findById(userId);
+      verify(roleRepository).findByRoleCode(roleCode);
+      verify(userRepository, never()).save(any(User.class));
+    }
+
+    @Test
+    @DisplayName("应该成功移除用户角色")
+    void shouldRemoveRoleFromUserSuccessfully() {
+      // Arrange
+      Long userId = testUser.getId();
+      String roleCode = "USER";
+      testUser.addRole(testRole); // 先添加角色
+
+      when(userRepository.findById(userId)).thenReturn(Optional.of(testUser));
+      when(roleRepository.findByRoleCode(roleCode)).thenReturn(Optional.of(testRole));
+      when(userRepository.save(any(User.class)))
+          .thenAnswer(invocation -> invocation.getArgument(0));
+
+      // Act
+      userService.removeRole(userId, roleCode);
+
+      // Assert
+      verify(userRepository).findById(userId);
+      verify(roleRepository).findByRoleCode(roleCode);
+      verify(userRepository).save(testUser);
+    }
+
+    @Test
+    @DisplayName("应该正确检查用户是否拥有角色")
+    void shouldCheckUserHasRoleCorrectly() {
+      // Arrange
+      Long userId = testUser.getId();
+      String roleCode = "USER";
+      testUser.addRole(testRole); // 添加角色
+
+      when(userRepository.findById(userId)).thenReturn(Optional.of(testUser));
+
+      // Act
+      boolean hasRole = userService.hasRole(userId, roleCode);
+
+      // Assert
+      assertThat(hasRole).isTrue();
+      verify(userRepository).findById(userId);
+    }
+
+    @Test
+    @DisplayName("应该在用户没有角色时返回false")
+    void shouldReturnFalseWhenUserDoesNotHaveRole() {
+      // Arrange
+      Long userId = testUser.getId();
+      String roleCode = "ADMIN";
+
+      when(userRepository.findById(userId)).thenReturn(Optional.of(testUser));
+
+      // Act
+      boolean hasRole = userService.hasRole(userId, roleCode);
+
+      // Assert
+      assertThat(hasRole).isFalse();
+      verify(userRepository).findById(userId);
+    }
+
+    @Test
+    @DisplayName("应该正确检查用户是否拥有权限")
+    void shouldCheckUserHasPermissionCorrectly() {
+      // Arrange
+      Long userId = testUser.getId();
+      String permissionCode = "user:read";
+
+      // 创建权限并添加到角色
+      Permission permission = TestDataFactory.createTestPermission();
+      permission.setPermissionCode(permissionCode);
+      testRole.addPermission(permission);
+      testUser.addRole(testRole);
+
+      when(userRepository.findById(userId)).thenReturn(Optional.of(testUser));
+
+      // Act
+      boolean hasPermission = userService.hasPermission(userId, permissionCode);
+
+      // Assert
+      assertThat(hasPermission).isTrue();
+      verify(userRepository).findById(userId);
+    }
+
+    @Test
+    @DisplayName("应该在用户没有权限时返回false")
+    void shouldReturnFalseWhenUserDoesNotHavePermission() {
+      // Arrange
+      Long userId = testUser.getId();
+      String permissionCode = "admin:manage";
+
+      when(userRepository.findById(userId)).thenReturn(Optional.of(testUser));
+
+      // Act
+      boolean hasPermission = userService.hasPermission(userId, permissionCode);
+
+      // Assert
+      assertThat(hasPermission).isFalse();
+      verify(userRepository).findById(userId);
+    }
+
+    @Test
+    @DisplayName("应该正确获取用户的所有权限")
+    void shouldGetUserPermissionsCorrectly() {
+      // Arrange
+      Long userId = testUser.getId();
+
+      // 创建多个权限并添加到角色
+      Permission permission1 = TestDataFactory.createTestPermission();
+      permission1.setPermissionCode("user:read");
+      Permission permission2 = TestDataFactory.createTestPermission();
+      permission2.setPermissionCode("user:update");
+
+      testRole.addPermission(permission1);
+      testRole.addPermission(permission2);
+      testUser.addRole(testRole);
+
+      when(userRepository.findById(userId)).thenReturn(Optional.of(testUser));
+
+      // Act
+      List<String> permissions = userService.getUserPermissions(userId);
+
+      // Assert
+      assertThat(permissions).hasSize(2);
+      assertThat(permissions).containsExactlyInAnyOrder("user:read", "user:update");
+      verify(userRepository).findById(userId);
+    }
+  }
+
+  @Nested
+  @DisplayName("查询统计相关测试")
+  class QueryStatisticsTests {
+
+    @Test
+    @DisplayName("应该能够根据角色查找用户")
+    void shouldFindUsersByRole() {
+      // Arrange
+      String roleCode = "USER";
+      List<User> expectedUsers = List.of(testUser);
+
+      when(userRepository.findByRoleCode(roleCode)).thenReturn(expectedUsers);
+
+      // Act
+      List<User> result = userService.findByRole(roleCode);
+
+      // Assert
+      assertThat(result).hasSize(1);
+      assertThat(result.get(0).getId()).isEqualTo(testUser.getId());
+      verify(userRepository).findByRoleCode(roleCode);
+    }
+
+    @Test
+    @DisplayName("应该能够根据状态查找用户")
+    void shouldFindUsersByStatus() {
+      // Arrange
+      Integer status = 1;
+      List<User> expectedUsers = List.of(testUser);
+
+      when(userRepository.findByStatus(status)).thenReturn(expectedUsers);
+
+      // Act
+      List<User> result = userService.findByStatus(status);
+
+      // Assert
+      assertThat(result).hasSize(1);
+      assertThat(result.get(0).getId()).isEqualTo(testUser.getId());
+      verify(userRepository).findByStatus(status);
+    }
+
+    @Test
+    @DisplayName("应该能够分页查找用户")
+    void shouldFindUsersWithPagination() {
+      // Arrange
+      String keyword = "test";
+      Integer status = 1;
+      Pageable pageable = PageRequest.of(0, 10);
+      Page<User> expectedPage = new PageImpl<>(List.of(testUser), pageable, 1);
+
+      when(userRepository.findAll(pageable)).thenReturn(expectedPage);
+
+      // Act
+      Page<User> result = userService.findUsers(keyword, status, pageable);
+
+      // Assert
+      assertThat(result.getContent()).hasSize(1);
+      assertThat(result.getTotalElements()).isEqualTo(1);
+      assertThat(result.getContent().get(0).getId()).isEqualTo(testUser.getId());
+      verify(userRepository).findAll(pageable);
+    }
+
+    @Test
+    @DisplayName("应该能够查找新注册用户")
+    void shouldFindNewUsers() {
+      // Arrange
+      LocalDateTime startTime = LocalDateTime.now().minusDays(7);
+      List<User> expectedUsers = List.of(testUser);
+
+      when(userRepository.findByCreatedTimeBetween(any(LocalDateTime.class),
+          any(LocalDateTime.class))).thenReturn(expectedUsers);
+
+      // Act
+      List<User> result = userService.findNewUsers(startTime);
+
+      // Assert
+      assertThat(result).hasSize(1);
+      assertThat(result.get(0).getId()).isEqualTo(testUser.getId());
+      verify(userRepository).findByCreatedTimeBetween(any(LocalDateTime.class),
+          any(LocalDateTime.class));
+    }
+
+    @Test
+    @DisplayName("应该能够查找长时间未登录的用户")
+    void shouldFindInactiveUsers() {
+      // Arrange
+      LocalDateTime cutoffTime = LocalDateTime.now().minusDays(30);
+      List<User> expectedUsers = List.of(testUser);
+
+      when(userRepository.findInactiveUsers(cutoffTime)).thenReturn(expectedUsers);
+
+      // Act
+      List<User> result = userService.findInactiveUsers(cutoffTime);
+
+      // Assert
+      assertThat(result).hasSize(1);
+      assertThat(result.get(0).getId()).isEqualTo(testUser.getId());
+      verify(userRepository).findInactiveUsers(cutoffTime);
+    }
+
+    @Test
+    @DisplayName("应该能够查找被锁定的用户")
+    void shouldFindLockedUsers() {
+      // Arrange
+      List<User> expectedUsers = List.of(testUser);
+
+      when(userRepository.findLockedUsers(any(LocalDateTime.class))).thenReturn(expectedUsers);
+
+      // Act
+      List<User> result = userService.findLockedUsers();
+
+      // Assert
+      assertThat(result).hasSize(1);
+      assertThat(result.get(0).getId()).isEqualTo(testUser.getId());
+      verify(userRepository).findLockedUsers(any(LocalDateTime.class));
+    }
+
+    @Test
+    @DisplayName("应该能够统计用户总数")
+    void shouldCountUsers() {
+      // Arrange
+      long expectedCount = 100L;
+
+      when(userRepository.count()).thenReturn(expectedCount);
+
+      // Act
+      long result = userService.countUsers();
+
+      // Assert
+      assertThat(result).isEqualTo(expectedCount);
+      verify(userRepository).count();
+    }
+
+    @Test
+    @DisplayName("应该能够根据状态统计用户数量")
+    void shouldCountUsersByStatus() {
+      // Arrange
+      Integer status = 1;
+      long expectedCount = 50L;
+
+      when(userRepository.countByStatus(status)).thenReturn(expectedCount);
+
+      // Act
+      long result = userService.countUsersByStatus(status);
+
+      // Assert
+      assertThat(result).isEqualTo(expectedCount);
+      verify(userRepository).countByStatus(status);
+    }
+
+    @Test
+    @DisplayName("应该能够统计新注册用户数量")
+    void shouldCountNewUsers() {
+      // Arrange
+      LocalDateTime since = LocalDateTime.now().minusDays(7);
+      long expectedCount = 10L;
+
+      when(userRepository.countNewUsers(since)).thenReturn(expectedCount);
+
+      // Act
+      long result = userService.countNewUsers(since);
+
+      // Assert
+      assertThat(result).isEqualTo(expectedCount);
+      verify(userRepository).countNewUsers(since);
+    }
+
+    @Test
+    @DisplayName("应该能够统计已验证邮箱的用户数量")
+    void shouldCountVerifiedUsers() {
+      // Arrange
+      long expectedCount = 80L;
+
+      when(userRepository.countVerifiedUsers()).thenReturn(expectedCount);
+
+      // Act
+      long result = userService.countVerifiedUsers();
+
+      // Assert
+      assertThat(result).isEqualTo(expectedCount);
+      verify(userRepository).countVerifiedUsers();
+    }
+
+    @Test
+    @DisplayName("应该能够统计启用双因素认证的用户数量")
+    void shouldCountTwoFactorEnabledUsers() {
+      // Arrange
+      long expectedCount = 20L;
+
+      when(userRepository.countTwoFactorEnabledUsers()).thenReturn(expectedCount);
+
+      // Act
+      long result = userService.countTwoFactorEnabledUsers();
+
+      // Assert
+      assertThat(result).isEqualTo(expectedCount);
+      verify(userRepository).countTwoFactorEnabledUsers();
     }
   }
 }
