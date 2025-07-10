@@ -5,7 +5,7 @@ spring:
     url: jdbc:mysql://mysql:3306/quick_code?useUnicode=true&characterEncoding=utf8&zeroDateTimeBehavior=convertToNull&useSSL=false&serverTimezone=GMT%2B8&allowPublicKeyRetrieval=true
     username: quick_code_user
     password: quick_code_pass
-  
+
   # 开发环境JPA配置
   jpa:
     hibernate:
@@ -15,7 +15,7 @@ spring:
       hibernate:
         format_sql: true
         use_sql_comments: true
-  
+
   # 开发环境Redis配置
   data:
     redis:
@@ -23,7 +23,7 @@ spring:
       port: 6379
       password: redis_pass
       database: 0
-  
+
   # 开发工具配置
   devtools:
     restart:
@@ -32,21 +32,14 @@ spring:
     livereload:
       enabled: true
 
-# 开发环境日志配置
-logging:
-  level:
-    com.quickcode: DEBUG
-    org.springframework.security: DEBUG
-    org.springframework.web: DEBUG
-    org.hibernate.SQL: DEBUG
-    org.hibernate.type.descriptor.sql.BasicBinder: TRACE
-    org.springframework.data.redis: DEBUG
+# 开发环境日志配置 - 详细配置见logback-spring.xml
+# 这里只保留必要的环境变量配置
 
 # 开发环境应用配置
 app:
   jwt:
     secret: dev-jwt-secret-key-change-in-production
-  
+
   minio:
     endpoint: http://minio:9000
     access-key: minioadmin

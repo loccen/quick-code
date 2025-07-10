@@ -1,6 +1,20 @@
 {
     "java.compile.nullAnalysis.mode": "automatic",
     "cSpell.words": [
-      "quickcode"
-    ]
+      "baomidou",
+      "hikari",
+      "hutool",
+      "jdbc",
+      "jjwt",
+      "jsonwebtoken",
+      "Jwts",
+      "mybatis",
+      "projectlombok",
+      "quickcode",
+      "springdoc",
+      "springframework",
+      "testcontainers",
+      "webmvc"
+    ],
+    "java.configuration.updateBuildConfiguration": "interactive"
 }
