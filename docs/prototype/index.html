@@ -1,0 +1,382 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>速码网 - 专业的源码交易平台</title>
+    <meta name="description" content="速码网是专业的源码交易平台，提供Docker化项目、一键部署、积分经济体系，为开发者提供高质量的源码交易服务">
+    <link rel="stylesheet" href="css/main.css">
+    <link rel="stylesheet" href="css/components.css">
+    <link rel="stylesheet" href="css/responsive.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+</head>
+<body>
+    <!-- 顶部导航栏 -->
+    <header class="header">
+        <nav class="navbar">
+            <div class="container">
+                <div class="nav-brand">
+                    <div class="logo">
+                        <i class="fas fa-code"></i>
+                        <span class="brand-name">速码网</span>
+                    </div>
+                </div>
+                
+                <div class="nav-menu">
+                    <ul class="nav-links">
+                        <li><a href="#" class="nav-link active">首页</a></li>
+                        <li><a href="#" class="nav-link">项目市场</a></li>
+                        <li><a href="#" class="nav-link">上传项目</a></li>
+                        <li><a href="#" class="nav-link">我的项目</a></li>
+                    </ul>
+                </div>
+
+                <div class="nav-search">
+                    <div class="search-box">
+                        <input type="text" placeholder="搜索项目、技术栈..." class="search-input">
+                        <button class="search-btn">
+                            <i class="fas fa-search"></i>
+                        </button>
+                    </div>
+                </div>
+
+                <div class="nav-user">
+                    <div class="user-actions">
+                        <button class="btn btn-outline">登录</button>
+                        <button class="btn btn-primary">注册</button>
+                    </div>
+                </div>
+
+                <div class="mobile-menu-toggle">
+                    <i class="fas fa-bars"></i>
+                </div>
+            </div>
+        </nav>
+    </header>
+
+    <!-- 主要内容区域 -->
+    <main class="main">
+        <!-- Hero区域 -->
+        <section class="hero">
+            <div class="container">
+                <div class="hero-content">
+                    <div class="hero-text">
+                        <h1 class="hero-title">
+                            专业的<span class="highlight">源码交易</span>平台
+                        </h1>
+                        <p class="hero-subtitle">
+                            Docker化标准 · 一键部署演示 · 积分经济体系<br>
+                            为开发者提供高质量的源码交易和部署服务
+                        </p>
+                        <div class="hero-actions">
+                            <button class="btn btn-primary btn-large">
+                                <i class="fas fa-rocket"></i>
+                                浏览项目
+                            </button>
+                            <button class="btn btn-outline btn-large">
+                                <i class="fas fa-upload"></i>
+                                上传项目
+                            </button>
+                        </div>
+                        <div class="hero-features">
+                            <div class="feature-item">
+                                <i class="fab fa-docker"></i>
+                                <span>Docker化标准</span>
+                            </div>
+                            <div class="feature-item">
+                                <i class="fas fa-play-circle"></i>
+                                <span>一键部署</span>
+                            </div>
+                            <div class="feature-item">
+                                <i class="fas fa-coins"></i>
+                                <span>积分奖励</span>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="hero-visual">
+                        <div class="code-window">
+                            <div class="window-header">
+                                <div class="window-controls">
+                                    <span class="control close"></span>
+                                    <span class="control minimize"></span>
+                                    <span class="control maximize"></span>
+                                </div>
+                                <div class="window-title">docker-compose.yml</div>
+                            </div>
+                            <div class="window-content">
+                                <pre class="code-content">
+<span class="code-keyword">version:</span> <span class="code-string">'3.8'</span>
+<span class="code-keyword">services:</span>
+  <span class="code-property">web:</span>
+    <span class="code-keyword">build:</span> <span class="code-string">.</span>
+    <span class="code-keyword">ports:</span>
+      - <span class="code-string">"3000:3000"</span>
+    <span class="code-keyword">environment:</span>
+      - <span class="code-property">NODE_ENV=production</span>
+  <span class="code-property">db:</span>
+    <span class="code-keyword">image:</span> <span class="code-string">mysql:8.0</span>
+    <span class="code-keyword">environment:</span>
+      - <span class="code-property">MYSQL_ROOT_PASSWORD=secret</span>
+                                </pre>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- 特色功能区 -->
+        <section class="features">
+            <div class="container">
+                <div class="section-header">
+                    <h2 class="section-title">为什么选择速码网？</h2>
+                    <p class="section-subtitle">专业的技术标准，完善的服务体系</p>
+                </div>
+                <div class="features-grid">
+                    <div class="feature-card">
+                        <div class="feature-icon">
+                            <i class="fab fa-docker"></i>
+                        </div>
+                        <h3 class="feature-title">Docker化标准</h3>
+                        <p class="feature-description">
+                            所有项目采用Docker容器化标准，确保一致的运行环境，降低部署复杂度
+                        </p>
+                    </div>
+                    <div class="feature-card">
+                        <div class="feature-icon">
+                            <i class="fas fa-rocket"></i>
+                        </div>
+                        <h3 class="feature-title">一键部署演示</h3>
+                        <p class="feature-description">
+                            提供免费演示环境，购买前即可体验项目效果，降低购买风险
+                        </p>
+                    </div>
+                    <div class="feature-card">
+                        <div class="feature-icon">
+                            <i class="fas fa-shield-alt"></i>
+                        </div>
+                        <h3 class="feature-title">质量保证</h3>
+                        <p class="feature-description">
+                            人工审核机制，确保代码质量和安全性，为用户提供可靠的源码资源
+                        </p>
+                    </div>
+                    <div class="feature-card">
+                        <div class="feature-icon">
+                            <i class="fas fa-coins"></i>
+                        </div>
+                        <h3 class="feature-title">积分经济</h3>
+                        <p class="feature-description">
+                            完善的积分体系，上传优质项目获得奖励，Docker化项目享受双倍积分
+                        </p>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- 热门项目展示 -->
+        <section class="projects">
+            <div class="container">
+                <div class="section-header">
+                    <h2 class="section-title">热门项目</h2>
+                    <p class="section-subtitle">精选优质源码项目</p>
+                    <a href="#" class="view-all-link">查看全部 <i class="fas fa-arrow-right"></i></a>
+                </div>
+                <div class="projects-grid">
+                    <div class="project-card">
+                        <div class="project-image">
+                            <div class="project-placeholder">
+                                <i class="fab fa-vue"></i>
+                            </div>
+                            <div class="project-badges">
+                                <span class="badge badge-docker">
+                                    <i class="fab fa-docker"></i>
+                                    Docker
+                                </span>
+                            </div>
+                        </div>
+                        <div class="project-content">
+                            <h3 class="project-title">Vue3 管理后台模板</h3>
+                            <p class="project-description">
+                                基于Vue3 + TypeScript + Element Plus的现代化管理后台模板
+                            </p>
+                            <div class="project-tags">
+                                <span class="tag">Vue3</span>
+                                <span class="tag">TypeScript</span>
+                                <span class="tag">Element Plus</span>
+                            </div>
+                            <div class="project-footer">
+                                <div class="project-price">
+                                    <i class="fas fa-coins"></i>
+                                    <span>299 积分</span>
+                                </div>
+                                <div class="project-actions">
+                                    <button class="btn btn-sm btn-outline">
+                                        <i class="fas fa-play"></i>
+                                        演示
+                                    </button>
+                                    <button class="btn btn-sm btn-primary">购买</button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="project-card">
+                        <div class="project-image">
+                            <div class="project-placeholder">
+                                <i class="fab fa-react"></i>
+                            </div>
+                            <div class="project-badges">
+                                <span class="badge badge-docker">
+                                    <i class="fab fa-docker"></i>
+                                    Docker
+                                </span>
+                                <span class="badge badge-hot">热门</span>
+                            </div>
+                        </div>
+                        <div class="project-content">
+                            <h3 class="project-title">React 电商系统</h3>
+                            <p class="project-description">
+                                完整的电商解决方案，包含用户端、管理后台和API服务
+                            </p>
+                            <div class="project-tags">
+                                <span class="tag">React</span>
+                                <span class="tag">Node.js</span>
+                                <span class="tag">MongoDB</span>
+                            </div>
+                            <div class="project-footer">
+                                <div class="project-price">
+                                    <i class="fas fa-coins"></i>
+                                    <span>599 积分</span>
+                                </div>
+                                <div class="project-actions">
+                                    <button class="btn btn-sm btn-outline">
+                                        <i class="fas fa-play"></i>
+                                        演示
+                                    </button>
+                                    <button class="btn btn-sm btn-primary">购买</button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="project-card">
+                        <div class="project-image">
+                            <div class="project-placeholder">
+                                <i class="fab fa-java"></i>
+                            </div>
+                            <div class="project-badges">
+                                <span class="badge badge-docker">
+                                    <i class="fab fa-docker"></i>
+                                    Docker
+                                </span>
+                            </div>
+                        </div>
+                        <div class="project-content">
+                            <h3 class="project-title">Spring Boot 微服务</h3>
+                            <p class="project-description">
+                                企业级微服务架构，包含网关、认证、配置中心等组件
+                            </p>
+                            <div class="project-tags">
+                                <span class="tag">Spring Boot</span>
+                                <span class="tag">微服务</span>
+                                <span class="tag">Redis</span>
+                            </div>
+                            <div class="project-footer">
+                                <div class="project-price">
+                                    <i class="fas fa-coins"></i>
+                                    <span>899 积分</span>
+                                </div>
+                                <div class="project-actions">
+                                    <button class="btn btn-sm btn-outline">
+                                        <i class="fas fa-play"></i>
+                                        演示
+                                    </button>
+                                    <button class="btn btn-sm btn-primary">购买</button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- 平台统计 -->
+        <section class="stats">
+            <div class="container">
+                <div class="stats-grid">
+                    <div class="stat-item">
+                        <div class="stat-number">1,234</div>
+                        <div class="stat-label">优质项目</div>
+                    </div>
+                    <div class="stat-item">
+                        <div class="stat-number">5,678</div>
+                        <div class="stat-label">注册用户</div>
+                    </div>
+                    <div class="stat-item">
+                        <div class="stat-number">9,876</div>
+                        <div class="stat-label">成功交易</div>
+                    </div>
+                    <div class="stat-item">
+                        <div class="stat-number">98%</div>
+                        <div class="stat-label">部署成功率</div>
+                    </div>
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <!-- 底部 -->
+    <footer class="footer">
+        <div class="container">
+            <div class="footer-content">
+                <div class="footer-section">
+                    <div class="footer-brand">
+                        <div class="logo">
+                            <i class="fas fa-code"></i>
+                            <span class="brand-name">速码网</span>
+                        </div>
+                        <p class="footer-description">
+                            专业的源码交易平台，为开发者提供高质量的源码交易和部署服务
+                        </p>
+                    </div>
+                </div>
+                <div class="footer-section">
+                    <h4 class="footer-title">产品</h4>
+                    <ul class="footer-links">
+                        <li><a href="#">项目市场</a></li>
+                        <li><a href="#">一键部署</a></li>
+                        <li><a href="#">积分系统</a></li>
+                        <li><a href="#">API文档</a></li>
+                    </ul>
+                </div>
+                <div class="footer-section">
+                    <h4 class="footer-title">支持</h4>
+                    <ul class="footer-links">
+                        <li><a href="#">帮助中心</a></li>
+                        <li><a href="#">开发者指南</a></li>
+                        <li><a href="#">联系我们</a></li>
+                        <li><a href="#">意见反馈</a></li>
+                    </ul>
+                </div>
+                <div class="footer-section">
+                    <h4 class="footer-title">关于</h4>
+                    <ul class="footer-links">
+                        <li><a href="#">关于我们</a></li>
+                        <li><a href="#">服务条款</a></li>
+                        <li><a href="#">隐私政策</a></li>
+                        <li><a href="#">加入我们</a></li>
+                    </ul>
+                </div>
+            </div>
+            <div class="footer-bottom">
+                <p>&copy; 2024 速码网. 保留所有权利.</p>
+            </div>
+        </div>
+    </footer>
+
+    <script src="js/main.js"></script>
+</body>
+</html>

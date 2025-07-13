@@ -1,0 +1,462 @@
+/* 速码网响应式样式 */
+
+/* ========== 断点定义 ========== */
+/* xs: 0px - 575px (手机) */
+/* sm: 576px - 767px (大手机) */
+/* md: 768px - 991px (平板) */
+/* lg: 992px - 1199px (小桌面) */
+/* xl: 1200px - 1399px (桌面) */
+/* 2xl: 1400px+ (大桌面) */
+
+/* ========== 大桌面 (1400px+) ========== */
+@media (min-width: 1400px) {
+  .container {
+    max-width: var(--container-2xl);
+  }
+  
+  .hero-title {
+    font-size: 48px;
+  }
+  
+  .section-title {
+    font-size: 36px;
+  }
+}
+
+/* ========== 桌面 (1200px - 1399px) ========== */
+@media (max-width: 1399px) {
+  .container {
+    max-width: var(--container-xl);
+  }
+}
+
+/* ========== 小桌面 (992px - 1199px) ========== */
+@media (max-width: 1199px) {
+  .container {
+    max-width: var(--container-lg);
+  }
+  
+  .nav-search {
+    flex: 0 0 250px;
+  }
+  
+  .hero-content {
+    gap: var(--spacing-2xl);
+  }
+  
+  .features-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+  
+  .projects-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+  
+  .footer-content {
+    grid-template-columns: 1fr 1fr 1fr 1fr;
+  }
+}
+
+/* ========== 平板 (768px - 991px) ========== */
+@media (max-width: 991px) {
+  .container {
+    max-width: var(--container-md);
+    padding: 0 var(--spacing-lg);
+  }
+  
+  /* 导航栏调整 */
+  .navbar .container {
+    gap: var(--spacing-md);
+  }
+  
+  .nav-links {
+    gap: var(--spacing-lg);
+    margin-left: var(--spacing-lg);
+  }
+  
+  .nav-search {
+    flex: 0 0 200px;
+  }
+  
+  /* Hero区域调整 */
+  .hero {
+    padding: var(--spacing-2xl) 0;
+  }
+  
+  .hero-content {
+    grid-template-columns: 1fr;
+    gap: var(--spacing-xl);
+    text-align: center;
+  }
+  
+  .hero-title {
+    font-size: 36px;
+  }
+  
+  .hero-subtitle {
+    font-size: var(--font-size-base);
+  }
+  
+  .hero-actions {
+    justify-content: center;
+  }
+  
+  .hero-features {
+    justify-content: center;
+  }
+  
+  .code-window {
+    transform: none;
+    max-width: 400px;
+    margin: 0 auto;
+  }
+  
+  /* 特色功能调整 */
+  .features {
+    padding: var(--spacing-2xl) 0;
+  }
+  
+  .features-grid {
+    grid-template-columns: 1fr;
+    gap: var(--spacing-lg);
+  }
+  
+  .section-title {
+    font-size: 28px;
+  }
+  
+  /* 项目展示调整 */
+  .projects {
+    padding: var(--spacing-2xl) 0;
+  }
+  
+  .projects-grid {
+    grid-template-columns: 1fr;
+  }
+  
+  .view-all-link {
+    position: static;
+    margin-top: var(--spacing-md);
+    justify-content: center;
+  }
+  
+  /* 统计区域调整 */
+  .stats {
+    padding: var(--spacing-2xl) 0;
+  }
+  
+  .stats-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+  
+  .stat-number {
+    font-size: 32px;
+  }
+  
+  /* 底部调整 */
+  .footer {
+    padding: var(--spacing-2xl) 0 var(--spacing-lg);
+  }
+  
+  .footer-content {
+    grid-template-columns: 1fr 1fr;
+    gap: var(--spacing-lg);
+  }
+}
+
+/* ========== 大手机 (576px - 767px) ========== */
+@media (max-width: 767px) {
+  .container {
+    max-width: var(--container-sm);
+  }
+  
+  /* 导航栏移动端 */
+  .nav-menu,
+  .nav-search {
+    display: none;
+  }
+  
+  .mobile-menu-toggle {
+    display: block;
+  }
+  
+  .nav-user .user-actions {
+    gap: var(--spacing-xs);
+  }
+  
+  .nav-user .btn {
+    padding: var(--spacing-xs) var(--spacing-sm);
+    font-size: var(--font-size-xs);
+  }
+  
+  /* Hero区域移动端 */
+  .hero {
+    padding: var(--spacing-xl) 0;
+  }
+  
+  .hero-title {
+    font-size: 28px;
+  }
+  
+  .hero-subtitle {
+    font-size: var(--font-size-sm);
+  }
+  
+  .hero-actions {
+    flex-direction: column;
+    gap: var(--spacing-sm);
+  }
+  
+  .hero-actions .btn {
+    width: 100%;
+  }
+  
+  .hero-features {
+    flex-direction: column;
+    gap: var(--spacing-sm);
+  }
+  
+  /* 特色功能移动端 */
+  .features {
+    padding: var(--spacing-xl) 0;
+  }
+  
+  .section-title {
+    font-size: 24px;
+  }
+  
+  .section-subtitle {
+    font-size: var(--font-size-base);
+  }
+  
+  .feature-card {
+    padding: var(--spacing-lg);
+  }
+  
+  .feature-icon {
+    width: 48px;
+    height: 48px;
+    font-size: var(--font-size-xl);
+  }
+  
+  /* 项目展示移动端 */
+  .projects {
+    padding: var(--spacing-xl) 0;
+  }
+  
+  .project-card {
+    margin-bottom: var(--spacing-md);
+  }
+  
+  .project-image {
+    height: 150px;
+  }
+  
+  .project-placeholder {
+    font-size: 32px;
+  }
+  
+  .project-content {
+    padding: var(--spacing-md);
+  }
+  
+  .project-footer {
+    flex-direction: column;
+    gap: var(--spacing-sm);
+    align-items: stretch;
+  }
+  
+  .project-actions {
+    justify-content: space-between;
+  }
+  
+  .project-actions .btn {
+    flex: 1;
+  }
+  
+  /* 统计区域移动端 */
+  .stats {
+    padding: var(--spacing-xl) 0;
+  }
+  
+  .stats-grid {
+    grid-template-columns: 1fr;
+    gap: var(--spacing-md);
+  }
+  
+  .stat-number {
+    font-size: 28px;
+  }
+  
+  .stat-label {
+    font-size: var(--font-size-base);
+  }
+  
+  /* 底部移动端 */
+  .footer-content {
+    grid-template-columns: 1fr;
+    text-align: center;
+  }
+  
+  .footer-brand {
+    margin-bottom: var(--spacing-lg);
+  }
+}
+
+/* ========== 手机 (最大575px) ========== */
+@media (max-width: 575px) {
+  .container {
+    padding: 0 var(--spacing-md);
+  }
+  
+  /* 导航栏超小屏 */
+  .navbar {
+    padding: var(--spacing-sm) 0;
+  }
+  
+  .nav-brand .logo {
+    font-size: var(--font-size-lg);
+  }
+  
+  .nav-brand .logo i {
+    font-size: var(--font-size-xl);
+  }
+  
+  /* Hero区域超小屏 */
+  .hero-title {
+    font-size: 24px;
+  }
+  
+  .hero-subtitle {
+    font-size: var(--font-size-sm);
+    margin-bottom: var(--spacing-lg);
+  }
+  
+  .code-window {
+    max-width: 100%;
+  }
+  
+  .window-content {
+    padding: var(--spacing-sm);
+  }
+  
+  .code-content {
+    font-size: var(--font-size-xs);
+  }
+  
+  /* 按钮调整 */
+  .btn-large {
+    padding: var(--spacing-sm) var(--spacing-lg);
+    font-size: var(--font-size-base);
+  }
+  
+  /* 特色功能超小屏 */
+  .section-title {
+    font-size: 20px;
+  }
+  
+  .section-subtitle {
+    font-size: var(--font-size-sm);
+  }
+  
+  .feature-card {
+    padding: var(--spacing-md);
+  }
+  
+  .feature-title {
+    font-size: var(--font-size-lg);
+  }
+  
+  /* 项目卡片超小屏 */
+  .project-image {
+    height: 120px;
+  }
+  
+  .project-placeholder {
+    font-size: 24px;
+  }
+  
+  .project-title {
+    font-size: var(--font-size-base);
+  }
+  
+  .project-description {
+    font-size: var(--font-size-sm);
+  }
+  
+  /* 统计超小屏 */
+  .stat-number {
+    font-size: 24px;
+  }
+  
+  .stat-label {
+    font-size: var(--font-size-sm);
+  }
+}
+
+/* ========== 触摸设备优化 ========== */
+@media (hover: none) and (pointer: coarse) {
+  /* 移除hover效果，增加点击区域 */
+  .btn {
+    min-height: 44px;
+  }
+  
+  .nav-link {
+    padding: var(--spacing-sm) 0;
+  }
+  
+  .project-card:hover,
+  .feature-card:hover {
+    transform: none;
+  }
+  
+  /* 增加触摸友好的间距 */
+  .project-actions .btn {
+    min-height: 40px;
+  }
+  
+  .search-input {
+    font-size: 16px; /* 防止iOS缩放 */
+  }
+}
+
+/* ========== 高分辨率屏幕优化 ========== */
+@media (-webkit-min-device-pixel-ratio: 2), (min-resolution: 192dpi) {
+  /* 高分辨率屏幕的图标和边框优化 */
+  .window-controls .control {
+    border: 0.5px solid rgba(255, 255, 255, 0.1);
+  }
+  
+  .nav-link.active::after {
+    height: 1.5px;
+  }
+}
+
+/* ========== 打印样式 ========== */
+@media print {
+  .header,
+  .footer,
+  .hero-actions,
+  .project-actions,
+  .btn {
+    display: none !important;
+  }
+  
+  .hero {
+    background: none !important;
+    padding: var(--spacing-lg) 0;
+  }
+  
+  .code-window {
+    transform: none;
+    box-shadow: none;
+    border: 1px solid #ccc;
+  }
+  
+  .project-card,
+  .feature-card {
+    break-inside: avoid;
+    box-shadow: none;
+    border: 1px solid #ccc;
+  }
+}
