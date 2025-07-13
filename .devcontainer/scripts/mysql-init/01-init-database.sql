@@ -155,6 +155,8 @@ CREATE TABLE IF NOT EXISTS `point_transactions` (
     `reference_type` varchar(50) DEFAULT NULL COMMENT '关联类型',
     `status` tinyint DEFAULT '1' COMMENT '状态：0-失败，1-成功，2-处理中',
     `created_time` datetime DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
+    `updated_time` datetime DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '更新时间',
+    `version` bigint DEFAULT '0' COMMENT '版本号',
     PRIMARY KEY (`id`),
     KEY `fk_point_transaction_user` (`user_id`),
     KEY `idx_type` (`type`),

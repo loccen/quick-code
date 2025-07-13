@@ -124,6 +124,7 @@
 <script setup lang="ts">
 import ModernButton from '@/components/ui/ModernButton.vue'
 import ModernCard from '@/components/ui/ModernCard.vue'
+import { authApi } from '@/api/modules/auth'
 import { useAppStore } from '@/stores/app'
 import { useUserStore } from '@/stores/user'
 import type { RegisterRequest } from '@/types/user'
@@ -154,7 +155,7 @@ const registerRules = {
   ],
   email: [
     { required: true, message: '请输入邮箱', trigger: 'blur' },
-    { type: 'email', message: '请输入正确的邮箱格式', trigger: 'blur' }
+    { type: 'email' as const, message: '请输入正确的邮箱格式', trigger: 'blur' }
   ],
   password: [
     { required: true, message: '请输入密码', trigger: 'blur' },
@@ -174,11 +175,13 @@ const registerRules = {
     }
   ],
   emailCode: [
-    { required: true, message: '请输入邮箱验证码', trigger: 'blur' }
+    { required: true, message: '请输入邮箱验证码', trigger: 'blur' },
+    { len: 6, message: '验证码为6位数字', trigger: 'blur' },
+    { pattern: /^\d{6}$/, message: '验证码必须为6位数字', trigger: 'blur' }
   ],
   agreeTerms: [
     {
-      validator: (rule: any, value: boolean, callback: Function) => {
+      validator: (_rule: any, value: boolean, callback: Function) => {
         if (!value) {
           callback(new Error('请同意用户协议和隐私政策'))
         } else {
@@ -200,8 +203,8 @@ const sendEmailCode = async () => {
   }
 
   try {
-    // 这里应该调用发送验证码的API
-    ElMessage.success('验证码已发送')
+    await authApi.sendEmailVerification(registerForm.email)
+    ElMessage.success('验证码已发送，请查收邮件（开发环境验证码：123456）')
 
     // 开始倒计时
     codeCountdown.value = 60
@@ -213,6 +216,7 @@ const sendEmailCode = async () => {
     }, 1000)
   } catch (error) {
     console.error('发送验证码失败:', error)
+    ElMessage.error('发送验证码失败，请稍后重试')
   }
 }
 

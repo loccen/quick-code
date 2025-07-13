@@ -156,7 +156,7 @@
       "name": "🚀 启动完整开发环境",
       "type": "node-terminal",
       "request": "launch",
-      "command": "./scripts/dev-tools.sh start",
+      "command": "./scripts/dev-tools.sh restart",
       "cwd": "${workspaceFolder}",
       "group": "development",
       "presentation": {

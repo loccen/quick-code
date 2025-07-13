@@ -1,12 +1,13 @@
 /**
  * 用户状态管理
  */
-import { defineStore } from 'pinia'
-import { ref, computed } from 'vue'
-import { ElMessage } from 'element-plus'
+import { authApi } from '@/api/modules/auth'
 import { userApi } from '@/api/user'
 import { envConfig } from '@/config/env'
-import type { User, LoginRequest, RegisterRequest, UpdateUserRequest } from '@/types/user'
+import type { LoginRequest, RegisterRequest, UpdateUserRequest, User } from '@/types/user'
+import { ElMessage } from 'element-plus'
+import { defineStore } from 'pinia'
+import { computed, ref } from 'vue'
 
 /**
  * 用户状态store
@@ -58,7 +59,7 @@ export const useUserStore = defineStore('user', () => {
     token.value = accessToken
     refreshToken.value = refreshTokenValue
     isLoggedIn.value = true
-    
+
     localStorage.setItem(envConfig.TOKEN_KEY, accessToken)
     localStorage.setItem(envConfig.REFRESH_TOKEN_KEY, refreshTokenValue)
   }
@@ -72,7 +73,7 @@ export const useUserStore = defineStore('user', () => {
     refreshToken.value = ''
     isLoggedIn.value = false
     permissions.value = []
-    
+
     localStorage.removeItem(envConfig.TOKEN_KEY)
     localStorage.removeItem(envConfig.REFRESH_TOKEN_KEY)
     localStorage.removeItem('user_info')
@@ -83,7 +84,7 @@ export const useUserStore = defineStore('user', () => {
    */
   const login = async (loginData: LoginRequest): Promise<boolean> => {
     try {
-      const response = await userApi.login(loginData)
+      const response = await authApi.login(loginData)
       const { accessToken, refreshToken: refreshTokenValue, user: userInfo } = response.data
 
       setTokens(accessToken, refreshTokenValue)
@@ -102,7 +103,7 @@ export const useUserStore = defineStore('user', () => {
    */
   const register = async (registerData: RegisterRequest): Promise<boolean> => {
     try {
-      await userApi.register(registerData)
+      await authApi.register(registerData)
       ElMessage.success('注册成功，请登录')
       return true
     } catch (error) {
@@ -116,13 +117,13 @@ export const useUserStore = defineStore('user', () => {
    */
   const logout = async (): Promise<void> => {
     try {
-      await userApi.logout()
+      await authApi.logout()
     } catch (error) {
       console.error('登出请求失败:', error)
     } finally {
       clearUserState()
       ElMessage.success('已退出登录')
-      
+
       // 跳转到登录页
       window.location.href = '/login'
     }
@@ -137,7 +138,7 @@ export const useUserStore = defineStore('user', () => {
         throw new Error('没有刷新令牌')
       }
 
-      const response = await userApi.refreshToken({ refreshToken: refreshToken.value })
+      const response = await authApi.refreshToken(refreshToken.value)
       const { accessToken, refreshToken: newRefreshToken } = response.data
 
       setTokens(accessToken, newRefreshToken)
@@ -185,7 +186,7 @@ export const useUserStore = defineStore('user', () => {
     try {
       const response = await userApi.uploadAvatar(file)
       if (user.value) {
-        user.value.avatar = response.data.url
+        user.value.avatarUrl = response.data.url
         localStorage.setItem('user_info', JSON.stringify(user.value))
       }
       ElMessage.success('头像上传成功')
@@ -207,7 +208,7 @@ export const useUserStore = defineStore('user', () => {
    * 检查角色
    */
   const hasRole = (roleCode: string): boolean => {
-    return userRoles.value.some(role => role.code === roleCode)
+    return userRoles.value.some(role => role === roleCode)
   }
 
   /**
@@ -234,12 +235,12 @@ export const useUserStore = defineStore('user', () => {
     refreshToken,
     isLoggedIn,
     permissions,
-    
+
     // 计算属性
     isAuthenticated,
     userRoles,
     userPermissions,
-    
+
     // 方法
     login,
     register,

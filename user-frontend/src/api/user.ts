@@ -1,20 +1,17 @@
 /**
  * 用户相关API服务
  */
-import { BaseApiService } from './base'
-import type { 
-  User, 
-  LoginRequest, 
-  LoginResponse, 
-  RegisterRequest, 
-  ResetPasswordRequest,
+import type { ApiResponse, PageRequest, PageResponse } from '@/types/api'
+import type {
   ChangePasswordRequest,
+  LoginRequest,
+  LoginResponse,
+  RegisterRequest,
   UpdateUserRequest,
-  SendEmailCodeRequest,
-  RefreshTokenRequest,
+  User,
   UserQueryParams
 } from '@/types/user'
-import type { ApiResponse, PageResponse, PageRequest } from '@/types/api'
+import { BaseApiService } from './base'
 
 /**
  * 用户API服务类
@@ -28,42 +25,84 @@ class UserApiService extends BaseApiService {
    * 用户登录
    */
   login(data: LoginRequest): Promise<ApiResponse<LoginResponse>> {
-    return this.post('/auth/login', data)
+    return this.request.post('/auth/login', data)
   }
 
   /**
    * 用户注册
    */
-  register(data: RegisterRequest): Promise<ApiResponse<User>> {
-    return this.post('/auth/register', data)
+  register(data: RegisterRequest): Promise<ApiResponse<LoginResponse>> {
+    return this.request.post('/auth/register', data)
   }
 
   /**
    * 用户登出
    */
   logout(): Promise<ApiResponse<void>> {
-    return this.post('/auth/logout')
+    return this.request.post('/auth/logout')
   }
 
   /**
    * 刷新令牌
    */
-  refreshToken(data: RefreshTokenRequest): Promise<ApiResponse<LoginResponse>> {
-    return this.post('/auth/refresh', data)
+  refreshToken(refreshToken: string): Promise<ApiResponse<LoginResponse>> {
+    return this.request.post('/auth/refresh', null, {
+      params: { refreshToken }
+    })
   }
 
   /**
    * 发送邮箱验证码
    */
-  sendEmailCode(data: SendEmailCodeRequest): Promise<ApiResponse<void>> {
-    return this.post('/auth/send-email-code', data)
+  sendEmailVerification(email: string): Promise<ApiResponse<void>> {
+    return this.request.post('/auth/send-email-verification', null, {
+      params: { email }
+    })
+  }
+
+  /**
+   * 验证邮箱
+   */
+  verifyEmail(token: string): Promise<ApiResponse<void>> {
+    return this.request.post('/auth/verify-email', null, {
+      params: { token }
+    })
+  }
+
+  /**
+   * 发送密码重置邮件
+   */
+  forgotPassword(email: string): Promise<ApiResponse<void>> {
+    return this.request.post('/auth/forgot-password', null, {
+      params: { email }
+    })
   }
 
   /**
    * 重置密码
    */
-  resetPassword(data: ResetPasswordRequest): Promise<ApiResponse<void>> {
-    return this.post('/auth/reset-password', data)
+  resetPassword(token: string, newPassword: string): Promise<ApiResponse<void>> {
+    return this.request.post('/auth/reset-password', null, {
+      params: { token, newPassword }
+    })
+  }
+
+  /**
+   * 检查用户名是否可用
+   */
+  checkUsername(username: string): Promise<ApiResponse<boolean>> {
+    return this.request.get('/auth/check-username', {
+      params: { username }
+    })
+  }
+
+  /**
+   * 检查邮箱是否可用
+   */
+  checkEmail(email: string): Promise<ApiResponse<boolean>> {
+    return this.request.get('/auth/check-email', {
+      params: { email }
+    })
   }
 
   /**

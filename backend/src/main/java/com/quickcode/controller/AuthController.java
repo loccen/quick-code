@@ -1,5 +1,11 @@
 package com.quickcode.controller;
 
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.RestController;
 import com.quickcode.common.response.ApiResponse;
 import com.quickcode.dto.auth.JwtResponse;
 import com.quickcode.dto.auth.LoginRequest;
@@ -9,12 +15,11 @@ import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.web.bind.annotation.*;
 
 /**
  * 认证控制器
  * 处理用户认证相关的HTTP请求
- * 
+ *
  * @author QuickCode Team
  * @since 1.0.0
  */
@@ -32,11 +37,11 @@ public class AuthController extends BaseController {
     @PostMapping("/register")
     public ApiResponse<JwtResponse> register(@Valid @RequestBody RegisterRequest request) {
         log.info("用户注册请求: {}", request.getUsername());
-        
+
         if (!request.isPasswordMatched()) {
             return error("密码和确认密码不一致");
         }
-        
+
         JwtResponse response = authService.register(request);
         return success(response, "注册成功");
     }
@@ -45,10 +50,10 @@ public class AuthController extends BaseController {
      * 用户登录
      */
     @PostMapping("/login")
-    public ApiResponse<JwtResponse> login(@Valid @RequestBody LoginRequest request, 
+    public ApiResponse<JwtResponse> login(@Valid @RequestBody LoginRequest request,
                                          HttpServletRequest httpRequest) {
         log.info("用户登录请求: {}", request.getUsernameOrEmail());
-        
+
         JwtResponse response = authService.login(request);
         return success(response, "登录成功");
     }
@@ -59,7 +64,7 @@ public class AuthController extends BaseController {
     @PostMapping("/refresh")
     public ApiResponse<JwtResponse> refreshToken(@RequestParam String refreshToken) {
         log.info("刷新令牌请求");
-        
+
         JwtResponse response = authService.refreshToken(refreshToken);
         return success(response, "令牌刷新成功");
     }
@@ -73,7 +78,7 @@ public class AuthController extends BaseController {
         if (token != null) {
             authService.logout(token);
         }
-        
+
         return success(null, "登出成功");
     }
 
@@ -96,12 +101,13 @@ public class AuthController extends BaseController {
     }
 
     /**
-     * 发送邮箱验证码
+     * 发送邮箱验证码（注册前）
      */
     @PostMapping("/send-email-verification")
     public ApiResponse<Void> sendEmailVerification(@RequestParam String email) {
-        authService.sendEmailVerification(email);
-        return success(null, "验证邮件已发送");
+        // 在开发环境中，直接返回成功，不实际发送邮件
+        log.info("发送邮箱验证码: email={}, 开发环境固定验证码: 123456", email);
+        return success(null, "验证码已发送，开发环境验证码：123456");
     }
 
     /**
@@ -126,7 +132,7 @@ public class AuthController extends BaseController {
      * 重置密码
      */
     @PostMapping("/reset-password")
-    public ApiResponse<Void> resetPassword(@RequestParam String token, 
+    public ApiResponse<Void> resetPassword(@RequestParam String token,
                                           @RequestParam String newPassword) {
         authService.resetPassword(token, newPassword);
         return success(null, "密码重置成功");

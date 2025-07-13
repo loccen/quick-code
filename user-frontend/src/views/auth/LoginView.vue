@@ -439,7 +439,7 @@ onMounted(() => {
         height: 0 !important;
         border-top: 6px solid transparent !important;
         border-bottom: 6px solid transparent !important;
-        border-right: 6px solid rgb(156, 176, 66) !important;
+        border-right: 6px solid rgba(255, 77, 79, 1) !important;
       }
     }
 

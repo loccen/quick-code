@@ -5,7 +5,7 @@
       <div class="container">
         <h1 class="market-title">项目市场</h1>
         <p class="market-subtitle">发现优质的源码项目，加速您的开发进程</p>
-        
+
         <!-- 搜索和筛选 -->
         <div class="search-section">
           <div class="search-bar">
@@ -24,7 +24,7 @@
               </template>
             </el-input>
           </div>
-          
+
           <div class="filter-bar">
             <el-select
               v-model="selectedCategory"
@@ -39,7 +39,7 @@
                 :value="category.code"
               />
             </el-select>
-            
+
             <el-select
               v-model="sortBy"
               placeholder="排序方式"
@@ -98,13 +98,13 @@
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted, computed } from 'vue'
-import { useRouter } from 'vue-router'
-import { ElMessage } from 'element-plus'
-import { Search } from '@element-plus/icons-vue'
+import { publicProjectApi } from '@/api/modules/public'
 import ProjectCard from '@/components/market/ProjectCard.vue'
 import { useUserStore } from '@/stores/user'
-import { publicProjectApi } from '@/api/modules/public'
+import { Search } from '@element-plus/icons-vue'
+import { ElMessage } from 'element-plus'
+import { computed, onMounted, ref } from 'vue'
+import { useRouter } from 'vue-router'
 
 const router = useRouter()
 const userStore = useUserStore()
@@ -119,8 +119,8 @@ const pageSize = ref(12)
 
 const projects = ref<any[]>([])
 const categories = ref<any[]>([])
-const totalElements = ref(0)
-const totalPages = computed(() => Math.ceil(totalElements.value / pageSize.value))
+const total = ref(0)
+const totalPages = computed(() => Math.ceil(total.value / pageSize.value))
 
 /**
  * 获取项目分类
@@ -148,10 +148,10 @@ const fetchProjects = async () => {
       sortBy: sortBy.value,
       sortDir: 'desc'
     }
-    
+
     const response = await publicProjectApi.getProjects(params)
     projects.value = response.data.content
-    totalElements.value = response.data.totalElements
+    total.value = response.data.total
   } catch (error) {
     console.error('获取项目列表失败:', error)
     ElMessage.error('获取项目列表失败')
@@ -220,7 +220,7 @@ const handlePurchase = (project: any) => {
     })
     return
   }
-  
+
   // 跳转到购买页面或显示购买弹窗
   ElMessage.info('购买功能开发中...')
 }
@@ -237,7 +237,7 @@ const handleDemo = (project: any) => {
     })
     return
   }
-  
+
   // 打开演示页面
   ElMessage.info('演示功能开发中...')
 }

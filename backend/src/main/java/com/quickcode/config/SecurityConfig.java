@@ -132,7 +132,10 @@ public class SecurityConfig {
     // 允许的源
     configuration.setAllowedOriginPatterns(List.of("http://localhost:3000", // 用户端前端
         "http://localhost:3001", // 管理后台前端
-        "http://127.0.0.1:3000", "http://127.0.0.1:3001"));
+        "http://localhost:5173", // Vite开发服务器（用户端）
+        "http://localhost:5174", // Vite开发服务器（管理后台）
+        "http://127.0.0.1:3000", "http://127.0.0.1:3001",
+        "http://127.0.0.1:5173", "http://127.0.0.1:5174"));
 
     // 允许的HTTP方法
     configuration

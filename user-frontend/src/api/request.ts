@@ -16,8 +16,8 @@ const request: AxiosInstance = axios.create({
 request.interceptors.request.use(
   (config: AxiosRequestConfig) => {
     // 检查是否为公开API，公开API不需要添加认证头
-    const isPublicApi = config.url?.includes('/api/public/') ||
-                       config.url?.includes('/api/auth/')
+    const isPublicApi = config.url?.includes('/public/') ||
+                       config.url?.includes('/auth/')
 
     // 添加认证token（仅对非公开API）
     if (!isPublicApi) {

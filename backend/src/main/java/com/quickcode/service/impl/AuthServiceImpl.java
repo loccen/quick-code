@@ -43,6 +43,14 @@ public class AuthServiceImpl implements AuthService {
       throw new IllegalArgumentException("密码和确认密码不一致");
     }
 
+    // 验证是否同意用户协议和隐私政策
+    if (!request.isAgreeTerms()) {
+      throw new IllegalArgumentException("必须同意用户协议和隐私政策");
+    }
+
+    // 验证邮箱验证码
+    validateEmailVerificationCode(request.getEmail(), request.getEmailCode());
+
     // 调用UserService进行注册
     User user =
         userService.register(request.getUsername(), request.getEmail(), request.getPassword());
@@ -227,6 +235,20 @@ public class AuthServiceImpl implements AuthService {
   @Override
   public boolean isEmailAvailable(String email) {
     return userService.isEmailAvailable(email);
+  }
+
+  /**
+   * 验证邮箱验证码（注册时使用）
+   */
+  private void validateEmailVerificationCode(String email, String code) {
+    log.debug("验证邮箱验证码: email={}, code={}", email, code);
+
+    // 在开发和测试环境中，直接验证固定验证码
+    if (!emailProperties.getVerificationCode().equals(code)) {
+      throw new IllegalArgumentException("邮箱验证码不正确");
+    }
+
+    log.debug("邮箱验证码验证成功: email={}", email);
   }
 
   /**

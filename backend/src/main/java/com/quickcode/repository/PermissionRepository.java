@@ -126,7 +126,7 @@ public interface PermissionRepository extends BaseRepository<Permission, Long> {
   /**
    * 根据权限类型统计权限数量
    */
-  @Query("SELECT COUNT(p) FROM Permission p WHERE p.permissionType = :permissionType")
+  @Query("SELECT COUNT(p) FROM Permission p WHERE p.resourceType = :permissionType")
   Long countByPermissionType(@Param("permissionType") String permissionType);
 
   /**

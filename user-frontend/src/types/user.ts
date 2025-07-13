@@ -7,7 +7,7 @@
  */
 export interface User {
   /** 用户ID */
-  id: string
+  id: number
   /** 用户名 */
   username: string
   /** 邮箱 */
@@ -15,7 +15,7 @@ export interface User {
   /** 昵称 */
   nickname?: string
   /** 头像URL */
-  avatar?: string
+  avatarUrl?: string
   /** 手机号 */
   phone?: string
   /** 性别 */
@@ -25,17 +25,21 @@ export interface User {
   /** 个人简介 */
   bio?: string
   /** 用户状态 */
-  status: 'ACTIVE' | 'INACTIVE' | 'BANNED'
+  status: number
+  /** 邮箱是否已验证 */
+  emailVerified?: boolean
+  /** 是否启用双因素认证 */
+  twoFactorEnabled?: boolean
   /** 角色列表 */
-  roles: Role[]
+  roles?: string[]
   /** 权限列表 */
-  permissions: string[]
+  permissions?: string[]
   /** 创建时间 */
-  createdAt: string
+  createdAt?: string
   /** 更新时间 */
-  updatedAt: string
+  updatedAt?: string
   /** 最后登录时间 */
-  lastLoginAt?: string
+  lastLoginTime?: string
 }
 
 /**
@@ -116,7 +120,7 @@ export interface RegisterRequest {
   confirmPassword: string
   /** 邮箱验证码 */
   emailCode: string
-  /** 同意条款 */
+  /** 是否同意用户协议和隐私政策 */
   agreeTerms: boolean
 }
 

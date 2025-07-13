@@ -2,8 +2,8 @@
  * 公开API模块
  * 提供无需认证的公开接口
  */
-import { request } from '../request'
 import type { ApiResponse, PageResponse } from '@/types/api'
+import { request } from '../request'
 
 /**
  * 项目查询参数
@@ -58,28 +58,28 @@ export const publicProjectApi = {
    * 获取项目列表
    */
   getProjects(params: ProjectQueryParams = {}): Promise<ApiResponse<PageResponse<Project>>> {
-    return request.get('/api/public/projects', { params })
+    return request.get('/public/projects', { params })
   },
 
   /**
    * 获取项目详情
    */
   getProjectDetail(id: number): Promise<ApiResponse<Project>> {
-    return request.get(`/api/public/projects/${id}`)
+    return request.get(`/public/projects/${id}`)
   },
 
   /**
    * 获取项目分类
    */
   getCategories(): Promise<ApiResponse<ProjectCategory[]>> {
-    return request.get('/api/public/projects/categories')
+    return request.get('/public/projects/categories')
   },
 
   /**
    * 搜索项目
    */
   searchProjects(keyword: string, limit = 10): Promise<ApiResponse<Project[]>> {
-    return request.get('/api/public/projects/search', {
+    return request.get('/public/projects/search', {
       params: { keyword, limit }
     })
   }
@@ -93,14 +93,14 @@ export const publicContentApi = {
    * 获取平台统计信息
    */
   getPlatformStats(): Promise<ApiResponse<any>> {
-    return request.get('/api/public/stats')
+    return request.get('/public/stats')
   },
 
   /**
    * 获取热门项目
    */
   getHotProjects(limit = 6): Promise<ApiResponse<Project[]>> {
-    return request.get('/api/public/projects/hot', {
+    return request.get('/public/projects/hot', {
       params: { limit }
     })
   },
@@ -109,7 +109,7 @@ export const publicContentApi = {
    * 获取最新项目
    */
   getLatestProjects(limit = 6): Promise<ApiResponse<Project[]>> {
-    return request.get('/api/public/projects/latest', {
+    return request.get('/public/projects/latest', {
       params: { limit }
     })
   },
@@ -118,7 +118,7 @@ export const publicContentApi = {
    * 获取推荐项目
    */
   getFeaturedProjects(limit = 6): Promise<ApiResponse<Project[]>> {
-    return request.get('/api/public/projects/featured', {
+    return request.get('/public/projects/featured', {
       params: { limit }
     })
   }
@@ -132,7 +132,7 @@ export const publicUserApi = {
    * 检查用户名是否可用
    */
   checkUsername(username: string): Promise<ApiResponse<{ available: boolean }>> {
-    return request.get('/api/public/users/check-username', {
+    return request.get('/public/users/check-username', {
       params: { username }
     })
   },
@@ -141,7 +141,7 @@ export const publicUserApi = {
    * 检查邮箱是否可用
    */
   checkEmail(email: string): Promise<ApiResponse<{ available: boolean }>> {
-    return request.get('/api/public/users/check-email', {
+    return request.get('/public/users/check-email', {
       params: { email }
     })
   }

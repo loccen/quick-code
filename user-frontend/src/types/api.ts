@@ -31,7 +31,7 @@ export interface PageResponse<T = any> {
   /** 总页数 */
   totalPages: number
   /** 总记录数 */
-  totalElements: number
+  total: number
   /** 是否为第一页 */
   first: boolean
   /** 是否为最后一页 */
@@ -40,6 +40,10 @@ export interface PageResponse<T = any> {
   hasNext: boolean
   /** 是否有上一页 */
   hasPrevious: boolean
+  /** 是否为空页 */
+  empty: boolean
+  /** 当前页记录数 */
+  currentSize: number
 }
 
 /**
