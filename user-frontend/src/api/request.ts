@@ -100,4 +100,5 @@ export const api = {
   }
 }
 
+export { request }
 export default request

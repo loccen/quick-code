@@ -1,152 +1,112 @@
 <template>
   <div class="public-layout">
-    <!-- 公开页面头部 -->
-    <header class="public-header">
-      <div class="header-container">
-        <!-- Logo和网站名称 -->
-        <div class="logo-section">
-          <router-link to="/" class="logo-link">
-            <img src="/src/assets/logo.svg" alt="速码网" class="logo-image" />
-            <span class="site-name">速码网</span>
-          </router-link>
-        </div>
+    <!-- 顶部导航栏 -->
+    <header class="header">
+      <nav class="navbar">
+        <div class="container">
+          <div class="nav-brand">
+            <div class="logo">
+              <i class="fas fa-code"></i>
+              <span class="brand-name">速码网</span>
+            </div>
+          </div>
 
-        <!-- 导航菜单 -->
-        <nav class="nav-menu">
-          <router-link to="/" class="nav-item">首页</router-link>
-          <router-link to="/market" class="nav-item">项目市场</router-link>
-          <router-link to="/about" class="nav-item">关于我们</router-link>
-        </nav>
+          <div class="nav-menu">
+            <ul class="nav-links">
+              <li><router-link to="/" class="nav-link" :class="{ active: $route.path === '/' }">首页</router-link></li>
+              <li><router-link to="/market" class="nav-link" :class="{ active: $route.path === '/market' }">项目市场</router-link></li>
+              <li><a href="#" class="nav-link">上传项目</a></li>
+              <li><a href="#" class="nav-link">我的项目</a></li>
+            </ul>
+          </div>
 
-        <!-- 用户操作区域 -->
-        <div class="user-actions">
-          <template v-if="!userStore.isAuthenticated">
-            <router-link to="/login" class="btn btn-outline">登录</router-link>
-            <router-link to="/register" class="btn btn-primary">注册</router-link>
-          </template>
-          <template v-else>
-            <el-dropdown @command="handleUserCommand">
-              <div class="user-info">
-                <el-avatar :src="userStore.user?.avatar" :size="32">
-                  {{ userStore.user?.username?.charAt(0) }}
-                </el-avatar>
-                <span class="username">{{ userStore.user?.username }}</span>
-                <el-icon><ArrowDown /></el-icon>
-              </div>
-              <template #dropdown>
-                <el-dropdown-menu>
-                  <el-dropdown-item command="dashboard">
-                    <el-icon><Dashboard /></el-icon>
-                    仪表盘
-                  </el-dropdown-item>
-                  <el-dropdown-item command="profile">
-                    <el-icon><User /></el-icon>
-                    个人中心
-                  </el-dropdown-item>
-                  <el-dropdown-item command="my-projects">
-                    <el-icon><FolderOpened /></el-icon>
-                    我的项目
-                  </el-dropdown-item>
-                  <el-dropdown-item divided command="logout">
-                    <el-icon><SwitchButton /></el-icon>
-                    退出登录
-                  </el-dropdown-item>
-                </el-dropdown-menu>
-              </template>
-            </el-dropdown>
-          </template>
+          <div class="nav-search">
+            <div class="search-box">
+              <input type="text" placeholder="搜索项目、技术栈..." class="search-input" v-model="searchQuery">
+              <button class="search-btn" @click="handleSearch">
+                <i class="fas fa-search"></i>
+              </button>
+            </div>
+          </div>
+
+          <div class="nav-user">
+            <div class="user-actions" v-if="!userStore.isAuthenticated">
+              <router-link to="/login" class="btn btn-outline">登录</router-link>
+              <router-link to="/register" class="btn btn-primary">注册</router-link>
+            </div>
+
+            <div class="user-actions" v-else>
+              <span class="username">{{ userStore.user?.username || '用户' }}</span>
+              <button class="btn btn-outline" @click="handleLogout">退出登录</button>
+            </div>
+          </div>
+
+          <div class="mobile-menu-toggle" @click="toggleMobileMenu">
+            <i class="fas fa-bars"></i>
+          </div>
         </div>
-      </div>
+      </nav>
     </header>
 
     <!-- 主要内容区域 -->
-    <main class="public-main">
+    <main class="public-content">
       <router-view />
     </main>
 
-    <!-- 公开页面底部 -->
-    <footer class="public-footer">
-      <div class="footer-container">
-        <div class="footer-content">
-          <div class="footer-section">
-            <h4>速码网</h4>
-            <p>专业的源码交易平台</p>
-            <p>为开发者提供优质的源码资源</p>
-          </div>
-          <div class="footer-section">
-            <h4>快速链接</h4>
-            <ul>
-              <li><router-link to="/">首页</router-link></li>
-              <li><router-link to="/market">项目市场</router-link></li>
-              <li><router-link to="/about">关于我们</router-link></li>
-            </ul>
-          </div>
-          <div class="footer-section">
-            <h4>帮助支持</h4>
-            <ul>
-              <li><a href="#">使用帮助</a></li>
-              <li><a href="#">常见问题</a></li>
-              <li><a href="#">联系我们</a></li>
-            </ul>
-          </div>
-          <div class="footer-section">
-            <h4>关注我们</h4>
-            <div class="social-links">
-              <a href="#" class="social-link">微信</a>
-              <a href="#" class="social-link">微博</a>
-              <a href="#" class="social-link">QQ群</a>
-            </div>
-          </div>
-        </div>
-        <div class="footer-bottom">
-          <p>&copy; 2024 速码网. All rights reserved.</p>
-        </div>
-      </div>
-    </footer>
+    <!-- 底部 -->
+    <Footer />
   </div>
 </template>
 
 <script setup lang="ts">
 import { useUserStore } from '@/stores/user'
-import {
-    ArrowDown,
-    Dashboard,
-    FolderOpened,
-    SwitchButton,
-    User
-} from '@element-plus/icons-vue'
 import { ElMessage } from 'element-plus'
+import { ref } from 'vue'
 import { useRouter } from 'vue-router'
+import Footer from '@/components/Footer.vue'
 
 const router = useRouter()
 const userStore = useUserStore()
 
+// 响应式数据
+const searchQuery = ref('')
+const mobileMenuOpen = ref(false)
+
 /**
- * 处理用户下拉菜单命令
+ * 处理搜索
  */
-const handleUserCommand = async (command: string) => {
-  switch (command) {
-    case 'dashboard':
-      router.push('/user/dashboard')
-      break
-    case 'profile':
-      router.push('/user/profile')
-      break
-    case 'my-projects':
-      router.push('/user/my-projects')
-      break
-    case 'logout':
-      try {
-        await userStore.logout()
-        ElMessage.success('退出登录成功')
-        router.push('/')
-      } catch (error) {
-        ElMessage.error('退出登录失败')
-      }
-      break
+const handleSearch = () => {
+  if (searchQuery.value.trim()) {
+    router.push({
+      path: '/market',
+      query: { search: searchQuery.value.trim() }
+    })
+  }
+}
+
+/**
+ * 切换移动端菜单
+ */
+const toggleMobileMenu = () => {
+  mobileMenuOpen.value = !mobileMenuOpen.value
+}
+
+/**
+ * 处理用户退出登录
+ */
+const handleLogout = async () => {
+  try {
+    await userStore.logout()
+    ElMessage.success('退出登录成功')
+    router.push('/')
+  } catch (error) {
+    console.error('退出登录失败:', error)
+    ElMessage.error('退出登录失败')
   }
 }
 </script>
+
+
 
 <style lang="scss" scoped>
 @import '@/styles/variables.scss';
@@ -156,226 +116,266 @@ const handleUserCommand = async (command: string) => {
   min-height: 100vh;
   display: flex;
   flex-direction: column;
-  background: var(--bg-primary);
+  background: $bg-primary;
 }
 
-.public-header {
-  position: sticky;
+// 顶部导航栏
+.header {
+  position: fixed;
   top: 0;
+  left: 0;
+  right: 0;
   z-index: 1000;
-  background: rgba(255, 255, 255, 0.95);
-  backdrop-filter: blur(10px);
-  border-bottom: 1px solid var(--border-color);
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  background: $glass-bg;
+  backdrop-filter: $glass-blur;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.2);
+  box-shadow: $shadow-layered-sm;
+  transition: all 0.3s ease;
 
-  .header-container {
-    max-width: 1200px;
-    margin: 0 auto;
-    padding: 0 $spacing-lg;
-    height: 64px;
-    @include flex-between();
-  }
-
-  .logo-section {
-    .logo-link {
-      @include flex-center();
-      gap: $spacing-sm;
-      text-decoration: none;
-      color: var(--text-primary);
-
-      .logo-image {
-        width: 32px;
-        height: 32px;
-      }
-
-      .site-name {
-        font-size: $font-size-xl;
-        font-weight: $font-weight-bold;
-        @include gradient-text();
-      }
+  .navbar {
+    .container {
+      max-width: 1200px;
+      margin: 0 auto;
+      padding: 0 $spacing-lg;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      height: 70px;
     }
-  }
 
-  .nav-menu {
-    @include flex-center();
-    gap: $spacing-xl;
+    .nav-brand {
+      .logo {
+        display: flex;
+        align-items: center;
+        gap: $spacing-sm;
+        text-decoration: none;
+        color: $text-primary;
 
-    .nav-item {
-      padding: $spacing-sm $spacing-md;
-      text-decoration: none;
-      color: var(--text-secondary);
-      font-weight: $font-weight-medium;
-      border-radius: $border-radius-md;
-      transition: all 0.3s ease;
+        i {
+          font-size: $font-size-xl;
+          color: $primary-color;
+        }
 
-      &:hover,
-      &.router-link-active {
-        color: var(--primary-color);
-        background: rgba(var(--primary-color-rgb), 0.1);
-      }
-    }
-  }
-
-  .user-actions {
-    @include flex-center();
-    gap: $spacing-md;
-
-    .btn {
-      padding: $spacing-sm $spacing-lg;
-      border-radius: $border-radius-md;
-      text-decoration: none;
-      font-weight: $font-weight-medium;
-      transition: all 0.3s ease;
-
-      &.btn-outline {
-        color: var(--primary-color);
-        border: 1px solid var(--primary-color);
-        background: transparent;
-
-        &:hover {
-          background: var(--primary-color);
-          color: white;
+        .brand-name {
+          font-size: $font-size-xl;
+          font-weight: 700;
+          color: $text-primary;
         }
       }
-
-      &.btn-primary {
-        background: var(--primary-color);
-        color: white;
-        border: 1px solid var(--primary-color);
-
-        &:hover {
-          background: var(--primary-color-hover);
-        }
-      }
-    }
-
-    .user-info {
-      @include flex-center();
-      gap: $spacing-sm;
-      padding: $spacing-sm;
-      cursor: pointer;
-      border-radius: $border-radius-md;
-      transition: background-color 0.3s ease;
-
-      &:hover {
-        background: var(--bg-secondary);
-      }
-
-      .username {
-        font-weight: $font-weight-medium;
-        color: var(--text-primary);
-      }
-    }
-  }
-}
-
-.public-main {
-  flex: 1;
-  min-height: calc(100vh - 64px - 200px);
-}
-
-.public-footer {
-  background: var(--bg-secondary);
-  border-top: 1px solid var(--border-color);
-  margin-top: auto;
-
-  .footer-container {
-    max-width: 1200px;
-    margin: 0 auto;
-    padding: $spacing-3xl $spacing-lg $spacing-lg;
-  }
-
-  .footer-content {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
-    gap: $spacing-xl;
-    margin-bottom: $spacing-xl;
-
-    .footer-section {
-      h4 {
-        color: var(--text-primary);
-        font-weight: $font-weight-bold;
-        margin-bottom: $spacing-md;
-      }
-
-      p {
-        color: var(--text-secondary);
-        margin-bottom: $spacing-sm;
-      }
-
-      ul {
-        list-style: none;
-        padding: 0;
-
-        li {
-          margin-bottom: $spacing-sm;
-
-          a {
-            color: var(--text-secondary);
-            text-decoration: none;
-            transition: color 0.3s ease;
-
-            &:hover {
-              color: var(--primary-color);
-            }
-          }
-        }
-      }
-
-      .social-links {
-        @include flex-start();
-        gap: $spacing-md;
-
-        .social-link {
-          color: var(--text-secondary);
-          text-decoration: none;
-          transition: color 0.3s ease;
-
-          &:hover {
-            color: var(--primary-color);
-          }
-        }
-      }
-    }
-  }
-
-  .footer-bottom {
-    padding-top: $spacing-lg;
-    border-top: 1px solid var(--border-color);
-    text-align: center;
-
-    p {
-      color: var(--text-secondary);
-      margin: 0;
-    }
-  }
-}
-
-// 响应式设计
-@media (max-width: 768px) {
-  .public-header {
-    .header-container {
-      padding: 0 $spacing-md;
     }
 
     .nav-menu {
-      display: none;
+      .nav-links {
+        display: flex;
+        list-style: none;
+        gap: $spacing-xl;
+        margin: 0;
+        padding: 0;
+
+        .nav-link {
+          color: $text-secondary;
+          text-decoration: none;
+          font-weight: 500;
+          padding: $spacing-sm $spacing-md;
+          border-radius: $radius-md;
+          transition: all 0.3s ease;
+
+          &:hover,
+          &.active {
+            color: $primary-color;
+            background: rgba(24, 144, 255, 0.1);
+          }
+        }
+      }
     }
 
-    .user-actions {
-      gap: $spacing-sm;
+    .nav-search {
+      .search-box {
+        position: relative;
+        display: flex;
+        align-items: center;
 
-      .btn {
-        padding: $spacing-xs $spacing-md;
-        font-size: $font-size-sm;
+        .search-input {
+          width: 300px;
+          padding: $spacing-sm $spacing-md;
+          padding-right: 40px;
+          border: 1px solid rgba(255, 255, 255, 0.3);
+          border-radius: $radius-lg;
+          background: rgba(255, 255, 255, 0.1);
+          backdrop-filter: $glass-blur-sm;
+          color: $text-primary;
+          font-size: $font-size-sm;
+          transition: all 0.3s ease;
+
+          &::placeholder {
+            color: rgba(0, 0, 0, 0.5);
+          }
+
+          &:focus {
+            outline: none;
+            border-color: $primary-color;
+            background: rgba(255, 255, 255, 0.2);
+            box-shadow: 0 0 0 3px rgba(24, 144, 255, 0.1);
+          }
+        }
+
+        .search-btn {
+          position: absolute;
+          right: $spacing-sm;
+          background: none;
+          border: none;
+          color: $text-secondary;
+          cursor: pointer;
+          padding: $spacing-xs;
+          border-radius: $radius-sm;
+          transition: color 0.3s ease;
+
+          &:hover {
+            color: $primary-color;
+          }
+        }
+      }
+    }
+
+    .nav-user {
+      .user-actions {
+        display: flex;
+        align-items: center;
+        gap: $spacing-md;
+
+        .btn {
+          padding: $spacing-sm $spacing-lg;
+          border-radius: $radius-lg;
+          text-decoration: none;
+          font-weight: 600;
+          font-size: $font-size-sm;
+          transition: all 0.3s ease;
+          border: 2px solid transparent;
+          cursor: pointer;
+
+          &.btn-outline {
+            background: transparent;
+            color: $primary-color;
+            border: 2px solid $primary-color;
+
+            &:hover {
+              background: $primary-color;
+              color: white;
+              transform: translateY(-1px);
+            }
+          }
+
+          &.btn-primary {
+            background: $primary-color;
+            color: white;
+            box-shadow: $shadow-primary;
+
+            &:hover {
+              background: $primary-hover;
+              transform: translateY(-1px);
+              box-shadow: $shadow-primary-hover;
+            }
+          }
+        }
+
+        .user-info {
+          display: flex;
+          align-items: center;
+          gap: $spacing-sm;
+          padding: $spacing-sm $spacing-md;
+          border-radius: $radius-lg;
+          background: rgba(255, 255, 255, 0.1);
+          backdrop-filter: $glass-blur-sm;
+          cursor: pointer;
+          transition: all 0.3s ease;
+
+          &:hover {
+            background: rgba(255, 255, 255, 0.2);
+          }
+
+          .username {
+            font-weight: 500;
+            color: $text-primary;
+          }
+        }
+      }
+    }
+
+    .mobile-menu-toggle {
+      display: none;
+      background: none;
+      border: none;
+      color: $text-primary;
+      font-size: $font-size-lg;
+      cursor: pointer;
+      padding: $spacing-sm;
+      border-radius: $radius-md;
+      transition: all 0.3s ease;
+
+      &:hover {
+        background: rgba(255, 255, 255, 0.1);
+        color: $primary-color;
       }
     }
   }
+}
 
-  .public-footer {
-    .footer-content {
-      grid-template-columns: 1fr;
-      gap: $spacing-lg;
+// 主要内容区域
+.public-content {
+  flex: 1;
+  padding-top: 70px; // 为固定导航栏留出空间
+}
+
+// 响应式设计
+@media (max-width: 1199px) {
+  .header {
+    .navbar {
+      .nav-search {
+        .search-box {
+          .search-input {
+            width: 250px;
+          }
+        }
+      }
+    }
+  }
+}
+
+@media (max-width: 991px) {
+  .header {
+    .navbar {
+      .nav-menu {
+        display: none;
+      }
+
+      .nav-search {
+        display: none;
+      }
+
+      .mobile-menu-toggle {
+        display: block;
+      }
+    }
+  }
+}
+
+@media (max-width: 767px) {
+  .header {
+    .navbar {
+      .container {
+        padding: 0 $spacing-md;
+      }
+
+      .nav-user {
+        .user-actions {
+          gap: $spacing-sm;
+
+          .btn {
+            padding: $spacing-xs $spacing-md;
+            font-size: $font-size-xs;
+          }
+        }
+      }
     }
   }
 }

@@ -99,14 +99,7 @@ export const publicRoutes: RouteRecordRaw[] = [
           hidden: true
         }
       },
-      {
-        path: 'about',
-        name: 'About',
-        component: () => import('@/views/AboutView.vue'),
-        meta: {
-          title: '关于我们'
-        }
-      }
+
     ]
   }
 ]

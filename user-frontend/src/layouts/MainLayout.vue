@@ -24,7 +24,7 @@
             class="sidebar-menu"
           >
             <el-menu-item index="/dashboard">
-              <el-icon><Dashboard /></el-icon>
+              <el-icon><DataBoard /></el-icon>
               <template #title>仪表盘</template>
             </el-menu-item>
 
@@ -209,7 +209,7 @@ import { useUserStore } from '@/stores/user'
 import { getRouteBreadcrumb } from '@/utils/breadcrumb'
 import {
     ArrowDown,
-    Dashboard, FolderOpened,
+    DataBoard, FolderOpened,
     Menu,
     Moon, MoreFilled,
     Setting,
