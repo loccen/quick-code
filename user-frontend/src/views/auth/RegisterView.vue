@@ -450,6 +450,20 @@ appStore.setPageTitle('用户注册')
         font-weight: $font-weight-medium;
       }
     }
+
+    // 表单验证错误提示样式优化
+    .el-form-item__error {
+      color: #ffffff !important;
+      background: rgba(255, 77, 79, 0.9) !important;
+      padding: $spacing-xs $spacing-sm !important;
+      border-radius: $radius-md !important;
+      font-size: $font-size-xs !important;
+      font-weight: $font-weight-semibold !important;
+      text-shadow: 0 1px 2px rgba(0, 0, 0, 0.3) !important;
+      border: 1px solid rgba(255, 77, 79, 1) !important;
+      margin-top: $spacing-xs !important;
+      box-shadow: 0 2px 8px rgba(255, 77, 79, 0.3) !important;
+    }
   }
 }
 
