@@ -6,7 +6,7 @@
         <!-- Logo和网站名称 -->
         <div class="logo-section">
           <router-link to="/" class="logo-link">
-            <img src="/logo.svg" alt="速码网" class="logo-image" />
+            <img src="/src/assets/logo.svg" alt="速码网" class="logo-image" />
             <span class="site-name">速码网</span>
           </router-link>
         </div>
@@ -107,16 +107,16 @@
 </template>
 
 <script setup lang="ts">
-import { useRouter } from 'vue-router'
 import { useUserStore } from '@/stores/user'
-import { ElMessage } from 'element-plus'
-import { 
-  ArrowDown, 
-  Dashboard, 
-  User, 
-  FolderOpened, 
-  SwitchButton 
+import {
+    ArrowDown,
+    Dashboard,
+    FolderOpened,
+    SwitchButton,
+    User
 } from '@element-plus/icons-vue'
+import { ElMessage } from 'element-plus'
+import { useRouter } from 'vue-router'
 
 const router = useRouter()
 const userStore = useUserStore()

@@ -30,7 +30,7 @@
           </div>
         </div>
         <div class="hero-image">
-          <img src="/images/hero-illustration.svg" alt="速码网" />
+          <img src="/src/assets/logo.svg" alt="速码网" />
         </div>
       </div>
     </section>

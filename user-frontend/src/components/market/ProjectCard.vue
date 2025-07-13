@@ -2,23 +2,23 @@
   <div class="project-card" @click="handleCardClick">
     <!-- 项目缩略图 -->
     <div class="project-thumbnail">
-      <img 
-        :src="project.thumbnail || '/images/default-project.jpg'" 
+      <img
+        :src="project.thumbnail || '/images/default-project.jpg'"
         :alt="project.title"
         @error="handleImageError"
       />
       <div class="overlay">
         <div class="overlay-actions">
-          <el-button 
-            type="primary" 
-            size="small" 
+          <el-button
+            type="primary"
+            size="small"
             @click.stop="$emit('demo', project)"
           >
             <el-icon><VideoPlay /></el-icon>
             演示
           </el-button>
-          <el-button 
-            type="success" 
+          <el-button
+            type="success"
             size="small"
             @click.stop="$emit('purchase', project)"
           >
@@ -33,22 +33,22 @@
     <div class="project-info">
       <!-- 项目标题 -->
       <h3 class="project-title">{{ project.title }}</h3>
-      
+
       <!-- 项目描述 -->
       <p class="project-description">{{ project.description }}</p>
-      
+
       <!-- 项目标签 -->
       <div class="project-tags">
-        <el-tag 
-          v-for="tag in project.tags?.slice(0, 3)" 
-          :key="tag" 
+        <el-tag
+          v-for="tag in project.tags?.slice(0, 3)"
+          :key="tag"
           size="small"
           type="info"
         >
           {{ tag }}
         </el-tag>
       </div>
-      
+
       <!-- 项目统计 -->
       <div class="project-stats">
         <div class="stat-item">
@@ -64,7 +64,7 @@
           <span>{{ project.author }}</span>
         </div>
       </div>
-      
+
       <!-- 价格和操作 -->
       <div class="project-footer">
         <div class="price-section">
@@ -72,8 +72,8 @@
           <span class="price-unit">积分</span>
         </div>
         <div class="action-buttons">
-          <el-button 
-            size="small" 
+          <el-button
+            size="small"
             @click.stop="$emit('viewDetail', project)"
           >
             查看详情
@@ -85,12 +85,12 @@
 </template>
 
 <script setup lang="ts">
-import { 
-  VideoPlay, 
-  ShoppingCart, 
-  Star, 
-  Download, 
-  User 
+import {
+    Download,
+    ShoppingCart,
+    Star,
+    User,
+    VideoPlay
 } from '@element-plus/icons-vue'
 
 interface Project {
@@ -212,7 +212,7 @@ const formatNumber = (num: number): string => {
       color: var(--text-primary);
       margin: 0 0 $spacing-sm 0;
       line-height: 1.4;
-      @include text-ellipsis(2);
+      @include text-ellipsis-multiline(2);
     }
 
     .project-description {
@@ -220,7 +220,7 @@ const formatNumber = (num: number): string => {
       font-size: $font-size-sm;
       line-height: 1.5;
       margin: 0 0 $spacing-md 0;
-      @include text-ellipsis(2);
+      @include text-ellipsis-multiline(2);
     }
 
     .project-tags {

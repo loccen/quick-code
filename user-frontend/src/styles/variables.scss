@@ -143,6 +143,13 @@ $radius-2xl: 20px;
 $radius-3xl: 24px;
 $radius-full: 9999px;
 
+// 兼容性别名
+$border-radius-xs: $radius-xs;
+$border-radius-sm: $radius-sm;
+$border-radius-md: $radius-md;
+$border-radius-lg: $radius-lg;
+$border-radius-xl: $radius-xl;
+
 // ========== 过渡动画 ==========
 
 $transition-fast: 0.15s ease;
