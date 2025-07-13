@@ -1,23 +1,39 @@
+/**
+ * Vue Router配置
+ */
 import { createRouter, createWebHistory } from 'vue-router'
-import HomeView from '../views/HomeView.vue'
+import { setupRouterGuards } from './guards'
+import { routes } from './routes'
 
+/**
+ * 创建路由实例
+ */
 const router = createRouter({
   history: createWebHistory(import.meta.env.BASE_URL),
-  routes: [
-    {
-      path: '/',
-      name: 'home',
-      component: HomeView,
-    },
-    {
-      path: '/about',
-      name: 'about',
-      // route level code-splitting
-      // this generates a separate chunk (About.[hash].js) for this route
-      // which is lazy-loaded when the route is visited.
-      component: () => import('../views/AboutView.vue'),
-    },
-  ],
+  routes,
+  scrollBehavior(to, from, savedPosition) {
+    // 如果有保存的位置，恢复到该位置
+    if (savedPosition) {
+      return savedPosition
+    }
+    // 如果有锚点，滚动到锚点
+    if (to.hash) {
+      return {
+        el: to.hash,
+        behavior: 'smooth'
+      }
+    }
+    // 否则滚动到顶部
+    return { top: 0 }
+  }
 })
 
+// 设置路由守卫
+setupRouterGuards(router)
+
 export default router
+
+// 导出路由相关工具
+export { createAuthGuard, createPermissionGuard, createRoleGuard, setupRouterGuards } from './guards'
+export { basicRoutes, dynamicRoutes, mainRoutes, routes } from './routes'
+

@@ -1,0 +1,205 @@
+/**
+ * 全局样式文件
+ * 基于现代化UI设计规范的全局样式定义
+ */
+
+@import './variables.scss';
+@import './mixins.scss';
+@import './animations.scss';
+
+// ========== CSS变量定义 ==========
+:root {
+  // 主色调
+  --primary-color: #{$primary-color};
+  --primary-hover: #{$primary-hover};
+  --primary-active: #{$primary-active};
+  --primary-light: #{$primary-light};
+
+  // 辅助色
+  --success-color: #{$success-color};
+  --warning-color: #{$warning-color};
+  --error-color: #{$error-color};
+  --info-color: #{$info-color};
+
+  // 中性色
+  --text-primary: #{$text-primary};
+  --text-secondary: #{$text-secondary};
+  --text-tertiary: #{$text-tertiary};
+  --text-disabled: #{$text-disabled};
+  --text-white: #{$text-white};
+
+  // 背景色
+  --bg-primary: #{$bg-primary};
+  --bg-secondary: #{$bg-secondary};
+  --bg-tertiary: #{$bg-tertiary};
+  --bg-dark: #{$bg-dark};
+
+  // 边框色
+  --border-color: #{$border-color};
+  --border-light: #{$border-light};
+
+  // 阴影
+  --shadow-sm: #{$shadow-sm};
+  --shadow-md: #{$shadow-md};
+  --shadow-lg: #{$shadow-lg};
+  --shadow-layered-sm: #{$shadow-layered-sm};
+  --shadow-layered-md: #{$shadow-layered-md};
+  --shadow-layered-lg: #{$shadow-layered-lg};
+
+  // 毛玻璃效果
+  --glass-bg: #{$glass-bg};
+  --glass-bg-dark: #{$glass-bg-dark};
+  --glass-border: #{$glass-border};
+  --glass-blur: #{$glass-blur};
+  --glass-blur-sm: #{$glass-blur-sm};
+
+  // 字体
+  --font-family: #{$font-family};
+  --font-size-base: #{$font-size-base};
+  --line-height-base: #{$line-height-base};
+
+  // 间距
+  --spacing-xs: #{$spacing-xs};
+  --spacing-sm: #{$spacing-sm};
+  --spacing-md: #{$spacing-md};
+  --spacing-lg: #{$spacing-lg};
+  --spacing-xl: #{$spacing-xl};
+
+  // 圆角
+  --radius-sm: #{$radius-sm};
+  --radius-md: #{$radius-md};
+  --radius-lg: #{$radius-lg};
+  --radius-xl: #{$radius-xl};
+
+  // 过渡
+  --transition-fast: #{$transition-fast};
+  --transition-base: #{$transition-base};
+  --transition-slow: #{$transition-slow};
+}
+
+// 暗色主题
+.dark {
+  --text-primary: #{$text-white};
+  --text-secondary: rgba(255, 255, 255, 0.85);
+  --text-tertiary: rgba(255, 255, 255, 0.65);
+  --text-disabled: rgba(255, 255, 255, 0.45);
+
+  --bg-primary: #{$bg-dark};
+  --bg-secondary: #141414;
+  --bg-tertiary: #1f1f1f;
+
+  --border-color: #434343;
+  --border-light: #303030;
+
+  --glass-bg: rgba(0, 0, 0, 0.25);
+  --glass-border: rgba(255, 255, 255, 0.1);
+}
+
+// ========== 重置样式 ==========
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+html {
+  font-size: 16px;
+  scroll-behavior: smooth;
+  height: 100%;
+}
+
+body {
+  font-family: var(--font-family);
+  font-size: var(--font-size-base);
+  line-height: var(--line-height-base);
+  color: var(--text-primary);
+  background-color: var(--bg-primary);
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  text-rendering: optimizeLegibility;
+  min-height: 100vh;
+  transition: color var(--transition-base), background-color var(--transition-base);
+}
+
+#app {
+  min-height: 100vh;
+}
+
+// ========== 链接样式 ==========
+a {
+  color: var(--primary-color);
+  text-decoration: none;
+  transition: color var(--transition-fast);
+
+  &:hover {
+    color: var(--primary-hover);
+  }
+
+  &:active {
+    color: var(--primary-active);
+  }
+}
+
+// ========== 列表样式 ==========
+ul, ol {
+  list-style: none;
+}
+
+// ========== 图片样式 ==========
+img {
+  max-width: 100%;
+  height: auto;
+  display: block;
+}
+
+// ========== 按钮重置 ==========
+button {
+  border: none;
+  background: none;
+  cursor: pointer;
+  font-family: inherit;
+  font-size: inherit;
+}
+
+// ========== 输入框重置 ==========
+input, textarea, select {
+  font-family: inherit;
+  font-size: inherit;
+  border: none;
+  outline: none;
+}
+
+// ========== 表格样式 ==========
+table {
+  border-collapse: collapse;
+  border-spacing: 0;
+}
+
+// ========== 现代化滚动条 ==========
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: var(--bg-tertiary);
+  border-radius: var(--radius-sm);
+}
+
+::-webkit-scrollbar-thumb {
+  background: linear-gradient(135deg, var(--primary-color), var(--primary-hover));
+  border-radius: var(--radius-sm);
+  transition: all var(--transition-fast);
+
+  &:hover {
+    background: linear-gradient(135deg, var(--primary-hover), var(--primary-active));
+  }
+}
+
+// ========== 选择文本样式 ==========
+::selection {
+  background: rgba(24, 144, 255, 0.2);
+  color: var(--text-primary);
+}

@@ -1,0 +1,359 @@
+/**
+ * SCSS混入函数
+ * 现代化UI效果的可复用样式
+ */
+
+@import './variables.scss';
+
+// ========== 毛玻璃效果混入 ==========
+
+@mixin glass-effect($bg: $glass-bg, $blur: $glass-blur, $border: $glass-border) {
+  backdrop-filter: $blur;
+  background: $bg;
+  border: 1px solid $border;
+}
+
+@mixin glass-dark($bg: $glass-bg-dark, $blur: $glass-blur) {
+  backdrop-filter: $blur;
+  background: $bg;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+// ========== 现代化阴影混入 ==========
+
+@mixin shadow-sm {
+  box-shadow: $shadow-sm;
+}
+
+@mixin shadow-md {
+  box-shadow: $shadow-md;
+}
+
+@mixin shadow-lg {
+  box-shadow: $shadow-lg;
+}
+
+@mixin shadow-layered($level: 'sm') {
+  @if $level == 'sm' {
+    box-shadow: $shadow-layered-sm;
+  } @else if $level == 'md' {
+    box-shadow: $shadow-layered-md;
+  } @else if $level == 'lg' {
+    box-shadow: $shadow-layered-lg;
+  } @else if $level == 'xl' {
+    box-shadow: $shadow-layered-xl;
+  }
+}
+
+@mixin shadow-layered-sm {
+  box-shadow: $shadow-layered-sm;
+}
+
+@mixin shadow-layered-md {
+  box-shadow: $shadow-layered-md;
+}
+
+@mixin shadow-layered-lg {
+  box-shadow: $shadow-layered-lg;
+}
+
+@mixin shadow-layered-xl {
+  box-shadow: $shadow-layered-xl;
+}
+
+@mixin shadow-colored($color: $primary-color, $opacity: 0.15) {
+  box-shadow: 0 8px 25px rgba($color, $opacity);
+}
+
+// ========== 增强卡片效果 ==========
+
+@mixin enhanced-card($radius: $radius-xl, $shadow: $shadow-layered-sm) {
+  background: $gradient-card;
+  border-radius: $radius;
+  box-shadow: $shadow;
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  backdrop-filter: $glass-blur-sm;
+  position: relative;
+  overflow: hidden;
+  transition: all $transition-base;
+
+  &::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 1px;
+    background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.8), transparent);
+  }
+
+  &:hover {
+    box-shadow: $shadow-layered-lg;
+    transform: translateY(-8px) scale(1.02);
+    border-color: rgba($primary-color, 0.2);
+  }
+}
+
+// ========== 现代化按钮效果 ==========
+
+@mixin modern-button($bg: $gradient-primary, $shadow: $shadow-primary) {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: $spacing-xs;
+  padding: $spacing-sm $spacing-md;
+  font-size: $font-size-sm;
+  font-weight: $font-weight-medium;
+  border-radius: $radius-lg;
+  border: 1px solid transparent;
+  cursor: pointer;
+  transition: all $transition-base;
+  text-decoration: none;
+  white-space: nowrap;
+  position: relative;
+  overflow: hidden;
+  transform: translateY(0);
+  background: $bg;
+  box-shadow: $shadow;
+  color: white;
+
+  &::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: -100%;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent);
+    transition: left 0.5s;
+  }
+
+  &:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 12px 35px rgba($primary-color, 0.25);
+
+    &::before {
+      left: 100%;
+    }
+  }
+
+  &:active {
+    transform: translateY(0);
+  }
+
+  &:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+    transform: none;
+
+    &:hover {
+      transform: none;
+      box-shadow: $shadow;
+    }
+  }
+}
+
+// ========== 浮动标签效果 ==========
+
+@mixin floating-label {
+  position: relative;
+
+  input, textarea {
+    padding: $spacing-md $spacing-sm $spacing-sm;
+    border: 2px solid $border-color;
+    border-radius: $radius-lg;
+    background: $glass-bg;
+    backdrop-filter: $glass-blur-sm;
+    transition: all $transition-base;
+    width: 100%;
+
+    &:focus {
+      border-color: $primary-color;
+      outline: none;
+      @include shadow-colored($primary-color, 0.1);
+    }
+  }
+
+  label {
+    position: absolute;
+    left: $spacing-sm;
+    top: 50%;
+    transform: translateY(-50%);
+    background: white;
+    padding: 0 $spacing-xs;
+    color: $text-tertiary;
+    transition: all $transition-base;
+    pointer-events: none;
+    font-size: $font-size-sm;
+  }
+
+  input:focus + label,
+  input:not(:placeholder-shown) + label,
+  textarea:focus + label,
+  textarea:not(:placeholder-shown) + label {
+    top: 0;
+    font-size: $font-size-xs;
+    color: $primary-color;
+  }
+}
+
+// ========== 渐变文本效果 ==========
+
+@mixin gradient-text($gradient: $gradient-primary) {
+  background: $gradient;
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+// ========== 响应式设计混入 ==========
+
+@mixin respond-to($breakpoint) {
+  @if $breakpoint == 'sm' {
+    @media (min-width: $breakpoint-sm) {
+      @content;
+    }
+  } @else if $breakpoint == 'md' {
+    @media (min-width: $breakpoint-md) {
+      @content;
+    }
+  } @else if $breakpoint == 'lg' {
+    @media (min-width: $breakpoint-lg) {
+      @content;
+    }
+  } @else if $breakpoint == 'xl' {
+    @media (min-width: $breakpoint-xl) {
+      @content;
+    }
+  } @else if $breakpoint == '2xl' {
+    @media (min-width: $breakpoint-2xl) {
+      @content;
+    }
+  }
+}
+
+@mixin respond-below($breakpoint) {
+  @if $breakpoint == 'sm' {
+    @media (max-width: $breakpoint-sm - 1px) {
+      @content;
+    }
+  } @else if $breakpoint == 'md' {
+    @media (max-width: $breakpoint-md - 1px) {
+      @content;
+    }
+  } @else if $breakpoint == 'lg' {
+    @media (max-width: $breakpoint-lg - 1px) {
+      @content;
+    }
+  } @else if $breakpoint == 'xl' {
+    @media (max-width: $breakpoint-xl - 1px) {
+      @content;
+    }
+  }
+}
+
+// ========== 动画效果混入 ==========
+
+@mixin fade-in($duration: $transition-base) {
+  animation: fadeIn $duration ease-out;
+}
+
+@mixin slide-in-up($duration: $transition-base) {
+  animation: slideInUp $duration ease-out;
+}
+
+@mixin slide-in-down($duration: $transition-base) {
+  animation: slideInDown $duration ease-out;
+}
+
+@mixin slide-in-left($duration: $transition-base) {
+  animation: slideInLeft $duration ease-out;
+}
+
+@mixin slide-in-right($duration: $transition-base) {
+  animation: slideInRight $duration ease-out;
+}
+
+@mixin animate-shake() {
+  animation: shake 0.5s ease-in-out;
+}
+
+@mixin animate-bounce-in() {
+  animation: bounceIn 0.6s ease-out;
+}
+
+@mixin pulse($color: $primary-color) {
+  animation: pulse 2s infinite;
+
+  @keyframes pulse {
+    0% {
+      box-shadow: 0 0 0 0 rgba($color, 0.7);
+    }
+    70% {
+      box-shadow: 0 0 0 10px rgba($color, 0);
+    }
+    100% {
+      box-shadow: 0 0 0 0 rgba($color, 0);
+    }
+  }
+}
+
+// ========== 加载动画混入 ==========
+
+@mixin loading-shimmer {
+  background: linear-gradient(90deg, #f0f0f0 25%, #e0e0e0 50%, #f0f0f0 75%);
+  background-size: 200% 100%;
+  animation: shimmer 1.5s infinite;
+
+  @keyframes shimmer {
+    0% {
+      background-position: -200% 0;
+    }
+    100% {
+      background-position: 200% 0;
+    }
+  }
+}
+
+// ========== 工具类混入 ==========
+
+@mixin flex-center {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+@mixin flex-between {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+@mixin absolute-center {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+}
+
+@mixin text-ellipsis {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+@mixin text-ellipsis-multiline($lines: 2) {
+  display: -webkit-box;
+  -webkit-line-clamp: $lines;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+@mixin clearfix {
+  &::after {
+    content: '';
+    display: table;
+    clear: both;
+  }
+}
