@@ -463,7 +463,6 @@ appStore.setPageTitle('用户注册')
     }
   }
 }
-}
 
 // 浮动动画
 @keyframes float {
