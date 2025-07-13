@@ -1,9 +1,24 @@
 <template>
   <div class="register-view">
+    <!-- 背景装饰 -->
+    <div class="register-background">
+      <div class="bg-shapes">
+        <div class="shape shape-1"></div>
+        <div class="shape shape-2"></div>
+        <div class="shape shape-3"></div>
+        <div class="shape shape-4"></div>
+      </div>
+    </div>
+
+    <!-- 注册表单容器 -->
     <div class="register-container">
       <ModernCard class="register-card" :glass="true" :hoverable="false">
+        <!-- 头部 -->
         <div class="register-header">
-          <h1 class="register-title">创建账户</h1>
+          <div class="logo">
+            <img src="/favicon.ico" alt="Logo" class="logo-image">
+            <h1 class="logo-text">速码网</h1>
+          </div>
           <p class="register-subtitle">加入速码网，开始您的编程之旅</p>
         </div>
 
@@ -107,15 +122,15 @@
 </template>
 
 <script setup lang="ts">
-import { ref, reactive } from 'vue'
-import { useRouter } from 'vue-router'
-import { ElForm, ElMessage } from 'element-plus'
-import { User, Message, Lock, Key } from '@element-plus/icons-vue'
-import { useUserStore } from '@/stores/user'
-import { useAppStore } from '@/stores/app'
-import ModernCard from '@/components/ui/ModernCard.vue'
 import ModernButton from '@/components/ui/ModernButton.vue'
+import ModernCard from '@/components/ui/ModernCard.vue'
+import { useAppStore } from '@/stores/app'
+import { useUserStore } from '@/stores/user'
 import type { RegisterRequest } from '@/types/user'
+import { Key, Lock, Message, User } from '@element-plus/icons-vue'
+import { ElForm, ElMessage } from 'element-plus'
+import { reactive, ref } from 'vue'
+import { useRouter } from 'vue-router'
 
 const router = useRouter()
 const userStore = useUserStore()
@@ -187,7 +202,7 @@ const sendEmailCode = async () => {
   try {
     // 这里应该调用发送验证码的API
     ElMessage.success('验证码已发送')
-    
+
     // 开始倒计时
     codeCountdown.value = 60
     const timer = setInterval(() => {
@@ -209,7 +224,7 @@ const handleRegister = async () => {
     loading.value = true
 
     const success = await userStore.register(registerForm)
-    
+
     if (success) {
       ElMessage.success('注册成功，请登录')
       router.push('/login')
@@ -232,108 +247,255 @@ appStore.setPageTitle('用户注册')
 .register-view {
   min-height: 100vh;
   @include flex-center();
+  position: relative;
+  overflow: hidden;
   background: var(--gradient-hero);
+}
 
-  .register-container {
+.register-background {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  z-index: 0;
+
+  .bg-shapes {
+    position: relative;
     width: 100%;
-    max-width: 450px;
-    padding: $spacing-lg;
+    height: 100%;
 
-    .register-card {
-      padding: $spacing-2xl;
-      @include shadow-layered-lg();
-    }
-  }
+    .shape {
+      position: absolute;
+      border-radius: 50%;
+      background: rgba(255, 255, 255, 0.1);
+      backdrop-filter: blur(20px);
+      animation: float 6s ease-in-out infinite;
 
-  .register-header {
-    text-align: center;
-    margin-bottom: $spacing-2xl;
-
-    .register-title {
-      @include gradient-text();
-      font-size: $font-size-3xl;
-      font-weight: $font-weight-bold;
-      margin: 0 0 $spacing-sm 0;
-    }
-
-    .register-subtitle {
-      color: var(--text-secondary);
-      font-size: $font-size-sm;
-      margin: 0;
-    }
-  }
-
-  .register-form {
-    .code-input-group {
-      display: flex;
-      gap: $spacing-sm;
-
-      .el-input {
-        flex: 1;
+      &.shape-1 {
+        width: 280px;
+        height: 280px;
+        top: 5%;
+        right: 10%;
+        animation-delay: 0s;
       }
-    }
 
-    .terms-link {
-      color: var(--primary-color);
-      text-decoration: none;
-
-      &:hover {
-        color: var(--primary-hover);
+      &.shape-2 {
+        width: 180px;
+        height: 180px;
+        top: 50%;
+        left: 5%;
+        animation-delay: 1.5s;
       }
-    }
 
-    :deep(.el-form-item) {
-      margin-bottom: $spacing-lg;
-
-      .el-input .el-input__wrapper {
-        border-radius: $radius-lg;
-        transition: all var(--transition-base);
-
-        &:hover {
-          border-color: rgba(var(--primary-color), 0.5);
-        }
-
-        &.is-focus {
-          border-color: var(--primary-color);
-          @include shadow-colored(var(--primary-color), 0.1);
-        }
+      &.shape-3 {
+        width: 220px;
+        height: 220px;
+        bottom: 15%;
+        right: 20%;
+        animation-delay: 3s;
       }
-    }
-  }
 
-  .register-footer {
-    text-align: center;
-    margin-top: $spacing-xl;
-    color: var(--text-secondary);
-    font-size: $font-size-sm;
-
-    .login-link {
-      color: var(--primary-color);
-      text-decoration: none;
-      font-weight: $font-weight-medium;
-      margin-left: $spacing-xs;
-
-      &:hover {
-        color: var(--primary-hover);
+      &.shape-4 {
+        width: 120px;
+        height: 120px;
+        top: 25%;
+        left: 25%;
+        animation-delay: 4.5s;
       }
     }
   }
 }
 
-@include respond-below('md') {
-  .register-view {
-    .register-container {
-      padding: $spacing-md;
+.register-container {
+  position: relative;
+  z-index: 1;
+  width: 100%;
+  max-width: 500px;
+  padding: $spacing-lg;
 
-      .register-card {
-        padding: $spacing-xl;
+  .register-card {
+    padding: $spacing-2xl $spacing-3xl;
+    @include shadow-layered-lg();
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    position: relative;
+    overflow: visible;
+    backdrop-filter: blur(25px);
+
+    &::before {
+      content: '';
+      position: absolute;
+      top: -1px;
+      left: -1px;
+      right: -1px;
+      bottom: -1px;
+      background: linear-gradient(135deg, rgba(255, 255, 255, 0.3), rgba(255, 255, 255, 0.1));
+      border-radius: inherit;
+      z-index: -1;
+    }
+
+    &::after {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      height: 1px;
+      background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.8), transparent);
+      z-index: 1;
+    }
+  }
+}
+
+.register-header {
+  text-align: center;
+  margin-bottom: $spacing-2xl;
+
+  .logo {
+    @include flex-center();
+    flex-direction: column;
+    gap: $spacing-sm;
+    margin-bottom: $spacing-lg;
+
+    .logo-image {
+      width: 64px;
+      height: 64px;
+      border-radius: $radius-xl;
+      @include shadow-layered-md();
+    }
+
+    .logo-text {
+      @include gradient-text();
+      font-size: $font-size-3xl;
+      font-weight: $font-weight-bold;
+      margin: 0;
+    }
+  }
+
+  .register-subtitle {
+    color: var(--text-secondary);
+    font-size: $font-size-sm;
+    margin: 0;
+  }
+}
+
+.register-form {
+  .code-input-group {
+    display: flex;
+    gap: $spacing-sm;
+
+    .el-input {
+      flex: 1;
+    }
+  }
+
+  .terms-link {
+    color: var(--primary-color);
+    text-decoration: none;
+    transition: color var(--transition-fast);
+
+    &:hover {
+      color: var(--primary-hover);
+    }
+  }
+
+  :deep(.el-form-item) {
+    margin-bottom: $spacing-lg;
+
+    .el-input {
+      .el-input__wrapper {
+        @include glass-effect();
+        border: 1px solid rgba(255, 255, 255, 0.25);
+        border-radius: $radius-lg;
+        transition: all var(--transition-base);
+        padding: $spacing-sm $spacing-md;
+        min-height: 48px;
+
+        &:hover {
+          border-color: rgba(var(--primary-color), 0.6);
+          transform: translateY(-1px);
+          @include shadow-colored(var(--primary-color), 0.1);
+        }
+
+        &.is-focus {
+          border-color: var(--primary-color);
+          @include shadow-colored(var(--primary-color), 0.25);
+          transform: translateY(-2px);
+        }
+
+        .el-input__inner {
+          color: var(--text-primary);
+          font-weight: $font-weight-medium;
+
+          &::placeholder {
+            color: var(--text-tertiary);
+            font-weight: $font-weight-normal;
+          }
+        }
       }
     }
 
-    .register-form {
-      .code-input-group {
-        flex-direction: column;
+    .el-checkbox {
+      .el-checkbox__label {
+        color: var(--text-secondary);
+        font-size: $font-size-sm;
+        font-weight: $font-weight-medium;
       }
+    }
+  }
+}
+
+.register-footer {
+  text-align: center;
+  margin-top: $spacing-xl;
+  color: var(--text-secondary);
+  font-size: $font-size-sm;
+
+  .login-link {
+    color: var(--primary-color);
+    text-decoration: none;
+    font-weight: $font-weight-medium;
+    margin-left: $spacing-xs;
+    transition: color var(--transition-fast);
+
+    &:hover {
+      color: var(--primary-hover);
+    }
+  }
+}
+}
+
+// 浮动动画
+@keyframes float {
+  0%, 100% {
+    transform: translateY(0px);
+  }
+  50% {
+    transform: translateY(-20px);
+  }
+}
+
+// 响应式设计
+@include respond-below('md') {
+  .register-container {
+    padding: $spacing-md;
+
+    .register-card {
+      padding: $spacing-xl;
+    }
+  }
+
+  .register-header {
+    .logo {
+      .logo-text {
+        font-size: $font-size-2xl;
+      }
+    }
+  }
+
+  .register-form {
+    .code-input-group {
+      flex-direction: column;
     }
   }
 }

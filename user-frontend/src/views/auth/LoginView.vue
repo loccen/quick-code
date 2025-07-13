@@ -56,14 +56,14 @@
 
           <el-form-item>
             <div class="form-options">
-              <el-checkbox 
+              <el-checkbox
                 v-model="loginForm.rememberMe"
                 data-testid="remember-me-checkbox"
               >
                 记住我
               </el-checkbox>
-              <router-link 
-                to="/forgot-password" 
+              <router-link
+                to="/forgot-password"
                 class="forgot-link"
                 data-testid="forgot-password-link"
               >
@@ -89,8 +89,8 @@
         <!-- 底部链接 -->
         <div class="login-footer">
           <span>还没有账户？</span>
-          <router-link 
-            to="/register" 
+          <router-link
+            to="/register"
             class="register-link"
             data-testid="register-link"
           >
@@ -99,8 +99,8 @@
         </div>
 
         <!-- 错误提示 -->
-        <div 
-          v-if="errorMessage" 
+        <div
+          v-if="errorMessage"
           class="error-message"
           data-testid="error-message"
         >
@@ -109,8 +109,8 @@
         </div>
 
         <!-- 加载状态 -->
-        <div 
-          v-if="loading" 
+        <div
+          v-if="loading"
           class="loading-overlay"
           data-testid="loading-spinner"
         >
@@ -122,15 +122,15 @@
 </template>
 
 <script setup lang="ts">
-import { ref, reactive, onMounted } from 'vue'
-import { useRouter, useRoute } from 'vue-router'
-import { ElForm, ElMessage } from 'element-plus'
-import { User, Lock, WarningFilled, Loading } from '@element-plus/icons-vue'
-import { useUserStore } from '@/stores/user'
-import { useAppStore } from '@/stores/app'
-import ModernCard from '@/components/ui/ModernCard.vue'
 import ModernButton from '@/components/ui/ModernButton.vue'
+import ModernCard from '@/components/ui/ModernCard.vue'
+import { useAppStore } from '@/stores/app'
+import { useUserStore } from '@/stores/user'
 import type { LoginRequest } from '@/types/user'
+import { Loading, Lock, User, WarningFilled } from '@element-plus/icons-vue'
+import { ElForm, ElMessage } from 'element-plus'
+import { onMounted, reactive, ref } from 'vue'
+import { useRoute, useRouter } from 'vue-router'
 
 const router = useRouter()
 const route = useRoute()
@@ -170,16 +170,16 @@ const handleLogin = async () => {
   try {
     // 验证表单
     await loginFormRef.value.validate()
-    
+
     loading.value = true
     errorMessage.value = ''
 
     // 执行登录
     const success = await userStore.login(loginForm)
-    
+
     if (success) {
       ElMessage.success('登录成功')
-      
+
       // 获取重定向路径
       const redirect = route.query.redirect as string || '/dashboard'
       router.push(redirect)
@@ -198,7 +198,7 @@ const handleLogin = async () => {
 onMounted(() => {
   // 设置页面标题
   appStore.setPageTitle('用户登录')
-  
+
   // 如果已登录，重定向到仪表盘
   if (userStore.isAuthenticated) {
     router.push('/dashboard')
@@ -269,15 +269,16 @@ onMounted(() => {
   position: relative;
   z-index: 1;
   width: 100%;
-  max-width: 400px;
+  max-width: 420px;
   padding: $spacing-lg;
 
   .login-card {
-    padding: $spacing-2xl;
+    padding: $spacing-2xl $spacing-3xl;
     @include shadow-layered-lg();
     border: 1px solid rgba(255, 255, 255, 0.2);
     position: relative;
     overflow: visible;
+    backdrop-filter: blur(25px);
 
     &::before {
       content: '';
@@ -289,6 +290,17 @@ onMounted(() => {
       background: linear-gradient(135deg, rgba(255, 255, 255, 0.3), rgba(255, 255, 255, 0.1));
       border-radius: inherit;
       z-index: -1;
+    }
+
+    &::after {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      height: 1px;
+      background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.8), transparent);
+      z-index: 1;
     }
   }
 }
@@ -343,22 +355,37 @@ onMounted(() => {
   }
 
   :deep(.el-form-item) {
-    margin-bottom: $spacing-lg;
+    margin-bottom: $spacing-xl;
 
     .el-input {
       .el-input__wrapper {
         @include glass-effect();
-        border: 1px solid rgba(255, 255, 255, 0.2);
+        border: 1px solid rgba(255, 255, 255, 0.25);
         border-radius: $radius-lg;
         transition: all var(--transition-base);
+        padding: $spacing-sm $spacing-md;
+        min-height: 48px;
 
         &:hover {
-          border-color: rgba(var(--primary-color), 0.5);
+          border-color: rgba(var(--primary-color), 0.6);
+          transform: translateY(-1px);
+          @include shadow-colored(var(--primary-color), 0.1);
         }
 
         &.is-focus {
           border-color: var(--primary-color);
-          @include shadow-colored(var(--primary-color), 0.2);
+          @include shadow-colored(var(--primary-color), 0.25);
+          transform: translateY(-2px);
+        }
+
+        .el-input__inner {
+          color: var(--text-primary);
+          font-weight: $font-weight-medium;
+
+          &::placeholder {
+            color: var(--text-tertiary);
+            font-weight: $font-weight-normal;
+          }
         }
       }
     }
@@ -367,6 +394,7 @@ onMounted(() => {
       .el-checkbox__label {
         color: var(--text-secondary);
         font-size: $font-size-sm;
+        font-weight: $font-weight-medium;
       }
     }
   }
