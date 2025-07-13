@@ -75,12 +75,17 @@ public class SecurityConfig {
         // 配置请求授权
         .authorizeHttpRequests(authz -> authz
             // 公开接口
-            .requestMatchers("/api/auth/**").permitAll().requestMatchers("/api/public/**")
-            .permitAll()
+            .requestMatchers("/api/auth/**").permitAll()
+            .requestMatchers("/api/public/**").permitAll()
+
+            // 项目市场公开接口
+            .requestMatchers("/api/public/projects/**").permitAll()
+            .requestMatchers("/api/public/categories/**").permitAll()
+            .requestMatchers("/api/public/search/**").permitAll()
 
             // 健康检查和监控
-            .requestMatchers("/actuator/health").permitAll().requestMatchers("/actuator/**")
-            .hasRole("ADMIN")
+            .requestMatchers("/actuator/health").permitAll()
+            .requestMatchers("/actuator/**").hasRole("ADMIN")
 
             // API文档
             .requestMatchers("/swagger-ui/**", "/api-docs/**").permitAll()

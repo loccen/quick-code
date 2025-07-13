@@ -64,17 +64,68 @@ export const basicRoutes: RouteRecordRaw[] = [
 ]
 
 /**
+ * 公开路由（匿名可访问）
+ */
+export const publicRoutes: RouteRecordRaw[] = [
+  {
+    path: '/',
+    name: 'PublicLayout',
+    component: () => import('@/layouts/PublicLayout.vue'),
+    children: [
+      {
+        path: '',
+        name: 'Home',
+        component: () => import('@/views/HomeView.vue'),
+        meta: {
+          title: '速码网 - 专业的源码交易平台',
+          keepAlive: true
+        }
+      },
+      {
+        path: 'market',
+        name: 'Market',
+        component: () => import('@/views/market/MarketView.vue'),
+        meta: {
+          title: '项目市场',
+          keepAlive: true
+        }
+      },
+      {
+        path: 'market/project/:id',
+        name: 'PublicProjectDetail',
+        component: () => import('@/views/market/ProjectDetailView.vue'),
+        meta: {
+          title: '项目详情',
+          hidden: true
+        }
+      },
+      {
+        path: 'about',
+        name: 'About',
+        component: () => import('@/views/AboutView.vue'),
+        meta: {
+          title: '关于我们'
+        }
+      }
+    ]
+  }
+]
+
+/**
  * 主要路由（需要认证）
  */
 export const mainRoutes: RouteRecordRaw[] = [
   {
-    path: '/',
-    name: 'Layout',
+    path: '/user',
+    name: 'UserLayout',
     component: () => import('@/layouts/MainLayout.vue'),
-    redirect: '/dashboard',
+    redirect: '/user/dashboard',
+    meta: {
+      requiresAuth: true
+    },
     children: [
       {
-        path: '/dashboard',
+        path: 'dashboard',
         name: 'Dashboard',
         component: () => import('@/views/dashboard/DashboardView.vue'),
         meta: {
@@ -86,7 +137,7 @@ export const mainRoutes: RouteRecordRaw[] = [
         }
       },
       {
-        path: '/profile',
+        path: 'profile',
         name: 'Profile',
         component: () => import('@/views/user/ProfileView.vue'),
         meta: {
@@ -97,7 +148,7 @@ export const mainRoutes: RouteRecordRaw[] = [
         }
       },
       {
-        path: '/settings',
+        path: 'settings',
         name: 'Settings',
         component: () => import('@/views/user/SettingsView.vue'),
         meta: {
@@ -105,6 +156,37 @@ export const mainRoutes: RouteRecordRaw[] = [
           icon: 'Setting',
           requiresAuth: true,
           hidden: true
+        }
+      },
+      {
+        path: 'my-projects',
+        name: 'MyProjects',
+        component: () => import('@/views/project/MyProjectsView.vue'),
+        meta: {
+          title: '我的项目',
+          icon: 'FolderOpened',
+          requiresAuth: true,
+          permissions: ['project:view']
+        }
+      },
+      {
+        path: 'my-orders',
+        name: 'MyOrders',
+        component: () => import('@/views/order/MyOrdersView.vue'),
+        meta: {
+          title: '我的订单',
+          icon: 'ShoppingCart',
+          requiresAuth: true
+        }
+      },
+      {
+        path: 'points',
+        name: 'Points',
+        component: () => import('@/views/point/PointsView.vue'),
+        meta: {
+          title: '积分管理',
+          icon: 'Coin',
+          requiresAuth: true
         }
       }
     ]
@@ -115,51 +197,6 @@ export const mainRoutes: RouteRecordRaw[] = [
  * 动态路由（根据权限加载）
  */
 export const dynamicRoutes: RouteRecordRaw[] = [
-  {
-    path: '/projects',
-    name: 'Projects',
-    component: () => import('@/layouts/MainLayout.vue'),
-    meta: {
-      title: '项目管理',
-      icon: 'FolderOpened',
-      requiresAuth: true,
-      permissions: ['project:view']
-    },
-    children: [
-      {
-        path: '',
-        name: 'ProjectList',
-        component: () => import('@/views/project/ProjectListView.vue'),
-        meta: {
-          title: '项目列表',
-          requiresAuth: true,
-          permissions: ['project:view']
-        }
-      },
-      {
-        path: 'create',
-        name: 'ProjectCreate',
-        component: () => import('@/views/project/ProjectCreateView.vue'),
-        meta: {
-          title: '创建项目',
-          requiresAuth: true,
-          permissions: ['project:create'],
-          hidden: true
-        }
-      },
-      {
-        path: ':id',
-        name: 'ProjectDetail',
-        component: () => import('@/views/project/ProjectDetailView.vue'),
-        meta: {
-          title: '项目详情',
-          requiresAuth: true,
-          permissions: ['project:view'],
-          hidden: true
-        }
-      }
-    ]
-  },
   {
     path: '/admin',
     name: 'Admin',
@@ -210,6 +247,7 @@ export const dynamicRoutes: RouteRecordRaw[] = [
  */
 export const routes: RouteRecordRaw[] = [
   ...basicRoutes,
+  ...publicRoutes,
   ...mainRoutes,
   ...dynamicRoutes,
   // 404路由必须放在最后

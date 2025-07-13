@@ -1,20 +1,77 @@
 {
     "java.compile.nullAnalysis.mode": "automatic",
-    "cSpell.words": [
-      "baomidou",
-      "hikari",
-      "hutool",
-      "jdbc",
-      "jjwt",
-      "jsonwebtoken",
-      "Jwts",
-      "mybatis",
-      "projectlombok",
-      "quickcode",
-      "springdoc",
-      "springframework",
-      "testcontainers",
-      "webmvc"
+    "java.configuration.updateBuildConfiguration": "interactive",
+    "typescript.preferences.includePackageJsonAutoImports": "on",
+    "typescript.suggest.autoImports": true,
+    "typescript.updateImportsOnFileMove.enabled": "always",
+    "vue.server.hybridMode": true,
+    "vue.splitEditors.layout.left": ["script", "scriptSetup", "styles"],
+    "vue.splitEditors.layout.right": ["template", "customBlocks"],
+    "eslint.workingDirectories": [
+      "user-frontend",
+      "admin-frontend"
     ],
-    "java.configuration.updateBuildConfiguration": "interactive"
+    "eslint.validate": [
+      "javascript",
+      "javascriptreact",
+      "typescript",
+      "typescriptreact",
+      "vue"
+    ],
+    "prettier.configPath": "./user-frontend/.prettierrc",
+    "editor.defaultFormatter": "esbenp.prettier-vscode",
+    "editor.formatOnSave": true,
+    "editor.codeActionsOnSave": {
+        "source.fixAll.eslint": "explicit"
+    },
+    "files.associations": {
+        "*.vue": "vue",
+        "*.ts": "typescript",
+        "*.js": "javascript"
+    },
+    "terminal.integrated.defaultProfile.linux": "zsh",
+    "terminal.integrated.cwd": "${workspaceFolder}",
+    "debug.terminal.clearBeforeReusing": true,
+    "debug.console.fontSize": 14,
+    "cSpell.words": [
+        "baomidou",
+        "hikari",
+        "hutool",
+        "jdbc",
+        "jjwt",
+        "jsonwebtoken",
+        "Jwts",
+        "mybatis",
+        "projectlombok",
+        "quickcode",
+        "springdoc",
+        "springframework",
+        "testcontainers",
+        "webmvc",
+        "devcontainer",
+        "devtools",
+        "glassmorphism",
+        "pinia",
+        "playwright",
+        "vite",
+        "vitest",
+        "vuejs"
+    ],
+    "files.exclude": {
+        "**/node_modules": true,
+        "**/dist": true,
+        "**/target": true,
+        "**/.git": true,
+        "**/.DS_Store": true,
+        "**/test-results": true,
+        "**/playwright-report": true
+    },
+    "search.exclude": {
+        "**/node_modules": true,
+        "**/dist": true,
+        "**/target": true,
+        "**/test-results": true,
+        "**/playwright-report": true,
+        "**/*.log": true
+    }
 }

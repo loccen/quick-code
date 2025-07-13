@@ -1,0 +1,272 @@
+{
+  "version": "2.0.0",
+  "tasks": [
+    {
+      "label": "🚀 启动用户端前端",
+      "type": "shell",
+      "command": "npm",
+      "args": ["run", "dev"],
+      "options": {
+        "cwd": "${workspaceFolder}/user-frontend"
+      },
+      "group": {
+        "kind": "build",
+        "isDefault": false
+      },
+      "presentation": {
+        "echo": true,
+        "reveal": "always",
+        "focus": false,
+        "panel": "new",
+        "showReuseMessage": true,
+        "clear": false,
+        "group": "frontend"
+      },
+      "isBackground": true,
+      "problemMatcher": {
+        "owner": "vite",
+        "pattern": {
+          "regexp": "^(.*):(\\d+):(\\d+):\\s+(warning|error):\\s+(.*)$",
+          "file": 1,
+          "line": 2,
+          "column": 3,
+          "severity": 4,
+          "message": 5
+        },
+        "background": {
+          "activeOnStart": true,
+          "beginsPattern": "^.*Local:.*$",
+          "endsPattern": "^.*ready in.*$"
+        }
+      },
+      "runOptions": {
+        "runOn": "folderOpen"
+      }
+    },
+    {
+      "label": "🎛️ 启动管理后台前端",
+      "type": "shell",
+      "command": "npm",
+      "args": ["run", "dev", "--", "--port", "3001"],
+      "options": {
+        "cwd": "${workspaceFolder}/admin-frontend"
+      },
+      "group": {
+        "kind": "build",
+        "isDefault": false
+      },
+      "presentation": {
+        "echo": true,
+        "reveal": "always",
+        "focus": false,
+        "panel": "new",
+        "showReuseMessage": true,
+        "clear": false,
+        "group": "frontend"
+      },
+      "isBackground": true,
+      "problemMatcher": {
+        "owner": "vite",
+        "pattern": {
+          "regexp": "^(.*):(\\d+):(\\d+):\\s+(warning|error):\\s+(.*)$",
+          "file": 1,
+          "line": 2,
+          "column": 3,
+          "severity": 4,
+          "message": 5
+        },
+        "background": {
+          "activeOnStart": true,
+          "beginsPattern": "^.*Local:.*$",
+          "endsPattern": "^.*ready in.*$"
+        }
+      }
+    },
+    {
+      "label": "🔧 启动后端服务器",
+      "type": "shell",
+      "command": "mvn",
+      "args": ["spring-boot:run"],
+      "options": {
+        "cwd": "${workspaceFolder}/backend",
+        "env": {
+          "JAVA_HOME": "/usr/lib/jvm/java-17-openjdk-arm64",
+          "PATH": "/usr/lib/jvm/java-17-openjdk-arm64/bin:${env:PATH}"
+        }
+      },
+      "group": {
+        "kind": "build",
+        "isDefault": false
+      },
+      "presentation": {
+        "echo": true,
+        "reveal": "always",
+        "focus": false,
+        "panel": "new",
+        "showReuseMessage": true,
+        "clear": false,
+        "group": "backend"
+      },
+      "isBackground": true,
+      "problemMatcher": {
+        "owner": "spring-boot",
+        "pattern": {
+          "regexp": "^(.*):(\\d+):(\\d+):\\s+(ERROR|WARN|INFO)\\s+(.*)$",
+          "file": 1,
+          "line": 2,
+          "column": 3,
+          "severity": 4,
+          "message": 5
+        },
+        "background": {
+          "activeOnStart": true,
+          "beginsPattern": "^.*Starting.*Application.*$",
+          "endsPattern": "^.*Started.*Application.*$"
+        }
+      }
+    },
+    {
+      "label": "🧪 运行E2E测试",
+      "type": "shell",
+      "command": "npm",
+      "args": ["run", "test:e2e"],
+      "options": {
+        "cwd": "${workspaceFolder}/user-frontend"
+      },
+      "group": {
+        "kind": "test",
+        "isDefault": true
+      },
+      "presentation": {
+        "echo": true,
+        "reveal": "always",
+        "focus": true,
+        "panel": "new",
+        "showReuseMessage": true,
+        "clear": true,
+        "group": "test"
+      },
+      "problemMatcher": {
+        "owner": "playwright",
+        "pattern": {
+          "regexp": "^\\s*(.*):(\\d+):(\\d+)\\s+(.*)$",
+          "file": 1,
+          "line": 2,
+          "column": 3,
+          "message": 4
+        }
+      }
+    },
+    {
+      "label": "🎭 运行E2E测试 (UI模式)",
+      "type": "shell",
+      "command": "npm",
+      "args": ["run", "test:e2e:ui"],
+      "options": {
+        "cwd": "${workspaceFolder}/user-frontend"
+      },
+      "group": {
+        "kind": "test",
+        "isDefault": false
+      },
+      "presentation": {
+        "echo": true,
+        "reveal": "always",
+        "focus": true,
+        "panel": "new",
+        "showReuseMessage": true,
+        "clear": true,
+        "group": "test"
+      }
+    },
+    {
+      "label": "🔍 运行E2E测试 (调试模式)",
+      "type": "shell",
+      "command": "npm",
+      "args": ["run", "test:e2e:debug"],
+      "options": {
+        "cwd": "${workspaceFolder}/user-frontend"
+      },
+      "group": {
+        "kind": "test",
+        "isDefault": false
+      },
+      "presentation": {
+        "echo": true,
+        "reveal": "always",
+        "focus": true,
+        "panel": "new",
+        "showReuseMessage": true,
+        "clear": true,
+        "group": "test"
+      }
+    },
+    {
+      "label": "📊 查看E2E测试报告",
+      "type": "shell",
+      "command": "npm",
+      "args": ["run", "test:e2e:report"],
+      "options": {
+        "cwd": "${workspaceFolder}/user-frontend"
+      },
+      "group": {
+        "kind": "test",
+        "isDefault": false
+      },
+      "presentation": {
+        "echo": true,
+        "reveal": "always",
+        "focus": true,
+        "panel": "new",
+        "showReuseMessage": true,
+        "clear": false,
+        "group": "test"
+      }
+    },
+    {
+      "label": "🧹 清理前端依赖",
+      "type": "shell",
+      "command": "rm",
+      "args": ["-rf", "node_modules", "package-lock.json"],
+      "options": {
+        "cwd": "${workspaceFolder}/user-frontend"
+      },
+      "group": "build",
+      "presentation": {
+        "echo": true,
+        "reveal": "always",
+        "focus": true,
+        "panel": "shared",
+        "showReuseMessage": true,
+        "clear": false
+      }
+    },
+    {
+      "label": "📦 重新安装前端依赖",
+      "type": "shell",
+      "command": "npm",
+      "args": ["install"],
+      "options": {
+        "cwd": "${workspaceFolder}/user-frontend"
+      },
+      "group": "build",
+      "presentation": {
+        "echo": true,
+        "reveal": "always",
+        "focus": true,
+        "panel": "shared",
+        "showReuseMessage": true,
+        "clear": false
+      },
+      "dependsOn": "🧹 清理前端依赖"
+    },
+    {
+      "label": "🔄 重启前端开发服务器",
+      "dependsOrder": "sequence",
+      "dependsOn": [
+        "📦 重新安装前端依赖",
+        "🚀 启动用户端前端"
+      ]
+    }
+  ]
+}

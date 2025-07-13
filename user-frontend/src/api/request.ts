@@ -15,12 +15,18 @@ const request: AxiosInstance = axios.create({
 // 请求拦截器
 request.interceptors.request.use(
   (config: AxiosRequestConfig) => {
-    // 添加认证token
-    const token = localStorage.getItem('token')
-    if (token && config.headers) {
-      config.headers.Authorization = `Bearer ${token}`
+    // 检查是否为公开API，公开API不需要添加认证头
+    const isPublicApi = config.url?.includes('/api/public/') ||
+                       config.url?.includes('/api/auth/')
+
+    // 添加认证token（仅对非公开API）
+    if (!isPublicApi) {
+      const token = localStorage.getItem('token')
+      if (token && config.headers) {
+        config.headers.Authorization = `Bearer ${token}`
+      }
     }
-    
+
     console.log('发送请求:', config.method?.toUpperCase(), config.url, config.data)
     return config
   },
@@ -38,10 +44,10 @@ request.interceptors.response.use(
   },
   (error) => {
     console.error('响应错误:', error)
-    
+
     if (error.response) {
       const { status, data } = error.response
-      
+
       switch (status) {
         case 401:
           ElMessage.error('未授权，请重新登录')
@@ -66,7 +72,7 @@ request.interceptors.response.use(
     } else {
       ElMessage.error('请求配置错误')
     }
-    
+
     return Promise.reject(error)
   }
 )
@@ -76,19 +82,19 @@ export const api = {
   get: <T = any>(url: string, config?: AxiosRequestConfig): Promise<T> => {
     return request.get(url, config).then(res => res.data)
   },
-  
+
   post: <T = any>(url: string, data?: any, config?: AxiosRequestConfig): Promise<T> => {
     return request.post(url, data, config).then(res => res.data)
   },
-  
+
   put: <T = any>(url: string, data?: any, config?: AxiosRequestConfig): Promise<T> => {
     return request.put(url, data, config).then(res => res.data)
   },
-  
+
   delete: <T = any>(url: string, config?: AxiosRequestConfig): Promise<T> => {
     return request.delete(url, config).then(res => res.data)
   },
-  
+
   patch: <T = any>(url: string, data?: any, config?: AxiosRequestConfig): Promise<T> => {
     return request.patch(url, data, config).then(res => res.data)
   }

@@ -1,10 +1,10 @@
 /**
  * 路由守卫
  */
-import type { Router, RouteLocationNormalized, NavigationGuardNext } from 'vue-router'
-import { ElMessage } from 'element-plus'
-import { useUserStore } from '@/stores/user'
 import { useAppStore } from '@/stores/app'
+import { useUserStore } from '@/stores/user'
+import { ElMessage } from 'element-plus'
+import type { NavigationGuardNext, RouteLocationNormalized, Router } from 'vue-router'
 
 /**
  * 设置路由守卫
@@ -23,9 +23,15 @@ export function setupRouterGuards(router: Router) {
       appStore.setPageTitle(to.meta.title)
     }
 
-    // 认证检查
+    // 如果已登录且访问登录页，重定向到用户仪表盘
+    if (to.path === '/login' && userStore.isAuthenticated) {
+      next('/user/dashboard')
+      return
+    }
+
+    // 认证检查 - 只对明确需要认证的路由进行检查
     if (to.meta?.requiresAuth && !userStore.isAuthenticated) {
-      ElMessage.warning('请先登录')
+      ElMessage.warning('请先登录后再访问该功能')
       next({
         path: '/login',
         query: { redirect: to.fullPath }
@@ -33,8 +39,8 @@ export function setupRouterGuards(router: Router) {
       return
     }
 
-    // 权限检查
-    if (to.meta?.permissions && to.meta.permissions.length > 0) {
+    // 权限检查 - 只在已登录且需要特定权限时检查
+    if (userStore.isAuthenticated && to.meta?.permissions && to.meta.permissions.length > 0) {
       const hasPermission = userStore.hasAnyPermission(to.meta.permissions)
       if (!hasPermission) {
         ElMessage.error('权限不足')
@@ -43,8 +49,8 @@ export function setupRouterGuards(router: Router) {
       }
     }
 
-    // 角色检查
-    if (to.meta?.roles && to.meta.roles.length > 0) {
+    // 角色检查 - 只在已登录且需要特定角色时检查
+    if (userStore.isAuthenticated && to.meta?.roles && to.meta.roles.length > 0) {
       const hasRole = to.meta.roles.some(role => userStore.hasRole(role))
       if (!hasRole) {
         ElMessage.error('角色权限不足')
@@ -53,19 +59,13 @@ export function setupRouterGuards(router: Router) {
       }
     }
 
-    // 如果已登录且访问登录页，重定向到首页
-    if (to.path === '/login' && userStore.isAuthenticated) {
-      next('/')
-      return
-    }
-
     next()
   })
 
   // 全局后置守卫
   router.afterEach((to, from) => {
     const appStore = useAppStore()
-    
+
     // 关闭页面加载状态
     appStore.setPageLoading(false)
 
@@ -77,7 +77,7 @@ export function setupRouterGuards(router: Router) {
   router.beforeResolve(async (to, from, next) => {
     // 在这里可以进行一些异步操作，比如获取用户信息
     const userStore = useUserStore()
-    
+
     // 如果用户已登录但没有用户信息，尝试获取
     if (userStore.isAuthenticated && !userStore.user) {
       try {
@@ -93,7 +93,7 @@ export function setupRouterGuards(router: Router) {
         }
       }
     }
-    
+
     next()
   })
 }
@@ -104,13 +104,13 @@ export function setupRouterGuards(router: Router) {
 export function createPermissionGuard(permissions: string[]) {
   return (to: RouteLocationNormalized, from: RouteLocationNormalized, next: NavigationGuardNext) => {
     const userStore = useUserStore()
-    
+
     if (!userStore.hasAnyPermission(permissions)) {
       ElMessage.error('权限不足')
       next('/403')
       return
     }
-    
+
     next()
   }
 }
@@ -121,14 +121,14 @@ export function createPermissionGuard(permissions: string[]) {
 export function createRoleGuard(roles: string[]) {
   return (to: RouteLocationNormalized, from: RouteLocationNormalized, next: NavigationGuardNext) => {
     const userStore = useUserStore()
-    
+
     const hasRole = roles.some(role => userStore.hasRole(role))
     if (!hasRole) {
       ElMessage.error('角色权限不足')
       next('/403')
       return
     }
-    
+
     next()
   }
 }
@@ -139,7 +139,7 @@ export function createRoleGuard(roles: string[]) {
 export function createAuthGuard() {
   return (to: RouteLocationNormalized, from: RouteLocationNormalized, next: NavigationGuardNext) => {
     const userStore = useUserStore()
-    
+
     if (!userStore.isAuthenticated) {
       ElMessage.warning('请先登录')
       next({
@@ -148,7 +148,7 @@ export function createAuthGuard() {
       })
       return
     }
-    
+
     next()
   }
 }

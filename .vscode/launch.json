@@ -1,0 +1,219 @@
+{
+  "version": "0.2.0",
+  "configurations": [
+    {
+      "name": "🚀 启动用户端前端开发服务器",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "npm run dev",
+      "cwd": "${workspaceFolder}/user-frontend",
+      "group": "frontend",
+      "presentation": {
+        "echo": true,
+        "reveal": "always",
+        "focus": false,
+        "panel": "new",
+        "showReuseMessage": true,
+        "clear": false,
+        "group": "frontend"
+      },
+      "problemMatcher": [],
+      "runOptions": {
+        "runOn": "folderOpen"
+      }
+    },
+    {
+      "name": "🎛️ 启动管理后台前端开发服务器",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "npm run dev -- --port 3001",
+      "cwd": "${workspaceFolder}/admin-frontend",
+      "group": "frontend",
+      "presentation": {
+        "echo": true,
+        "reveal": "always",
+        "focus": false,
+        "panel": "new",
+        "showReuseMessage": true,
+        "clear": false,
+        "group": "frontend"
+      },
+      "problemMatcher": []
+    },
+    {
+      "name": "🧪 运行用户端E2E测试",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "npm run test:e2e",
+      "cwd": "${workspaceFolder}/user-frontend",
+      "group": "test",
+      "presentation": {
+        "echo": true,
+        "reveal": "always",
+        "focus": true,
+        "panel": "new",
+        "showReuseMessage": true,
+        "clear": true,
+        "group": "test"
+      },
+      "problemMatcher": []
+    },
+    {
+      "name": "🎭 运行用户端E2E测试 (UI模式)",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "npm run test:e2e:ui",
+      "cwd": "${workspaceFolder}/user-frontend",
+      "group": "test",
+      "presentation": {
+        "echo": true,
+        "reveal": "always",
+        "focus": true,
+        "panel": "new",
+        "showReuseMessage": true,
+        "clear": true,
+        "group": "test"
+      },
+      "problemMatcher": []
+    },
+    {
+      "name": "🔍 运行用户端E2E测试 (调试模式)",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "npm run test:e2e:debug",
+      "cwd": "${workspaceFolder}/user-frontend",
+      "group": "test",
+      "presentation": {
+        "echo": true,
+        "reveal": "always",
+        "focus": true,
+        "panel": "new",
+        "showReuseMessage": true,
+        "clear": true,
+        "group": "test"
+      },
+      "problemMatcher": []
+    },
+    {
+      "name": "👀 运行用户端E2E测试 (有头模式)",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "npm run test:e2e:headed",
+      "cwd": "${workspaceFolder}/user-frontend",
+      "group": "test",
+      "presentation": {
+        "echo": true,
+        "reveal": "always",
+        "focus": true,
+        "panel": "new",
+        "showReuseMessage": true,
+        "clear": true,
+        "group": "test"
+      },
+      "problemMatcher": []
+    },
+    {
+      "name": "📊 查看E2E测试报告",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "npm run test:e2e:report",
+      "cwd": "${workspaceFolder}/user-frontend",
+      "group": "test",
+      "presentation": {
+        "echo": true,
+        "reveal": "always",
+        "focus": true,
+        "panel": "new",
+        "showReuseMessage": true,
+        "clear": false,
+        "group": "test"
+      },
+      "problemMatcher": []
+    },
+    {
+      "name": "🔧 启动后端开发服务器",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "mvn spring-boot:run",
+      "cwd": "${workspaceFolder}/backend",
+      "group": "backend",
+      "presentation": {
+        "echo": true,
+        "reveal": "always",
+        "focus": false,
+        "panel": "new",
+        "showReuseMessage": true,
+        "clear": false,
+        "group": "backend"
+      },
+      "problemMatcher": [],
+      "env": {
+        "JAVA_HOME": "/usr/lib/jvm/java-17-openjdk-arm64",
+        "PATH": "/usr/lib/jvm/java-17-openjdk-arm64/bin:${env:PATH}"
+      }
+    },
+    {
+      "name": "🚀 启动完整开发环境",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "./scripts/dev-tools.sh start",
+      "cwd": "${workspaceFolder}",
+      "group": "development",
+      "presentation": {
+        "echo": true,
+        "reveal": "always",
+        "focus": true,
+        "panel": "new",
+        "showReuseMessage": true,
+        "clear": true,
+        "group": "development"
+      },
+      "problemMatcher": []
+    },
+    {
+      "name": "🛑 停止开发环境",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "./scripts/dev-tools.sh stop",
+      "cwd": "${workspaceFolder}",
+      "group": "development",
+      "presentation": {
+        "echo": true,
+        "reveal": "always",
+        "focus": true,
+        "panel": "new",
+        "showReuseMessage": true,
+        "clear": true,
+        "group": "development"
+      },
+      "problemMatcher": []
+    }
+  ],
+  "compounds": [
+    {
+      "name": "🌟 启动前端开发环境",
+      "configurations": [
+        "🚀 启动用户端前端开发服务器",
+        "🎛️ 启动管理后台前端开发服务器"
+      ],
+      "stopAll": true,
+      "presentation": {
+        "hidden": false,
+        "group": "frontend",
+        "order": 1
+      }
+    },
+    {
+      "name": "🔬 运行完整测试套件",
+      "configurations": [
+        "🧪 运行用户端E2E测试"
+      ],
+      "stopAll": true,
+      "presentation": {
+        "hidden": false,
+        "group": "test",
+        "order": 1
+      }
+    }
+  ]
+}

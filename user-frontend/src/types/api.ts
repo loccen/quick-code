@@ -100,3 +100,44 @@ export interface ApiError {
   /** 请求路径 */
   path?: string
 }
+
+/**
+ * 项目相关类型
+ */
+export interface Project {
+  id: number
+  title: string
+  description: string
+  category: string
+  price: number
+  thumbnail?: string
+  author: string
+  authorId?: number
+  rating?: number
+  downloads?: number
+  tags?: string[]
+  status?: 'DRAFT' | 'PENDING' | 'APPROVED' | 'REJECTED'
+  featured?: boolean
+  createdAt: string
+  updatedAt?: string
+  // 详细信息
+  features?: string[]
+  techStack?: string[]
+  sourceSize?: string
+  license?: string
+  demoUrl?: string
+  sourceUrl?: string
+}
+
+/**
+ * 项目分类类型
+ */
+export interface ProjectCategory {
+  id: number
+  name: string
+  code: string
+  description?: string
+  count: number
+  parentId?: number
+  children?: ProjectCategory[]
+}
