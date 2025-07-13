@@ -75,6 +75,14 @@
   --transition-fast: #{$transition-fast};
   --transition-base: #{$transition-base};
   --transition-slow: #{$transition-slow};
+
+  // 渐变背景
+  --gradient-primary: #{$gradient-primary};
+  --gradient-hero: #{$gradient-hero};
+  --gradient-card: #{$gradient-card};
+  --gradient-glass: #{$gradient-glass};
+  --gradient-sunset: #{$gradient-sunset};
+  --gradient-ocean: #{$gradient-ocean};
 }
 
 // 暗色主题
