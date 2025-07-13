@@ -2,257 +2,283 @@
 type: "agent_requested"
 description: "## 适用场景 本规范适用于速码网项目的所有UI设计和前端开发工作，包括用户端前端应用的界面设计和开发、管理后台前端应用的界面设计和开发、组件库的设计和实现、响应式布局的实现、用户体验优化、无障碍访问功能实现。AI在进行任何UI相关的设计、开发或优化时，必须严格遵循本规范。"
 ---
-# 速码网UI设计规范指南
+# 速码网现代化UI设计规范指南
 
-
+基于速码网主页原型的成功设计，本规范定义了完整的现代化UI设计系统，包含毛玻璃效果、多层次阴影、微交互动画等现代化元素。
 
 ## 1. 设计系统概述
 
-### 1.1 双前端应用设计原则
-- **用户端应用**：简洁直观、一致性、响应式、高效性、可访问性
+### 1.1 设计理念
+- **现代化美学**：采用毛玻璃效果、多层次阴影、渐变设计等现代化视觉元素
+- **微交互驱动**：通过涟漪效果、卡片倾斜、悬浮反馈等提升用户体验
+- **技术专业性**：体现速码网作为专业源码交易平台的技术特色
+- **响应式优先**：确保在所有设备上都有优秀的用户体验
+
+### 1.2 双前端应用设计原则
+- **用户端应用**：现代化视觉、直观交互、流畅动画、专业感、易用性
 - **管理后台应用**：功能性优先、信息密度合理、数据可视化、操作便捷、权限清晰
 
-### 1.2 设计系统变量
-```scss
-// 主色调
-$primary-color: #1890ff;
-$success-color: #52c41a;
-$warning-color: #faad14;
-$error-color: #ff4d4f;
+### 1.3 核心设计Token系统
 
-// 中性色
-$text-primary: #262626;
-$text-secondary: #595959;
-$border-color: #d9d9d9;
-$background-color: #f5f5f5;
+完整的设计Token定义请参考：`docs/ui-examples/design-tokens.scss`
 
-// 字体系统
-$font-family-base: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
-$font-size-base: 16px;
-$font-size-sm: 14px;
-$font-size-lg: 18px;
-$line-height-base: 1.5;
+**主要Token类别：**
+- **色彩系统**：主色调、中性色、状态色
+- **阴影系统**：多层次阴影、彩色阴影
+- **毛玻璃效果**：半透明背景、模糊效果
+- **渐变系统**：按钮、卡片、背景渐变
+- **字体系统**：字体族、尺寸、行高
+- **间距系统**：4px基础单位的8倍数系统
+- **圆角系统**：6px-24px渐进式圆角
+- **过渡动画**：缓动函数和时长定义
+**核心Token示例：**
+- 主色调：`#1890ff` (蓝色)
+- 成功色：`#52c41a` (绿色)
+- 警告色：`#faad14` (橙色)
+- 错误色：`#ff4d4f` (红色)
+- 多层次阴影：组合多个box-shadow创造深度感
+- 毛玻璃效果：`rgba(255,255,255,0.25)` + `blur(20px)`
+- 现代化圆角：6px-24px渐进式系统
 
-// 间距系统
-$spacing-unit: 8px;
-$spacing-sm: 8px;
-$spacing-md: 16px;
-$spacing-lg: 24px;
-$spacing-xl: 32px;
-```
+## 2. 现代化组件设计规范
 
-## 2. 组件库设计规范
+### 2.1 Element Plus现代化定制
 
-### 2.1 Element Plus定制化
-```scss
-:root {
-  --el-color-primary: #{$primary-color};
-  --el-color-success: #{$success-color};
-  --el-color-warning: #{$warning-color};
-  --el-color-danger: #{$error-color};
-  --el-font-size-base: #{$font-size-base};
-  --el-border-radius-base: 6px;
-}
-```
+Element Plus主题定制配置请参考：`docs/ui-examples/design-tokens.scss`
 
-### 2.2 通用组件设计
+**定制要点：**
+- 使用现代化圆角系统（12px基础圆角）
+- 应用多层次阴影效果
+- 集成毛玻璃效果和渐变设计
+- 优化过渡动画时长和缓动函数
 
-#### 按钮组件规范
-```vue
-<template>
-  <el-button type="primary">主要按钮</el-button>
-  <el-button type="default">次要按钮</el-button>
-  <el-button type="danger">删除</el-button>
-</template>
+### 2.2 现代化按钮组件
 
-<style scoped lang="scss">
-.el-button {
-  margin-right: $spacing-sm;
-  border-radius: 6px;
-  height: 40px;
-}
-</style>
-```
+按钮组件实现示例请参考：`docs/ui-examples/modern-components.vue`
 
-#### 表单组件规范
-```vue
-<template>
-  <el-form :model="form" label-width="120px">
-    <el-form-item label="用户名" prop="username">
-      <el-input v-model="form.username" placeholder="请输入用户名" />
-    </el-form-item>
-    <el-form-item>
-      <el-button type="primary" @click="handleSubmit">提交</el-button>
-    </el-form-item>
-  </el-form>
-</template>
+**按钮类型规范：**
+- **主要按钮**：渐变背景 + 彩色阴影 + 悬浮效果
+- **次要按钮**：毛玻璃效果 + 边框渐变
+- **危险按钮**：错误色阴影 + 警告交互
+- **涟漪效果**：点击时产生水波纹扩散动画
 
-<style scoped lang="scss">
-.form-container {
-  max-width: 600px;
-  .el-form-item { margin-bottom: $spacing-lg; }
-}
-</style>
-```
+**交互规范：**
+- 悬浮时上升2px并增强阴影
+- 点击时产生涟漪效果
+- 过渡动画使用cubic-bezier缓动函数
 
-#### 卡片组件规范
-```vue
-<template>
-  <el-card class="project-card" shadow="hover">
-    <template #header>
-      <h3 class="project-title">{{ project.title }}</h3>
-      <el-tag>{{ project.status }}</el-tag>
-    </template>
-    <div class="card-content">
-      <p class="project-description">{{ project.description }}</p>
-      <div class="card-footer">
-        <span class="price">¥{{ project.price }}</span>
-        <el-button type="primary" size="small">购买</el-button>
-      </div>
-    </div>
-  </el-card>
-</template>
+### 2.3 现代化表单组件
 
-<style scoped lang="scss">
-.project-card {
-  height: 100%;
-  &:hover { transform: translateY(-2px); }
-  .card-footer {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-  }
-}
-</style>
-```
+表单组件实现示例请参考：`docs/ui-examples/modern-components.vue`
 
-## 3. 响应式设计标准
+**表单设计规范：**
+- **毛玻璃输入框**：半透明背景 + 模糊效果 + 聚焦时增强透明度
+- **浮动标签**：标签在聚焦时上浮的动画效果
+- **验证反馈**：错误状态使用彩色阴影和边框高亮
+- **触摸友好**：移动端输入框最小高度44px，字体大小16px防止缩放
 
-### 3.1 断点系统
-```scss
-$breakpoints: (
-  xs: 0, sm: 576px, md: 768px, lg: 992px, xl: 1200px
-);
+### 2.4 现代化卡片组件
 
-@mixin respond-to($breakpoint) {
-  @media (min-width: map-get($breakpoints, $breakpoint)) {
-    @content;
-  }
-}
-```
+卡片组件实现示例请参考：`docs/ui-examples/modern-components.vue`
 
-### 3.2 栅格系统
-```vue
-<template>
-  <el-row :gutter="24">
-    <el-col :xs="24" :sm="12" :md="8" :lg="6">
-      <ProjectCard :project="project" />
-    </el-col>
-  </el-row>
-</template>
-```
+**卡片设计规范：**
+- **毛玻璃效果**：半透明背景 + 模糊效果 + 顶部高光线
+- **3D交互**：悬浮时上升8px并轻微放大(scale 1.02)
+- **徽章系统**：Docker标签、热门标签使用毛玻璃设计
+- **渐变背景**：卡片使用微妙的渐变背景增强层次感
 
-### 3.3 移动端适配
-```scss
-.mobile-optimized {
-  .el-button { min-height: 44px; }
-  .el-input { font-size: 16px; } // 防止iOS缩放
-}
-```
 
-## 4. 用户体验设计原则
+## 3. 现代化微交互动画系统
 
-### 4.1 交互反馈
-```vue
-<template>
-  <el-button type="primary" :loading="isSubmitting">
-    {{ isSubmitting ? '提交中...' : '提交' }}
-  </el-button>
-  <el-skeleton v-if="isLoading" :rows="5" animated />
-  <el-empty v-else-if="!projects.length" description="暂无项目" />
-</template>
-```
+微交互动画实现请参考：`docs/ui-examples/interaction-functions.ts`
 
-### 4.2 错误处理
-```vue
-<template>
-  <el-form :model="form" :rules="rules">
-    <el-form-item label="邮箱" prop="email" :error="emailError">
-      <el-input v-model="form.email" />
-    </el-form-item>
-  </el-form>
-  <el-alert v-if="globalError" :title="globalError" type="error" />
-</template>
+**核心动画效果：**
+- **涟漪效果**：按钮点击时产生水波纹扩散动画
+- **卡片3D倾斜**：鼠标移动时卡片跟随倾斜，增强立体感
+- **数字计数动画**：统计数字滚动增长效果
+- **滚动触发动画**：元素进入视口时的淡入上升动画
+- **智能导航滚动**：导航栏根据滚动方向智能显示/隐藏
 
-<script setup lang="ts">
-const showError = (message: string) => ElMessage.error(message)
-</script>
-```
+**Vue3组合式函数：**
+- `useRipple()` - 涟漪效果
+- `useCardTilt()` - 卡片倾斜
+- `useCounterAnimation()` - 数字计数
+- `useScrollAnimation()` - 滚动动画
+- `useSmartNavigation()` - 智能导航
 
-### 4.3 操作确认
-```vue
-<template>
-  <el-popconfirm title="确定要删除吗？" @confirm="handleDelete">
-    <template #reference>
-      <el-button type="danger">删除</el-button>
-    </template>
-  </el-popconfirm>
-</template>
-```
+## 4. 响应式设计标准
 
-## 5. 无障碍访问要求
+响应式设计实现请参考：`docs/ui-examples/responsive-patterns.scss`
 
-### 5.1 语义化HTML
-```vue
-<template>
-  <main role="main">
-    <header>
-      <h1>项目市场</h1>
-      <nav aria-label="面包屑导航">
-        <el-breadcrumb>
-          <el-breadcrumb-item to="/">首页</el-breadcrumb-item>
-        </el-breadcrumb>
-      </nav>
-    </header>
-    <section aria-label="搜索区域">
-      <el-input v-model="searchQuery" aria-label="搜索项目" />
-    </section>
-  </main>
-</template>
-```
+### 4.1 断点系统
+- **xs**: 0px (手机)
+- **sm**: 576px (大手机)
+- **md**: 768px (平板)
+- **lg**: 992px (小桌面)
+- **xl**: 1200px (桌面)
+- **2xl**: 1400px (大桌面)
 
-### 5.2 键盘导航
-```vue
-<script setup lang="ts">
-const handleKeydown = (event: KeyboardEvent) => {
-  switch (event.key) {
-    case 'Enter': handleActivate(); break
-    case 'Escape': handleClose(); break
-  }
-}
-</script>
-```
+### 4.2 容器系统
+- 响应式容器最大宽度：640px/768px/1024px/1280px/1536px
+- 自适应内边距：16px(移动端) → 24px(桌面端)
+- Element Plus栅格系统：24列网格，响应式间距
 
-### 5.3 颜色对比度
-```scss
-.high-contrast {
-  color: $text-primary; // 确保4.5:1对比度
-  a { color: $primary-color; }
-}
-```
+### 4.3 移动端适配规范
+- **触摸友好**：按钮最小高度44px
+- **防止缩放**：输入框字体大小16px
+- **禁用hover**：移动端禁用悬浮效果
+- **导航优化**：移动端使用毛玻璃下拉菜单
 
-## 6. 性能优化
+## 5. 现代化导航系统
 
-### 6.1 图片优化
-```vue
-<template>
-  <img :src="project.imageUrl" :alt="project.title" loading="lazy" />
-</template>
-```
+导航组件实现示例请参考：`docs/ui-examples/modern-components.vue`
 
-### 6.2 懒加载
-```vue
-<template>
+### 5.1 毛玻璃导航栏设计规范
+**导航栏特性：**
+- **毛玻璃效果**：半透明背景 + 20px模糊效果
+- **智能滚动**：根据滚动方向自动显示/隐藏
+- **状态变化**：滚动时增强阴影和透明度
+- **响应式布局**：移动端自适应菜单
+
+### 5.2 智能滚动行为
+
+智能滚动实现请参考：`docs/ui-examples/interaction-functions.ts`
+
+**滚动控制特性：**
+- **滚动阈值**：15px滚动距离才触发状态变化
+- **方向稳定性**：连续3次相同方向滚动才执行隐藏/显示
+- **防抖机制**：80ms防抖延迟，避免频繁状态切换
+- **移动端优化**：更大的阈值和延迟，适配触摸滚动
+## 6. 用户体验设计原则
+
+用户体验组件实现示例请参考：`docs/ui-examples/modern-components.vue`
+
+### 6.1 现代化交互反馈规范
+**交互反馈类型：**
+- **加载状态**：按钮loading状态 + 涟漪效果
+- **骨架屏**：渐变动画的内容占位符
+- **空状态**：友好的空数据提示和引导操作
+- **进度反馈**：实时状态更新和视觉反馈
+
+### 6.2 现代化错误处理规范
+- **输入验证**：错误状态使用彩色阴影和边框高亮
+- **全局错误**：毛玻璃错误横幅，固定定位，滑动动画
+- **错误恢复**：提供明确的错误信息和恢复操作
+- **视觉层次**：错误状态使用错误色系统，层级清晰
+
+### 6.3 现代化操作确认规范
+- **确认对话框**：毛玻璃背景，圆角设计，多层次阴影
+- **警告图标**：渐变背景的圆形图标，彩色阴影
+- **操作按钮**：取消使用毛玻璃按钮，确认使用危险色按钮
+- **加载状态**：确认操作时显示loading状态
+
+## 7. 无障碍访问和性能优化
+
+无障碍访问和性能优化实现请参考：`docs/ui-examples/responsive-patterns.scss`
+
+### 7.1 无障碍访问规范
+**无障碍访问要点：**
+- **语义化HTML**：使用正确的HTML标签和ARIA属性
+- **键盘导航**：所有交互元素支持键盘操作
+- **跳过链接**：提供跳转到主要内容的快捷方式
+- **屏幕阅读器**：为按钮和表单提供描述性标签
+- **减少动画**：支持`prefers-reduced-motion`媒体查询
+- **高对比度**：支持`prefers-contrast`高对比度模式
+
+### 7.2 性能优化指南
+
+**核心优化策略：**
+- **组件懒加载**：使用`defineAsyncComponent`和路由懒加载
+- **图片优化**：响应式图片、WebP格式、懒加载
+- **虚拟滚动**：大数据列表使用`el-virtual-list`
+- **代码分割**：按路由和功能模块分割代码
+- **缓存策略**：合理使用浏览器缓存和CDN
+
+
+
+### 7.3 现代化滚动条和焦点样式
+
+滚动条和焦点样式实现请参考：`docs/ui-examples/responsive-patterns.scss`
+
+**样式特性：**
+- **现代化滚动条**：8px宽度，渐变背景，圆角设计
+- **文本选择**：主色调半透明背景
+- **焦点样式**：2px主色调轮廓，2px偏移量
+- **按钮焦点**：组合轮廓和阴影效果
+
+## 8. 实施指南和最佳实践
+
+### 8.1 Vue3 + TypeScript集成
+
+Vue3组合式函数集成请参考：`docs/ui-examples/interaction-functions.ts`
+
+**集成要点：**
+- 使用组合式API和TypeScript类型定义
+- 导入UI交互函数：`useRipple`、`useCardTilt`、`useScrollAnimation`
+- 在`onMounted`生命周期中初始化动画观察器
+- 返回响应式引用和事件处理函数
+
+### 8.2 Element Plus主题定制
+
+Element Plus主题定制配置请参考：`docs/ui-examples/design-tokens.scss`
+
+**定制要点：**
+- 覆盖Element Plus CSS变量，使用现代化设计Token
+- 全局应用现代化组件样式（按钮、卡片、输入框）
+- 配置合适的z-index层级和默认尺寸
+
+### 8.3 开发工作流程
+1. **设计Token优先**：始终使用定义的设计变量
+2. **组件化开发**：将UI元素拆分为可复用组件
+3. **渐进增强**：先实现基础功能，再添加现代化效果
+4. **性能监控**：使用Vue DevTools监控组件性能
+5. **无障碍测试**：使用屏幕阅读器和键盘导航测试
+6. **跨浏览器测试**：确保在主流浏览器中正常工作
+
+### 8.4 代码质量保证
+- **ESLint配置**：Vue3 + TypeScript规则，组件命名规范
+- **Stylelint配置**：SCSS标准规则，支持现代CSS属性
+- **类型检查**：严格的TypeScript类型定义
+- **代码格式化**：Prettier统一代码风格
+
+## 9. 文档引用说明
+
+本规范的详细实现代码已提取到独立文档文件中：
+
+### 9.1 核心文档文件
+- **`docs/ui-examples/design-tokens.scss`** - 完整的设计Token系统和SCSS变量定义
+- **`docs/ui-examples/modern-components.vue`** - Vue组件实现示例（按钮、卡片、表单、导航等）
+- **`docs/ui-examples/interaction-functions.ts`** - TypeScript交互函数库（涟漪、倾斜、滚动动画等）
+- **`docs/ui-examples/responsive-patterns.scss`** - 响应式设计模式和无障碍访问样式
+
+### 9.2 使用方式
+在开发过程中，请参考相应的文档文件获取具体的实现代码：
+1. 复制所需的设计Token到项目的SCSS变量文件中
+2. 参考组件示例实现具体的UI组件
+3. 导入交互函数库到Vue组件中使用
+4. 应用响应式模式确保移动端兼容性
+
+---
+
+## 总结
+
+本UI设计规范基于速码网主页原型的成功实践，提供了完整的现代化UI设计系统：
+
+**核心特性：**
+- **现代化视觉效果**：毛玻璃效果、多层次阴影、渐变设计
+- **微交互动画**：涟漪效果、卡片倾斜、智能滚动
+- **完整设计系统**：130+个设计Token，统一的视觉语言
+- **响应式优先**：适配所有设备的设计方案
+- **无障碍友好**：支持屏幕阅读器和键盘导航
+- **性能优化**：懒加载、虚拟滚动、代码分割
+
+**技术集成：**
+- Vue3 + TypeScript + Element Plus技术栈
+- 组合式API和现代化开发模式
+- ESLint + Stylelint代码质量保证
+- 完整的开发工作流程指导
+
+遵循这些规范，可以确保整个速码网项目具有一致的现代化视觉效果和优秀的用户体验。
   <el-virtual-list :data="projects" :height="600" :item-size="120">
     <template #default="{ item }">
       <ProjectCard :project="item" />
