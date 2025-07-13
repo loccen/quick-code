@@ -273,7 +273,7 @@ onMounted(() => {
   padding: $spacing-lg;
 
   .login-card {
-    padding: $spacing-2xl $spacing-3xl;
+    padding: $spacing-xl $spacing-2xl;
     @include shadow-layered-lg();
     border: 1px solid rgba(255, 255, 255, 0.2);
     position: relative;
@@ -307,33 +307,39 @@ onMounted(() => {
 
 .login-header {
   text-align: center;
-  margin-bottom: $spacing-2xl;
+  margin-bottom: $spacing-xl;
 
   .logo {
     @include flex-center();
     flex-direction: column;
     gap: $spacing-sm;
-    margin-bottom: $spacing-lg;
+    margin-bottom: $spacing-md;
 
     .logo-image {
-      width: 64px;
-      height: 64px;
+      width: 56px;
+      height: 56px;
       border-radius: $radius-xl;
       @include shadow-layered-md();
     }
 
     .logo-text {
-      @include gradient-text();
-      font-size: $font-size-3xl;
+      background: linear-gradient(135deg, #ffffff 0%, #f0f9ff 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+      font-size: $font-size-2xl;
       font-weight: $font-weight-bold;
       margin: 0;
+      text-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
     }
   }
 
   .login-subtitle {
-    color: var(--text-secondary);
+    color: rgba(255, 255, 255, 0.9);
     font-size: $font-size-sm;
+    font-weight: $font-weight-medium;
     margin: 0;
+    text-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
   }
 }
 
@@ -343,47 +349,49 @@ onMounted(() => {
     width: 100%;
 
     .forgot-link {
-      color: var(--primary-color);
+      color: rgba(255, 255, 255, 0.9);
       font-size: $font-size-sm;
       text-decoration: none;
+      font-weight: $font-weight-medium;
       transition: color var(--transition-fast);
 
       &:hover {
-        color: var(--primary-hover);
+        color: #ffffff;
+        text-shadow: 0 0 8px rgba(255, 255, 255, 0.5);
       }
     }
   }
 
   :deep(.el-form-item) {
-    margin-bottom: $spacing-xl;
+    margin-bottom: $spacing-lg;
 
     .el-input {
       .el-input__wrapper {
         @include glass-effect();
-        border: 1px solid rgba(255, 255, 255, 0.25);
+        border: 1px solid rgba(255, 255, 255, 0.3);
         border-radius: $radius-lg;
         transition: all var(--transition-base);
         padding: $spacing-sm $spacing-md;
         min-height: 48px;
 
         &:hover {
-          border-color: rgba(var(--primary-color), 0.6);
+          border-color: rgba(255, 255, 255, 0.5);
           transform: translateY(-1px);
-          @include shadow-colored(var(--primary-color), 0.1);
+          @include shadow-colored(rgba(255, 255, 255, 0.2), 0.1);
         }
 
         &.is-focus {
-          border-color: var(--primary-color);
-          @include shadow-colored(var(--primary-color), 0.25);
+          border-color: rgba(255, 255, 255, 0.7);
+          @include shadow-colored(rgba(255, 255, 255, 0.3), 0.25);
           transform: translateY(-2px);
         }
 
         .el-input__inner {
-          color: var(--text-primary);
+          color: #ffffff;
           font-weight: $font-weight-medium;
 
           &::placeholder {
-            color: var(--text-tertiary);
+            color: rgba(255, 255, 255, 0.6);
             font-weight: $font-weight-normal;
           }
         }
@@ -392,7 +400,7 @@ onMounted(() => {
 
     .el-checkbox {
       .el-checkbox__label {
-        color: var(--text-secondary);
+        color: rgba(255, 255, 255, 0.9);
         font-size: $font-size-sm;
         font-weight: $font-weight-medium;
       }
@@ -402,19 +410,20 @@ onMounted(() => {
 
 .login-footer {
   text-align: center;
-  margin-top: $spacing-xl;
-  color: var(--text-secondary);
+  margin-top: $spacing-lg;
+  color: rgba(255, 255, 255, 0.8);
   font-size: $font-size-sm;
 
   .register-link {
-    color: var(--primary-color);
+    color: rgba(255, 255, 255, 0.95);
     text-decoration: none;
-    font-weight: $font-weight-medium;
+    font-weight: $font-weight-semibold;
     margin-left: $spacing-xs;
-    transition: color var(--transition-fast);
+    transition: all var(--transition-fast);
 
     &:hover {
-      color: var(--primary-hover);
+      color: #ffffff;
+      text-shadow: 0 0 8px rgba(255, 255, 255, 0.5);
     }
   }
 }
@@ -422,13 +431,15 @@ onMounted(() => {
 .error-message {
   @include flex-center();
   gap: $spacing-xs;
-  margin-top: $spacing-lg;
+  margin-top: $spacing-md;
   padding: $spacing-sm $spacing-md;
-  background: rgba(var(--error-color), 0.1);
-  border: 1px solid rgba(var(--error-color), 0.3);
+  background: rgba(255, 77, 79, 0.15);
+  border: 1px solid rgba(255, 77, 79, 0.4);
   border-radius: $radius-lg;
-  color: var(--error-color);
+  color: #ffffff;
   font-size: $font-size-sm;
+  font-weight: $font-weight-medium;
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.2);
   @include animate-shake();
 }
 
@@ -467,16 +478,33 @@ onMounted(() => {
     padding: $spacing-md;
 
     .login-card {
-      padding: $spacing-xl;
+      padding: $spacing-lg $spacing-xl;
     }
   }
 
   .login-header {
+    margin-bottom: $spacing-lg;
+
     .logo {
+      .logo-image {
+        width: 48px;
+        height: 48px;
+      }
+
       .logo-text {
-        font-size: $font-size-2xl;
+        font-size: $font-size-xl;
       }
     }
+  }
+
+  .login-form {
+    :deep(.el-form-item) {
+      margin-bottom: $spacing-md;
+    }
+  }
+
+  .login-footer {
+    margin-top: $spacing-md;
   }
 }
 </style>
