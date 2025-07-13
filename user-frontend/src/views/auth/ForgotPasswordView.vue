@@ -1,9 +1,24 @@
 <template>
   <div class="forgot-password-view">
+    <!-- 背景装饰 -->
+    <div class="forgot-password-background">
+      <div class="bg-shapes">
+        <div class="shape shape-1"></div>
+        <div class="shape shape-2"></div>
+        <div class="shape shape-3"></div>
+      </div>
+    </div>
+
+    <!-- 密码重置表单容器 -->
     <div class="forgot-password-container">
       <ModernCard class="forgot-password-card" :glass="true" :hoverable="false">
+        <!-- 头部 -->
         <div class="forgot-password-header">
-          <h1 class="forgot-password-title">重置密码</h1>
+          <div class="logo">
+            <img src="/favicon.ico" alt="Logo" class="logo-image">
+            <h1 class="logo-text">速码网</h1>
+          </div>
+          <h2 class="forgot-password-title">重置密码</h2>
           <p class="forgot-password-subtitle">请输入您的邮箱地址，我们将发送重置密码的验证码</p>
         </div>
 
@@ -90,14 +105,14 @@
 </template>
 
 <script setup lang="ts">
-import { ref, reactive } from 'vue'
-import { useRouter } from 'vue-router'
-import { ElForm, ElMessage } from 'element-plus'
-import { Message, Lock, Key, ArrowLeft } from '@element-plus/icons-vue'
-import { useAppStore } from '@/stores/app'
-import ModernCard from '@/components/ui/ModernCard.vue'
 import ModernButton from '@/components/ui/ModernButton.vue'
+import ModernCard from '@/components/ui/ModernCard.vue'
+import { useAppStore } from '@/stores/app'
 import type { ResetPasswordRequest } from '@/types/user'
+import { ArrowLeft, Key, Lock, Message } from '@element-plus/icons-vue'
+import { ElForm, ElMessage } from 'element-plus'
+import { reactive, ref } from 'vue'
+import { useRouter } from 'vue-router'
 
 const router = useRouter()
 const appStore = useAppStore()
@@ -150,7 +165,7 @@ const sendEmailCode = async () => {
   try {
     // 这里应该调用发送验证码的API
     ElMessage.success('验证码已发送')
-    
+
     // 开始倒计时
     codeCountdown.value = 60
     const timer = setInterval(() => {
@@ -173,10 +188,10 @@ const handleResetPassword = async () => {
 
     // 这里应该调用重置密码的API
     // const success = await userApi.resetPassword(forgotPasswordForm)
-    
+
     // 模拟API调用
     await new Promise(resolve => setTimeout(resolve, 1000))
-    
+
     ElMessage.success('密码重置成功，请使用新密码登录')
     router.push('/login')
   } catch (error) {
@@ -197,101 +212,265 @@ appStore.setPageTitle('重置密码')
 .forgot-password-view {
   min-height: 100vh;
   @include flex-center();
+  position: relative;
+  overflow: hidden;
   background: var(--gradient-hero);
+}
 
-  .forgot-password-container {
+.forgot-password-background {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  z-index: 0;
+
+  .bg-shapes {
+    position: relative;
     width: 100%;
-    max-width: 450px;
-    padding: $spacing-lg;
+    height: 100%;
 
-    .forgot-password-card {
-      padding: $spacing-2xl;
-      @include shadow-layered-lg();
-    }
-  }
+    .shape {
+      position: absolute;
+      border-radius: 50%;
+      background: rgba(255, 255, 255, 0.1);
+      backdrop-filter: blur(20px);
+      animation: float 6s ease-in-out infinite;
 
-  .forgot-password-header {
-    text-align: center;
-    margin-bottom: $spacing-2xl;
-
-    .forgot-password-title {
-      @include gradient-text();
-      font-size: $font-size-3xl;
-      font-weight: $font-weight-bold;
-      margin: 0 0 $spacing-sm 0;
-    }
-
-    .forgot-password-subtitle {
-      color: var(--text-secondary);
-      font-size: $font-size-sm;
-      margin: 0;
-      line-height: var(--line-height-relaxed);
-    }
-  }
-
-  .forgot-password-form {
-    .code-input-group {
-      display: flex;
-      gap: $spacing-sm;
-
-      .el-input {
-        flex: 1;
+      &.shape-1 {
+        width: 240px;
+        height: 240px;
+        top: 10%;
+        right: 15%;
+        animation-delay: 0s;
       }
-    }
 
-    :deep(.el-form-item) {
-      margin-bottom: $spacing-lg;
-
-      .el-input .el-input__wrapper {
-        border-radius: $radius-lg;
-        transition: all var(--transition-base);
-
-        &:hover {
-          border-color: rgba(var(--primary-color), 0.5);
-        }
-
-        &.is-focus {
-          border-color: var(--primary-color);
-          @include shadow-colored(var(--primary-color), 0.1);
-        }
+      &.shape-2 {
+        width: 160px;
+        height: 160px;
+        top: 60%;
+        left: 10%;
+        animation-delay: 2s;
       }
-    }
-  }
 
-  .forgot-password-footer {
-    text-align: center;
-    margin-top: $spacing-xl;
-
-    .back-link {
-      @include flex-center();
-      gap: $spacing-xs;
-      color: var(--text-secondary);
-      text-decoration: none;
-      font-size: $font-size-sm;
-      transition: color var(--transition-fast);
-
-      &:hover {
-        color: var(--primary-color);
+      &.shape-3 {
+        width: 200px;
+        height: 200px;
+        bottom: 20%;
+        right: 25%;
+        animation-delay: 4s;
       }
     }
   }
 }
 
+.forgot-password-container {
+  position: relative;
+  z-index: 1;
+  width: 100%;
+  max-width: 460px;
+  padding: $spacing-lg;
+
+  .forgot-password-card {
+    padding: $spacing-xl $spacing-2xl;
+    @include shadow-layered-lg();
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    position: relative;
+    overflow: visible;
+    backdrop-filter: blur(25px);
+
+    &::before {
+      content: '';
+      position: absolute;
+      top: -1px;
+      left: -1px;
+      right: -1px;
+      bottom: -1px;
+      background: linear-gradient(135deg, rgba(255, 255, 255, 0.3), rgba(255, 255, 255, 0.1));
+      border-radius: inherit;
+      z-index: -1;
+    }
+
+    &::after {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      height: 1px;
+      background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.8), transparent);
+      z-index: 1;
+    }
+  }
+}
+
+.forgot-password-header {
+  text-align: center;
+  margin-bottom: $spacing-xl;
+
+  .logo {
+    @include flex-center();
+    flex-direction: column;
+    gap: $spacing-sm;
+    margin-bottom: $spacing-md;
+
+    .logo-image {
+      width: 56px;
+      height: 56px;
+      border-radius: $radius-xl;
+      @include shadow-layered-md();
+    }
+
+    .logo-text {
+      background: linear-gradient(135deg, #ffffff 0%, #f0f9ff 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+      font-size: $font-size-2xl;
+      font-weight: $font-weight-bold;
+      margin: 0;
+      text-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    }
+  }
+
+  .forgot-password-title {
+    color: rgba(255, 255, 255, 0.95);
+    font-size: $font-size-xl;
+    font-weight: $font-weight-semibold;
+    margin: 0 0 $spacing-sm 0;
+    text-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
+  }
+
+  .forgot-password-subtitle {
+    color: rgba(255, 255, 255, 0.85);
+    font-size: $font-size-sm;
+    font-weight: $font-weight-medium;
+    margin: 0;
+    line-height: var(--line-height-relaxed);
+    text-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
+  }
+}
+
+.forgot-password-form {
+  .code-input-group {
+    display: flex;
+    gap: $spacing-sm;
+
+    .el-input {
+      flex: 1;
+    }
+  }
+
+  :deep(.el-form-item) {
+    margin-bottom: $spacing-md;
+
+    .el-input {
+      .el-input__wrapper {
+        @include glass-effect();
+        border: 1px solid rgba(255, 255, 255, 0.3);
+        border-radius: $radius-lg;
+        transition: all var(--transition-base);
+        padding: $spacing-sm $spacing-md;
+        min-height: 48px;
+
+        &:hover {
+          border-color: rgba(255, 255, 255, 0.5);
+          transform: translateY(-1px);
+          @include shadow-colored(rgba(255, 255, 255, 0.2), 0.1);
+        }
+
+        &.is-focus {
+          border-color: rgba(255, 255, 255, 0.7);
+          @include shadow-colored(rgba(255, 255, 255, 0.3), 0.25);
+          transform: translateY(-2px);
+        }
+
+        .el-input__inner {
+          color: #ffffff;
+          font-weight: $font-weight-medium;
+
+          &::placeholder {
+            color: rgba(255, 255, 255, 0.6);
+            font-weight: $font-weight-normal;
+          }
+        }
+      }
+    }
+  }
+}
+
+.forgot-password-footer {
+  text-align: center;
+  margin-top: $spacing-lg;
+
+  .back-link {
+    @include flex-center();
+    gap: $spacing-xs;
+    color: rgba(255, 255, 255, 0.9);
+    text-decoration: none;
+    font-size: $font-size-sm;
+    font-weight: $font-weight-medium;
+    transition: all var(--transition-fast);
+
+    &:hover {
+      color: #ffffff;
+      text-shadow: 0 0 8px rgba(255, 255, 255, 0.5);
+    }
+  }
+}
+
+// 浮动动画
+@keyframes float {
+  0%, 100% {
+    transform: translateY(0px);
+  }
+  50% {
+    transform: translateY(-20px);
+  }
+}
+
+// 响应式设计
 @include respond-below('md') {
-  .forgot-password-view {
-    .forgot-password-container {
-      padding: $spacing-md;
+  .forgot-password-container {
+    padding: $spacing-md;
 
-      .forgot-password-card {
-        padding: $spacing-xl;
+    .forgot-password-card {
+      padding: $spacing-lg $spacing-xl;
+    }
+  }
+
+  .forgot-password-header {
+    margin-bottom: $spacing-lg;
+
+    .logo {
+      .logo-image {
+        width: 48px;
+        height: 48px;
+      }
+
+      .logo-text {
+        font-size: $font-size-xl;
       }
     }
 
-    .forgot-password-form {
-      .code-input-group {
-        flex-direction: column;
-      }
+    .forgot-password-title {
+      font-size: $font-size-lg;
     }
+  }
+
+  .forgot-password-form {
+    .code-input-group {
+      flex-direction: column;
+      gap: $spacing-xs;
+    }
+
+    :deep(.el-form-item) {
+      margin-bottom: $spacing-sm;
+    }
+  }
+
+  .forgot-password-footer {
+    margin-top: $spacing-md;
   }
 }
 </style>
