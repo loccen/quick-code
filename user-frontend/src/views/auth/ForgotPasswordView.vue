@@ -399,16 +399,62 @@ appStore.setPageTitle('重置密码')
 
     // 表单验证错误提示样式优化
     .el-form-item__error {
+      position: absolute !important;
+      top: 50% !important;
+      left: calc(100% + #{$spacing-sm}) !important;
+      transform: translateY(-50%) !important;
       color: #ffffff !important;
-      background: rgba(255, 77, 79, 0.9) !important;
+      background: rgba(255, 77, 79, 0.95) !important;
       padding: $spacing-xs $spacing-sm !important;
       border-radius: $radius-md !important;
       font-size: $font-size-xs !important;
       font-weight: $font-weight-semibold !important;
       text-shadow: 0 1px 2px rgba(0, 0, 0, 0.3) !important;
       border: 1px solid rgba(255, 77, 79, 1) !important;
-      margin-top: $spacing-xs !important;
-      box-shadow: 0 2px 8px rgba(255, 77, 79, 0.3) !important;
+      margin: 0 !important;
+      box-shadow: 0 2px 8px rgba(255, 77, 79, 0.4) !important;
+      white-space: nowrap !important;
+      z-index: 10 !important;
+      max-width: 180px !important;
+      overflow: hidden !important;
+      text-overflow: ellipsis !important;
+
+      // 添加小箭头指向输入框
+      &::before {
+        content: '' !important;
+        position: absolute !important;
+        left: -6px !important;
+        top: 50% !important;
+        transform: translateY(-50%) !important;
+        width: 0 !important;
+        height: 0 !important;
+        border-top: 6px solid transparent !important;
+        border-bottom: 6px solid transparent !important;
+        border-right: 6px solid rgba(255, 77, 79, 1) !important;
+      }
+    }
+
+    // 确保表单项有相对定位，为绝对定位的错误提示提供定位上下文
+    &.is-error {
+      position: relative !important;
+    }
+
+    // 移动端适配：错误提示显示在下方，但增加足够间距
+    @media (max-width: 768px) {
+      .el-form-item__error {
+        position: static !important;
+        transform: none !important;
+        left: auto !important;
+        top: auto !important;
+        margin-top: $spacing-sm !important;
+        margin-bottom: $spacing-md !important;
+        max-width: 100% !important;
+        white-space: normal !important;
+
+        &::before {
+          display: none !important;
+        }
+      }
     }
   }
 }
