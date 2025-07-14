@@ -16,10 +16,6 @@
         "showReuseMessage": true,
         "clear": false,
         "group": "frontend"
-      },
-      "problemMatcher": [],
-      "runOptions": {
-        "runOn": "folderOpen"
       }
     },
     {
@@ -37,8 +33,7 @@
         "showReuseMessage": true,
         "clear": false,
         "group": "frontend"
-      },
-      "problemMatcher": []
+      }
     },
     {
       "name": "🧪 运行用户端E2E测试",
@@ -55,8 +50,7 @@
         "showReuseMessage": true,
         "clear": true,
         "group": "test"
-      },
-      "problemMatcher": []
+      }
     },
     {
       "name": "🎭 运行用户端E2E测试 (UI模式)",
@@ -73,8 +67,7 @@
         "showReuseMessage": true,
         "clear": true,
         "group": "test"
-      },
-      "problemMatcher": []
+      }
     },
     {
       "name": "🔍 运行用户端E2E测试 (调试模式)",
@@ -109,8 +102,7 @@
         "showReuseMessage": true,
         "clear": true,
         "group": "test"
-      },
-      "problemMatcher": []
+      }
     },
     {
       "name": "📊 查看E2E测试报告",
@@ -146,7 +138,6 @@
         "clear": false,
         "group": "backend"
       },
-      "problemMatcher": [],
       "env": {
         "JAVA_HOME": "/usr/lib/jvm/java-17-openjdk-arm64",
         "PATH": "/usr/lib/jvm/java-17-openjdk-arm64/bin:${env:PATH}"
@@ -167,8 +158,7 @@
         "showReuseMessage": true,
         "clear": true,
         "group": "development"
-      },
-      "problemMatcher": []
+      }
     },
     {
       "name": "🛑 停止开发环境",
@@ -185,8 +175,7 @@
         "showReuseMessage": true,
         "clear": true,
         "group": "development"
-      },
-      "problemMatcher": []
+      }
     }
   ],
   "compounds": [

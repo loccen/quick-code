@@ -38,9 +38,6 @@
           "beginsPattern": "^.*Local:.*$",
           "endsPattern": "^.*ready in.*$"
         }
-      },
-      "runOptions": {
-        "runOn": "folderOpen"
       }
     },
     {
