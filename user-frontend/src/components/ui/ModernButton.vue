@@ -16,6 +16,7 @@
     ]"
     :disabled="disabled || loading"
     :to="to"
+    :type="buttonType"
     @click="handleClick"
   >
     <!-- 加载图标 -->
@@ -44,8 +45,8 @@
 </template>
 
 <script setup lang="ts">
-import { computed } from 'vue'
 import { Loading } from '@element-plus/icons-vue'
+import { computed } from 'vue'
 import type { RouteLocationRaw } from 'vue-router'
 
 interface Props {
@@ -73,6 +74,8 @@ interface Props {
   glass?: boolean
   /** 路由跳转 */
   to?: RouteLocationRaw
+  /** HTML 按钮类型 */
+  buttonType?: 'button' | 'submit' | 'reset'
 }
 
 interface Emits {
@@ -88,7 +91,8 @@ const props = withDefaults(defineProps<Props>(), {
   block: false,
   round: false,
   circle: false,
-  glass: false
+  glass: false,
+  buttonType: 'button'
 })
 
 const emit = defineEmits<Emits>()

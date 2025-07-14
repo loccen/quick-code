@@ -110,11 +110,17 @@ RUN if [ "$USER_GID" != "1000" ] || [ "$USER_UID" != "1000" ]; then \
   && chown -R $USER_UID:$USER_GID /home/$USERNAME; \
   fi
 
-# 为vscode用户设置Maven和Gradle目录权限
+# 为vscode用户设置Maven、Gradle和VSCode Server目录权限
 RUN mkdir -p /home/$USERNAME/.m2 \
   && mkdir -p /home/$USERNAME/.gradle \
+  && mkdir -p /home/$USERNAME/.vscode-server \
+  && mkdir -p /home/$USERNAME/.config \
+  && mkdir -p /home/$USERNAME/.augment \
   && chown -R $USERNAME:$USERNAME /home/$USERNAME/.m2 \
-  && chown -R $USERNAME:$USERNAME /home/$USERNAME/.gradle
+  && chown -R $USERNAME:$USERNAME /home/$USERNAME/.gradle \
+  && chown -R $USERNAME:$USERNAME /home/$USERNAME/.vscode-server \
+  && chown -R $USERNAME:$USERNAME /home/$USERNAME/.config \
+  && chown -R $USERNAME:$USERNAME /home/$USERNAME/.augment
 
 # Oh My Zsh 将通过 devcontainer features 安装，跳过手动安装
 USER $USERNAME

@@ -1,20 +1,20 @@
 // 管理后台API配置文件
 export const API_CONFIG = {
   // 基础URL
-  BASE_URL: import.meta.env.VITE_API_BASE_URL || 'http://localhost:8080/api',
-  
+  BASE_URL: import.meta.env.VITE_API_BASE_URL || 'http://localhost:8080',
+
   // WebSocket URL
   WS_URL: import.meta.env.VITE_WS_URL || 'ws://localhost:8080/ws',
   
   // 上传URL
   UPLOAD_URL: import.meta.env.VITE_UPLOAD_URL || 'http://localhost:8080/api/upload',
-  
+
   // MinIO URL
   MINIO_URL: import.meta.env.VITE_MINIO_URL || 'http://localhost:9000',
-  
+
   // 请求超时时间
   TIMEOUT: 10000,
-  
+
   // 请求重试次数
   RETRY_COUNT: 3
 }
@@ -28,7 +28,7 @@ export const API_ENDPOINTS = {
     REFRESH: '/admin/auth/refresh',
     PROFILE: '/admin/auth/profile'
   },
-  
+
   // 用户管理
   USER: {
     LIST: '/admin/users',
@@ -40,7 +40,7 @@ export const API_ENDPOINTS = {
     ENABLE: '/admin/users/:id/enable',
     RESET_PASSWORD: '/admin/users/:id/reset-password'
   },
-  
+
   // 项目管理
   PROJECT: {
     LIST: '/admin/projects',
@@ -52,7 +52,7 @@ export const API_ENDPOINTS = {
     CATEGORIES: '/admin/projects/categories',
     STATS: '/admin/projects/stats'
   },
-  
+
   // 订单管理
   ORDER: {
     LIST: '/admin/orders',
@@ -60,7 +60,7 @@ export const API_ENDPOINTS = {
     REFUND: '/admin/orders/:id/refund',
     STATS: '/admin/orders/stats'
   },
-  
+
   // 财务管理
   FINANCE: {
     OVERVIEW: '/admin/finance/overview',
@@ -69,7 +69,7 @@ export const API_ENDPOINTS = {
     APPROVE_WITHDRAWAL: '/admin/finance/withdrawals/:id/approve',
     REJECT_WITHDRAWAL: '/admin/finance/withdrawals/:id/reject'
   },
-  
+
   // 系统管理
   SYSTEM: {
     CONFIGS: '/admin/system/configs',
@@ -78,7 +78,7 @@ export const API_ENDPOINTS = {
     STATS: '/admin/system/stats',
     HEALTH: '/admin/system/health'
   },
-  
+
   // 内容审核
   REVIEW: {
     PENDING: '/admin/review/pending',

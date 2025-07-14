@@ -1,0 +1,2 @@
+POST http://localhost:8080/api/auth/send-email-verification?email=test@example.com
+Content-Type: application/json

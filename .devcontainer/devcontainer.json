@@ -3,7 +3,7 @@
   "dockerComposeFile": "docker-compose.yml",
   "service": "app",
   "workspaceFolder": "/workspace",
-  
+
   // 配置VSCode设置
   "customizations": {
     "vscode": {
@@ -27,15 +27,15 @@
         "ms-vscode.vscode-typescript-next",
         "esbenp.prettier-vscode",
         "dbaeumer.vscode-eslint",
-        
+
         // 数据库
         "cweijan.vscode-mysql-client2",
         "cweijan.vscode-redis-client",
-        
+
         // Docker和容器
         "ms-azuretools.vscode-docker",
         "ms-vscode-remote.remote-containers",
-        
+
         // 通用工具
         "humao.rest-client",
         "ms-vscode.vscode-json",
@@ -43,7 +43,7 @@
         "ms-vscode.vscode-markdown",
         "yzhang.markdown-all-in-one"
       ],
-      
+
       // VSCode设置
       "settings": {
         // 编辑器设置
@@ -55,32 +55,32 @@
         "editor.tabSize": 4,
         "editor.insertSpaces": true,
         "editor.detectIndentation": false,
-        
+
         // 文件设置
         "files.autoSave": "afterDelay",
         "files.trimTrailingWhitespace": true,
         "files.insertFinalNewline": true,
-        
+
         // TypeScript设置
         "typescript.preferences.importModuleSpecifier": "relative",
         "typescript.updateImportsOnFileMove.enabled": "always",
-        
+
         // Java设置
         "java.configuration.updateBuildConfiguration": "automatic",
         "java.compile.nullAnalysis.mode": "automatic",
         "java.format.settings.url": "https://raw.githubusercontent.com/google/styleguide/gh-pages/eclipse-java-google-style.xml",
-        
+
         // Vue设置
         "vue.codeActions.enabled": true,
         "vue.complete.casing.tags": "kebab",
         "vue.complete.casing.props": "camel",
-        
+
         // Prettier设置
         "prettier.semi": true,
         "prettier.singleQuote": true,
         "prettier.trailingComma": "es5",
         "prettier.printWidth": 100,
-        
+
         // ESLint设置
         "eslint.validate": [
           "javascript",
@@ -89,7 +89,7 @@
           "typescriptreact",
           "vue"
         ],
-        
+
         // 终端设置
         "terminal.integrated.defaultProfile.linux": "bash",
         "terminal.integrated.profiles.linux": {
@@ -98,12 +98,12 @@
             "args": ["-l"]
           }
         },
-        
+
         // Git设置
         "git.autofetch": true,
         "git.confirmSync": false,
         "git.enableSmartCommit": true,
-        
+
         // 搜索设置
         "search.exclude": {
           "**/node_modules": true,
@@ -112,7 +112,7 @@
           "**/build": true,
           "**/.git": true
         },
-        
+
         // 文件关联
         "files.associations": {
           "*.vue": "vue",
@@ -122,7 +122,7 @@
       }
     }
   },
-  
+
   // 端口转发
   "forwardPorts": [
     3000,  // 用户端前端
@@ -133,7 +133,7 @@
     9000,  // MinIO
     9001   // MinIO Console
   ],
-  
+
   // 端口属性
   "portsAttributes": {
     "3000": {
@@ -141,7 +141,7 @@
       "onAutoForward": "silent"
     },
     "3001": {
-      "label": "管理后台前端", 
+      "label": "管理后台前端",
       "onAutoForward": "silent"
     },
     "8080": {
@@ -165,24 +165,30 @@
       "onAutoForward": "silent"
     }
   },
-  
+
   // 容器创建后执行的命令
   "postCreateCommand": "chmod +x .devcontainer/scripts/*.sh && bash .devcontainer/scripts/post-create.sh",
 
   // 容器启动后执行的命令
   "postStartCommand": "bash .devcontainer/scripts/post-start.sh",
-  
+
   // 挂载点
   "mounts": [
     // 缓存Maven依赖
-    "source=quick-code-maven-cache,target=/home/vscode/.m2,type=volume"
+    "source=quick-code-maven-cache,target=/home/vscode/.m2,type=volume",
+    // Augment AI 上下文持久化
+    "source=quick-code-augment-context,target=/home/vscode/.augment,type=volume",
+    // VSCode Server 数据持久化（包含扩展数据）
+    "source=quick-code-vscode-server,target=/home/vscode/.vscode-server,type=volume",
+    // VSCode 用户配置持久化
+    "source=quick-code-vscode-config,target=/home/vscode/.config,type=volume"
     // Git配置持久化 - 暂时禁用以避免权限冲突
     // "source=${localEnv:HOME}/.gitconfig,target=/home/vscode/.gitconfig,type=bind,consistency=cached"
   ],
-  
+
   // 容器用户
   "remoteUser": "vscode",
-  
+
   // 功能特性
   "features": {
     "ghcr.io/devcontainers/features/common-utils:2": {

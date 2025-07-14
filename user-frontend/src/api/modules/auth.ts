@@ -2,13 +2,13 @@
  * 认证相关API模块
  * 提供用户认证功能的接口
  */
-import { request } from '../request'
 import type { ApiResponse } from '@/types/api'
-import type { 
-  LoginRequest, 
-  LoginResponse, 
-  RegisterRequest 
+import type {
+    LoginRequest,
+    LoginResponse,
+    RegisterRequest
 } from '@/types/user'
+import { request } from '../request'
 
 /**
  * 认证API服务
@@ -54,7 +54,7 @@ export const authApi = {
    * 发送邮箱验证码
    */
   sendEmailVerification(email: string): Promise<ApiResponse<void>> {
-    return request.post('/auth/send-email-verification', null, {
+    return request.post('/api/auth/send-email-verification', null, {
       params: { email }
     })
   },

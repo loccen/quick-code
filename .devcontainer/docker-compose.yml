@@ -12,10 +12,16 @@ services:
       # - quick-code-node_modules:/workspace/user-frontend/node_modules:delegated
       # - quick-code-admin-node_modules:/workspace/admin-frontend/node_modules:delegated
       - quick-code-maven-cache:/home/vscode/.m2
+      # Augment AI 上下文持久化
+      - quick-code-augment-context:/home/vscode/.augment
+      # VSCode Server 数据持久化
+      - quick-code-vscode-server:/home/vscode/.vscode-server
+      # VSCode 用户配置持久化
+      - quick-code-vscode-config:/home/vscode/.config
     working_dir: /workspace
     command: sleep infinity
-    # 添加用户权限配置
-    user: "1000:1000"
+    # 移除用户权限配置，使用Dockerfile中的默认vscode用户
+    # user: "1000:1000"
     environment:
       # 数据库配置
       - DB_HOST=${DB_HOST:-mysql}
@@ -56,7 +62,7 @@ services:
       - AUTO_APPROVE_PROJECTS=${AUTO_APPROVE_PROJECTS:-false}
 
       # 前端配置
-      - VITE_API_BASE_URL=${VITE_API_BASE_URL:-http://localhost:8080/api}
+      - VITE_API_BASE_URL=${VITE_API_BASE_URL:-http://localhost:8080}
       - VITE_WS_URL=${VITE_WS_URL:-ws://localhost:8080/ws}
       - VITE_ENABLE_MOCK=${VITE_ENABLE_MOCK:-false}
       - VITE_ENABLE_DEVTOOLS=${VITE_ENABLE_DEVTOOLS:-true}
@@ -209,4 +215,11 @@ volumes:
   quick-code-admin-node_modules:
     driver: local
   quick-code-maven-cache:
+    driver: local
+  # Augment AI 和开发环境持久化卷
+  quick-code-augment-context:
+    driver: local
+  quick-code-vscode-server:
+    driver: local
+  quick-code-vscode-config:
     driver: local

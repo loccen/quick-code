@@ -1,20 +1,20 @@
 // API配置文件
 export const API_CONFIG = {
   // 基础URL
-  BASE_URL: import.meta.env.VITE_API_BASE_URL || 'http://localhost:8080/api',
-  
+  BASE_URL: import.meta.env.VITE_API_BASE_URL || 'http://localhost:8080',
+
   // WebSocket URL
   WS_URL: import.meta.env.VITE_WS_URL || 'ws://localhost:8080/ws',
-  
+
   // 上传URL
   UPLOAD_URL: import.meta.env.VITE_UPLOAD_URL || 'http://localhost:8080/api/upload',
-  
+
   // MinIO URL
   MINIO_URL: import.meta.env.VITE_MINIO_URL || 'http://localhost:9000',
-  
+
   // 请求超时时间
   TIMEOUT: 10000,
-  
+
   // 请求重试次数
   RETRY_COUNT: 3
 }
@@ -30,7 +30,7 @@ export const API_ENDPOINTS = {
     UPDATE_PROFILE: '/user/profile',
     CHANGE_PASSWORD: '/user/change-password'
   },
-  
+
   // 项目相关
   PROJECT: {
     LIST: '/projects',
@@ -42,7 +42,7 @@ export const API_ENDPOINTS = {
     CATEGORIES: '/projects/categories',
     UPLOAD: '/projects/upload'
   },
-  
+
   // 订单相关
   ORDER: {
     LIST: '/orders',
@@ -51,7 +51,7 @@ export const API_ENDPOINTS = {
     PAY: '/orders/:id/pay',
     CANCEL: '/orders/:id/cancel'
   },
-  
+
   // 积分相关
   POINT: {
     BALANCE: '/points/balance',
@@ -59,7 +59,7 @@ export const API_ENDPOINTS = {
     RECHARGE: '/points/recharge',
     WITHDRAW: '/points/withdraw'
   },
-  
+
   // 部署相关
   DEPLOY: {
     CREATE: '/deploy',
