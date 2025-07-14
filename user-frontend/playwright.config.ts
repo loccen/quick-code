@@ -6,20 +6,20 @@ import { defineConfig, devices } from '@playwright/test'
 /**
  * 从环境变量读取配置
  */
-const baseURL = process.env.PLAYWRIGHT_BASE_URL || 'http://localhost:5173'
+const baseURL = process.env.PLAYWRIGHT_BASE_URL || 'http://localhost:3000'
 const headless = process.env.PLAYWRIGHT_HEADLESS !== 'false'
 const workers = process.env.CI ? 1 : undefined
 
 export default defineConfig({
   // 测试目录
   testDir: './tests/e2e',
-  
+
   // 全局设置
   fullyParallel: true,
   forbidOnly: !!process.env.CI,
   retries: process.env.CI ? 2 : 0,
   workers,
-  
+
   // 报告配置
   reporter: [
     ['html', { outputFolder: 'test-results/html-report' }],
@@ -27,7 +27,7 @@ export default defineConfig({
     ['junit', { outputFile: 'test-results/junit.xml' }],
     process.env.CI ? ['github'] : ['list']
   ],
-  
+
   // 全局测试配置
   use: {
     baseURL,
@@ -42,7 +42,7 @@ export default defineConfig({
   projects: [
     {
       name: 'chromium',
-      use: { 
+      use: {
         ...devices['Desktop Chrome'],
         // 设置视口大小
         viewport: { width: 1280, height: 720 },
@@ -64,7 +64,7 @@ export default defineConfig({
 
   // 输出目录
   outputDir: 'test-results/artifacts',
-  
+
   // 全局设置和拆卸
   globalSetup: require.resolve('./tests/e2e/global-setup.ts'),
   globalTeardown: require.resolve('./tests/e2e/global-teardown.ts'),

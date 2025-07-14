@@ -84,17 +84,41 @@ check_service_status() {
 
     case "$service" in
         "user-frontend")
+            # 检查PID文件和进程状态
             if [ -f "logs/user-frontend.pid" ] && kill -0 $(cat logs/user-frontend.pid) 2>/dev/null; then
+                # 进一步检查端口是否被占用
+                if lsof -i:3000 >/dev/null 2>&1; then
+                    return 0
+                fi
+            fi
+            # 如果PID文件不存在或进程已死，检查是否有其他进程占用端口
+            if lsof -i:3000 >/dev/null 2>&1; then
                 return 0
             fi
             ;;
         "admin-frontend")
+            # 检查PID文件和进程状态
             if [ -f "logs/admin-frontend.pid" ] && kill -0 $(cat logs/admin-frontend.pid) 2>/dev/null; then
+                # 进一步检查端口是否被占用
+                if lsof -i:3001 >/dev/null 2>&1; then
+                    return 0
+                fi
+            fi
+            # 如果PID文件不存在或进程已死，检查是否有其他进程占用端口
+            if lsof -i:3001 >/dev/null 2>&1; then
                 return 0
             fi
             ;;
         "backend")
+            # 检查PID文件和进程状态
             if [ -f "logs/backend.pid" ] && kill -0 $(cat logs/backend.pid) 2>/dev/null; then
+                # 进一步检查端口是否被占用
+                if lsof -i:8080 >/dev/null 2>&1; then
+                    return 0
+                fi
+            fi
+            # 如果PID文件不存在或进程已死，检查是否有其他进程占用端口
+            if lsof -i:8080 >/dev/null 2>&1; then
                 return 0
             fi
             ;;
@@ -173,14 +197,17 @@ start_single_service() {
             if [ -f "user-frontend/package.json" ]; then
                 log_info "启动${SERVICES[$service]} (端口: ${SERVICE_PORTS[$service]})..."
                 cd user-frontend
-                npm run dev > ../logs/user-frontend.log 2>&1 &
+                # 确保使用正确的端口启动
+                VITE_DEV_PORT=3000 npm run dev > ../logs/user-frontend.log 2>&1 &
                 echo $! > ../logs/user-frontend.pid
                 cd ..
-                sleep 3
+                sleep 5
                 if check_service_status "$service"; then
                     log_success "${SERVICES[$service]} 启动成功"
+                    log_info "访问地址: http://localhost:3000"
                 else
                     log_error "${SERVICES[$service]} 启动失败"
+                    log_info "查看日志: ./scripts/dev-tools.sh logs user-frontend"
                     return 1
                 fi
             else
@@ -283,61 +310,81 @@ start_dev() {
     fi
 }
 
+# 强制清理服务进程
+force_kill_service_processes() {
+    local service="$1"
+
+    case "$service" in
+        "user-frontend")
+            # 清理所有user-frontend相关进程
+            pkill -f "user-frontend.*vite" 2>/dev/null || true
+            pkill -f "user-frontend.*npm" 2>/dev/null || true
+            # 清理可能运行在3000或5174端口的vite进程
+            local pids=$(lsof -ti:3000,5174 2>/dev/null || true)
+            if [[ -n "$pids" ]]; then
+                echo "$pids" | xargs kill -9 2>/dev/null || true
+            fi
+            ;;
+        "admin-frontend")
+            # 清理所有admin-frontend相关进程
+            pkill -f "admin-frontend.*vite" 2>/dev/null || true
+            pkill -f "admin-frontend.*npm" 2>/dev/null || true
+            # 清理可能运行在3001端口的vite进程
+            local pids=$(lsof -ti:3001 2>/dev/null || true)
+            if [[ -n "$pids" ]]; then
+                echo "$pids" | xargs kill -9 2>/dev/null || true
+            fi
+            ;;
+        "backend")
+            # 清理所有backend相关进程
+            pkill -f "spring-boot:run" 2>/dev/null || true
+            pkill -f "backend.*mvn" 2>/dev/null || true
+            # 清理可能运行在8080端口的进程
+            local pids=$(lsof -ti:8080 2>/dev/null || true)
+            if [[ -n "$pids" ]]; then
+                echo "$pids" | xargs kill -9 2>/dev/null || true
+            fi
+            ;;
+    esac
+}
+
 # 停止单个服务
 stop_single_service() {
     local service="$1"
 
-    # 检查服务是否在运行
-    if ! check_service_status "$service"; then
-        log_warning "${SERVICES[$service]} 未在运行"
-        return 0
-    fi
+    log_info "停止${SERVICES[$service]}..."
 
     case "$service" in
-        "user-frontend")
-            if [ -f "logs/user-frontend.pid" ]; then
-                log_info "停止${SERVICES[$service]}..."
-                kill $(cat logs/user-frontend.pid) 2>/dev/null || true
-                rm -f logs/user-frontend.pid
-                # 确保进程完全停止
-                pkill -f "vite.*3000" 2>/dev/null || true
+        "user-frontend"|"admin-frontend"|"backend")
+            # 首先尝试优雅停止
+            if [ -f "logs/${service}.pid" ]; then
+                local pid=$(cat "logs/${service}.pid")
+                if kill -0 "$pid" 2>/dev/null; then
+                    log_info "优雅停止进程 $pid..."
+                    kill "$pid" 2>/dev/null || true
+                    sleep 2
+                fi
+                rm -f "logs/${service}.pid"
+            fi
+
+            # 强制清理所有相关进程
+            log_info "清理所有相关进程..."
+            force_kill_service_processes "$service"
+
+            # 等待进程完全停止
+            sleep 2
+
+            # 验证停止结果
+            if ! check_service_status "$service"; then
+                log_success "${SERVICES[$service]} 已完全停止"
+            else
+                log_warning "${SERVICES[$service]} 可能仍有残留进程，正在强制清理..."
+                force_kill_service_processes "$service"
                 sleep 1
                 if ! check_service_status "$service"; then
-                    log_success "${SERVICES[$service]} 已停止"
+                    log_success "${SERVICES[$service]} 已强制停止"
                 else
-                    log_error "${SERVICES[$service]} 停止失败"
-                    return 1
-                fi
-            fi
-            ;;
-        "admin-frontend")
-            if [ -f "logs/admin-frontend.pid" ]; then
-                log_info "停止${SERVICES[$service]}..."
-                kill $(cat logs/admin-frontend.pid) 2>/dev/null || true
-                rm -f logs/admin-frontend.pid
-                # 确保进程完全停止
-                pkill -f "vite.*3001" 2>/dev/null || true
-                sleep 1
-                if ! check_service_status "$service"; then
-                    log_success "${SERVICES[$service]} 已停止"
-                else
-                    log_error "${SERVICES[$service]} 停止失败"
-                    return 1
-                fi
-            fi
-            ;;
-        "backend")
-            if [ -f "logs/backend.pid" ]; then
-                log_info "停止${SERVICES[$service]}..."
-                kill $(cat logs/backend.pid) 2>/dev/null || true
-                rm -f logs/backend.pid
-                # 确保进程完全停止
-                pkill -f "spring-boot:run" 2>/dev/null || true
-                sleep 2
-                if ! check_service_status "$service"; then
-                    log_success "${SERVICES[$service]} 已停止"
-                else
-                    log_error "${SERVICES[$service]} 停止失败"
+                    log_error "${SERVICES[$service]} 停止失败，请手动检查进程"
                     return 1
                 fi
             fi
