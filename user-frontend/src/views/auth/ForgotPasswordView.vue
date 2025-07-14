@@ -110,7 +110,7 @@ import ModernCard from '@/components/ui/ModernCard.vue'
 import { useAppStore } from '@/stores/app'
 import type { ResetPasswordRequest } from '@/types/user'
 import { ArrowLeft, Key, Lock, Message } from '@element-plus/icons-vue'
-import { ElForm, ElMessage } from 'element-plus'
+import { ElForm, ElMessage, type FormRules } from 'element-plus'
 import { reactive, ref } from 'vue'
 import { useRouter } from 'vue-router'
 
@@ -126,10 +126,10 @@ const forgotPasswordForm = reactive<ResetPasswordRequest>({
   emailCode: ''
 })
 
-const forgotPasswordRules = {
+const forgotPasswordRules: FormRules = {
   email: [
     { required: true, message: '请输入邮箱', trigger: 'blur' },
-    { type: 'email', message: '请输入正确的邮箱格式', trigger: 'blur' }
+    { type: 'email' as const, message: '请输入正确的邮箱格式', trigger: 'blur' }
   ],
   emailCode: [
     { required: true, message: '请输入邮箱验证码', trigger: 'blur' }

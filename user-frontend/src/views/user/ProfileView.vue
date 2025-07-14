@@ -323,7 +323,7 @@ const initFormData = () => {
   if (userStore.user) {
     Object.assign(profileForm, {
       nickname: userStore.user.nickname || '',
-      avatar: userStore.user.avatar || '',
+      avatar: userStore.user.avatarUrl || '',
       phone: userStore.user.phone || '',
       gender: userStore.user.gender,
       birthday: userStore.user.birthday || '',
@@ -354,7 +354,7 @@ const uploadAvatar = async ({ file }: { file: File }) => {
   try {
     const success = await userStore.uploadAvatar(file)
     if (success && userStore.user) {
-      profileForm.avatar = userStore.user.avatar || ''
+      profileForm.avatar = userStore.user.avatarUrl || ''
     }
   } catch (error) {
     console.error('头像上传失败:', error)

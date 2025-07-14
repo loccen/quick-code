@@ -95,7 +95,7 @@
           <el-dropdown class="user-dropdown" @command="handleUserCommand">
             <div class="user-info">
               <el-avatar
-                :src="userStore.user?.avatar"
+                :src="userStore.user?.avatarUrl"
                 :size="32"
                 class="user-avatar"
               >

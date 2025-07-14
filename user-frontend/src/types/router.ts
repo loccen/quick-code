@@ -3,43 +3,38 @@
  */
 import type { Component } from 'vue'
 
-/**
- * 路由元信息
- */
-export interface RouteMeta {
-  /** 页面标题 */
-  title?: string
-  /** 页面图标 */
-  icon?: string
-  /** 是否需要认证 */
-  requiresAuth?: boolean
-  /** 需要的权限 */
-  permissions?: string[]
-  /** 需要的角色 */
-  roles?: string[]
-  /** 是否在菜单中隐藏 */
-  hidden?: boolean
-  /** 是否固定在标签页 */
-  affix?: boolean
-  /** 是否缓存页面 */
-  keepAlive?: boolean
-  /** 面包屑路径 */
-  breadcrumb?: BreadcrumbItem[]
-  /** 页面布局 */
-  layout?: string
-  /** 排序权重 */
-  order?: number
-  /** 外部链接 */
-  externalLink?: string
-  /** 是否为根菜单 */
-  isRoot?: boolean
-  /** 重定向路径 */
-  redirect?: string
-}
-
 // 扩展Vue Router的路由元信息类型
 declare module 'vue-router' {
-  interface RouteMeta extends RouteMeta {}
+  interface RouteMeta {
+    /** 页面标题 */
+    title?: string
+    /** 页面图标 */
+    icon?: string
+    /** 是否需要认证 */
+    requiresAuth?: boolean
+    /** 需要的权限 */
+    permissions?: string[]
+    /** 需要的角色 */
+    roles?: string[]
+    /** 是否在菜单中隐藏 */
+    hidden?: boolean
+    /** 是否固定在标签页 */
+    affix?: boolean
+    /** 是否缓存页面 */
+    keepAlive?: boolean
+    /** 面包屑路径 */
+    breadcrumb?: BreadcrumbItem[]
+    /** 页面布局 */
+    layout?: string
+    /** 排序权重 */
+    order?: number
+    /** 外部链接 */
+    externalLink?: string
+    /** 是否为根菜单 */
+    isRoot?: boolean
+    /** 重定向路径 */
+    redirect?: string
+  }
 }
 
 /**
