@@ -78,47 +78,89 @@ list_services() {
     done
 }
 
+# 获取服务的实际运行PID（包括子进程）
+get_service_pids() {
+    local service="$1"
+    local pids=""
+
+    case "$service" in
+        "user-frontend")
+            # 获取npm主进程PID
+            if [ -f "logs/user-frontend.pid" ]; then
+                local main_pid=$(cat logs/user-frontend.pid)
+                if kill -0 "$main_pid" 2>/dev/null; then
+                    # 获取整个进程树的PID
+                    pids=$(pstree -p "$main_pid" | grep -o '([0-9]*)' | tr -d '()' | tr '\n' ' ')
+                fi
+            fi
+            # 也检查可能的孤儿进程
+            local orphan_pids=$(ps -ef | grep "user-frontend.*vite" | grep -v grep | awk '{print $2}' | tr '\n' ' ')
+            pids="$pids $orphan_pids"
+            ;;
+        "admin-frontend")
+            # 获取npm主进程PID
+            if [ -f "logs/admin-frontend.pid" ]; then
+                local main_pid=$(cat logs/admin-frontend.pid)
+                if kill -0 "$main_pid" 2>/dev/null; then
+                    # 获取整个进程树的PID
+                    pids=$(pstree -p "$main_pid" | grep -o '([0-9]*)' | tr -d '()' | tr '\n' ' ')
+                fi
+            fi
+            # 也检查可能的孤儿进程
+            local orphan_pids=$(ps -ef | grep "admin-frontend.*vite" | grep -v grep | awk '{print $2}' | tr '\n' ' ')
+            pids="$pids $orphan_pids"
+            ;;
+        "backend")
+            # 获取mvn主进程PID
+            if [ -f "logs/backend.pid" ]; then
+                local main_pid=$(cat logs/backend.pid)
+                if kill -0 "$main_pid" 2>/dev/null; then
+                    # 获取整个进程树的PID
+                    pids=$(pstree -p "$main_pid" | grep -o '([0-9]*)' | tr -d '()' | tr '\n' ' ')
+                fi
+            fi
+            # 也检查可能的孤儿进程
+            local orphan_pids=$(ps -ef | grep "spring-boot:run" | grep -v grep | awk '{print $2}' | tr '\n' ' ')
+            pids="$pids $orphan_pids"
+            ;;
+    esac
+
+    # 去重并清理空格
+    echo "$pids" | tr ' ' '\n' | sort -u | grep -v '^$' | tr '\n' ' '
+}
+
 # 检查服务运行状态
 check_service_status() {
     local service="$1"
 
     case "$service" in
         "user-frontend")
-            # 检查PID文件和进程状态
-            if [ -f "logs/user-frontend.pid" ] && kill -0 $(cat logs/user-frontend.pid) 2>/dev/null; then
-                # 进一步检查端口是否被占用
-                if lsof -i:3000 >/dev/null 2>&1; then
-                    return 0
-                fi
-            fi
-            # 如果PID文件不存在或进程已死，检查是否有其他进程占用端口
+            # 首先检查端口是否被占用（最可靠的方法）
             if lsof -i:3000 >/dev/null 2>&1; then
+                return 0
+            fi
+            # 然后检查PID文件和进程状态
+            if [ -f "logs/user-frontend.pid" ] && kill -0 $(cat logs/user-frontend.pid) 2>/dev/null; then
                 return 0
             fi
             ;;
         "admin-frontend")
-            # 检查PID文件和进程状态
-            if [ -f "logs/admin-frontend.pid" ] && kill -0 $(cat logs/admin-frontend.pid) 2>/dev/null; then
-                # 进一步检查端口是否被占用
-                if lsof -i:3001 >/dev/null 2>&1; then
-                    return 0
-                fi
-            fi
-            # 如果PID文件不存在或进程已死，检查是否有其他进程占用端口
+            # 首先检查端口是否被占用（最可靠的方法）
             if lsof -i:3001 >/dev/null 2>&1; then
+                return 0
+            fi
+            # 然后检查PID文件和进程状态
+            if [ -f "logs/admin-frontend.pid" ] && kill -0 $(cat logs/admin-frontend.pid) 2>/dev/null; then
                 return 0
             fi
             ;;
         "backend")
-            # 检查PID文件和进程状态
-            if [ -f "logs/backend.pid" ] && kill -0 $(cat logs/backend.pid) 2>/dev/null; then
-                # 进一步检查端口是否被占用
-                if lsof -i:8080 >/dev/null 2>&1; then
-                    return 0
-                fi
-            fi
-            # 如果PID文件不存在或进程已死，检查是否有其他进程占用端口
+            # 首先检查端口是否被占用（最可靠的方法）
             if lsof -i:8080 >/dev/null 2>&1; then
+                return 0
+            fi
+            # 然后检查PID文件和进程状态
+            if [ -f "logs/backend.pid" ] && kill -0 $(cat logs/backend.pid) 2>/dev/null; then
                 return 0
             fi
             ;;
@@ -310,39 +352,68 @@ start_dev() {
     fi
 }
 
-# 强制清理服务进程
+# 强制清理服务进程（包括整个进程树）
 force_kill_service_processes() {
     local service="$1"
 
+    log_info "强制清理 ${SERVICES[$service]} 的所有相关进程..."
+
+    # 获取所有相关PID
+    local all_pids=$(get_service_pids "$service")
+
+    if [[ -n "$all_pids" ]]; then
+        log_info "发现进程: $all_pids"
+        # 首先尝试优雅终止
+        for pid in $all_pids; do
+            if kill -0 "$pid" 2>/dev/null; then
+                kill "$pid" 2>/dev/null || true
+            fi
+        done
+
+        sleep 2
+
+        # 强制终止仍然存在的进程
+        for pid in $all_pids; do
+            if kill -0 "$pid" 2>/dev/null; then
+                log_info "强制终止进程 $pid"
+                kill -9 "$pid" 2>/dev/null || true
+            fi
+        done
+    fi
+
+    # 额外的清理措施
     case "$service" in
         "user-frontend")
-            # 清理所有user-frontend相关进程
+            # 清理可能的孤儿进程
             pkill -f "user-frontend.*vite" 2>/dev/null || true
             pkill -f "user-frontend.*npm" 2>/dev/null || true
-            # 清理可能运行在3000或5174端口的vite进程
-            local pids=$(lsof -ti:3000,5174 2>/dev/null || true)
-            if [[ -n "$pids" ]]; then
-                echo "$pids" | xargs kill -9 2>/dev/null || true
+            # 清理端口占用
+            local port_pids=$(lsof -ti:3000 2>/dev/null || true)
+            if [[ -n "$port_pids" ]]; then
+                log_info "清理端口3000占用进程: $port_pids"
+                echo "$port_pids" | xargs kill -9 2>/dev/null || true
             fi
             ;;
         "admin-frontend")
-            # 清理所有admin-frontend相关进程
+            # 清理可能的孤儿进程
             pkill -f "admin-frontend.*vite" 2>/dev/null || true
             pkill -f "admin-frontend.*npm" 2>/dev/null || true
-            # 清理可能运行在3001端口的vite进程
-            local pids=$(lsof -ti:3001 2>/dev/null || true)
-            if [[ -n "$pids" ]]; then
-                echo "$pids" | xargs kill -9 2>/dev/null || true
+            # 清理端口占用
+            local port_pids=$(lsof -ti:3001 2>/dev/null || true)
+            if [[ -n "$port_pids" ]]; then
+                log_info "清理端口3001占用进程: $port_pids"
+                echo "$port_pids" | xargs kill -9 2>/dev/null || true
             fi
             ;;
         "backend")
-            # 清理所有backend相关进程
+            # 清理可能的孤儿进程
             pkill -f "spring-boot:run" 2>/dev/null || true
             pkill -f "backend.*mvn" 2>/dev/null || true
-            # 清理可能运行在8080端口的进程
-            local pids=$(lsof -ti:8080 2>/dev/null || true)
-            if [[ -n "$pids" ]]; then
-                echo "$pids" | xargs kill -9 2>/dev/null || true
+            # 清理端口占用
+            local port_pids=$(lsof -ti:8080 2>/dev/null || true)
+            if [[ -n "$port_pids" ]]; then
+                log_info "清理端口8080占用进程: $port_pids"
+                echo "$port_pids" | xargs kill -9 2>/dev/null || true
             fi
             ;;
     esac
@@ -459,15 +530,45 @@ show_single_status() {
     if check_service_status "$service"; then
         echo -e "状态: ${GREEN}运行中${NC}"
 
-        # 显示额外信息
+        # 显示详细进程信息
         case "$service" in
             "user-frontend"|"admin-frontend"|"backend")
                 if [ -f "logs/${service}.pid" ]; then
-                    local pid=$(cat "logs/${service}.pid")
-                    echo "进程ID: $pid"
+                    local main_pid=$(cat "logs/${service}.pid")
+                    echo "主进程ID: $main_pid"
+
+                    # 显示进程树中的关键进程
+                    local all_pids=$(get_service_pids "$service")
+                    if [[ -n "$all_pids" ]]; then
+                        echo "相关进程: $all_pids"
+
+                        # 显示实际的Vite/Java进程
+                        case "$service" in
+                            "user-frontend"|"admin-frontend")
+                                local vite_pid=$(ps -ef | grep "${service}.*vite" | grep -v grep | awk '{print $2}' | head -1)
+                                if [[ -n "$vite_pid" ]]; then
+                                    echo "Vite进程ID: $vite_pid"
+                                fi
+                                ;;
+                            "backend")
+                                local java_pid=$(ps -ef | grep "spring-boot:run" | grep -v grep | awk '{print $2}' | head -1)
+                                if [[ -n "$java_pid" ]]; then
+                                    echo "Java进程ID: $java_pid"
+                                fi
+                                ;;
+                        esac
+                    fi
+
                     if [ -f "logs/${service}.log" ]; then
                         echo "日志文件: logs/${service}.log"
                     fi
+                fi
+
+                # 显示端口占用情况
+                local port_info=$(lsof -i:${SERVICE_PORTS[$service]} 2>/dev/null | grep LISTEN | head -1)
+                if [[ -n "$port_info" ]]; then
+                    local port_pid=$(echo "$port_info" | awk '{print $2}')
+                    echo "端口占用进程: $port_pid"
                 fi
                 ;;
         esac
