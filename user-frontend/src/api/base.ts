@@ -1,8 +1,8 @@
 /**
  * API服务基类
  */
+import type { ApiResponse, PageRequest, PageResponse } from '@/types/api'
 import http from '@/utils/http'
-import type { ApiResponse, PageResponse, PageRequest } from '@/types/api'
 
 /**
  * API服务基类
@@ -31,8 +31,8 @@ export abstract class BaseApiService {
   /**
    * POST请求
    */
-  protected post<T = any>(path: string, data?: any): Promise<ApiResponse<T>> {
-    return http.post(this.buildUrl(path), data)
+  protected post<T = any>(path: string, data?: any, config?: any): Promise<ApiResponse<T>> {
+    return http.post(this.buildUrl(path), data, config)
   }
 
   /**

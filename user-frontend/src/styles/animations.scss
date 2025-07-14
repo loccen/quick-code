@@ -3,7 +3,7 @@
  * 现代化微交互动画
  */
 
-@import './variables.scss';
+@use './variables' as *;
 
 // ========== 基础动画 ==========
 

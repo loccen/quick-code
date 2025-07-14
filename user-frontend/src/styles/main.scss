@@ -3,9 +3,9 @@
  * 基于现代化UI设计规范的全局样式定义
  */
 
-@import './variables.scss';
-@import './mixins.scss';
-@import './animations.scss';
+@use './variables' as *;
+@use './mixins' as *;
+@use './animations' as *;
 
 // ========== CSS变量定义 ==========
 :root {

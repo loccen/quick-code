@@ -3,7 +3,7 @@
  * 现代化UI效果的可复用样式
  */
 
-@import './variables.scss';
+@use './variables' as *;
 
 // ========== 毛玻璃效果混入 ==========
 
