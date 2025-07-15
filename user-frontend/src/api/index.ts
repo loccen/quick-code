@@ -6,7 +6,7 @@
 export { BaseApiService } from './base'
 
 // 导出认证服务
-export { default as authApi } from './auth'
+export { default as authApi } from './modules/auth'
 
 // 导出用户服务
 export { default as userApi } from './user'
@@ -19,7 +19,7 @@ export type * from '@/types/api'
 export type * from '@/types/user'
 
 // 统一API实例
-import authApi from './auth'
+import authApi from './modules/auth'
 import userApi from './user'
 
 export const api = {

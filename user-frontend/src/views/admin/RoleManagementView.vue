@@ -25,8 +25,8 @@ appStore.setPageTitle('角色管理')
 </script>
 
 <style lang="scss" scoped>
-@import '@/styles/variables.scss';
-@import '@/styles/mixins.scss';
+@use '@/styles/variables' as *;
+@use '@/styles/mixins' as *;
 
 .role-management-view {
   .page-header {

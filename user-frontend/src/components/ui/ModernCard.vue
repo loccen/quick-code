@@ -98,8 +98,8 @@ const handleClick = (event: MouseEvent) => {
 </script>
 
 <style lang="scss" scoped>
-@import '@/styles/variables.scss';
-@import '@/styles/mixins.scss';
+@use '@/styles/variables' as *;
+@use '@/styles/mixins' as *;
 
 .modern-card {
   @include enhanced-card();

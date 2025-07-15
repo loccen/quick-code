@@ -206,8 +206,8 @@ appStore.setPageTitle('重置密码')
 </script>
 
 <style lang="scss" scoped>
-@import '@/styles/variables.scss';
-@import '@/styles/mixins.scss';
+@use '@/styles/variables' as *;
+@use '@/styles/mixins' as *;
 
 .forgot-password-view {
   min-height: 100vh;

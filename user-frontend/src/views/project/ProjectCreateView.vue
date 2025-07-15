@@ -25,8 +25,8 @@ appStore.setPageTitle('创建项目')
 </script>
 
 <style lang="scss" scoped>
-@import '@/styles/variables.scss';
-@import '@/styles/mixins.scss';
+@use '@/styles/variables' as *;
+@use '@/styles/mixins' as *;
 
 .project-create-view {
   .page-header {

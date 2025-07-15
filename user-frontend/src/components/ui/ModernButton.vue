@@ -109,8 +109,8 @@ const handleClick = (event: MouseEvent) => {
 </script>
 
 <style lang="scss" scoped>
-@import '@/styles/variables.scss';
-@import '@/styles/mixins.scss';
+@use '@/styles/variables' as *;
+@use '@/styles/mixins' as *;
 
 .modern-button {
   @include modern-button();
@@ -172,7 +172,7 @@ const handleClick = (event: MouseEvent) => {
   }
 
   &--success {
-    background: linear-gradient(135deg, $success-color 0%, lighten($success-color, 10%) 100%);
+    background: linear-gradient(135deg, $success-color 0%, color-mix(in srgb, $success-color 90%, white 10%) 100%);
     color: white;
     border: 1px solid $success-color;
     box-shadow: $shadow-success;
@@ -183,7 +183,7 @@ const handleClick = (event: MouseEvent) => {
   }
 
   &--warning {
-    background: linear-gradient(135deg, $warning-color 0%, lighten($warning-color, 10%) 100%);
+    background: linear-gradient(135deg, $warning-color 0%, color-mix(in srgb, $warning-color 90%, white 10%) 100%);
     color: white;
     border: 1px solid $warning-color;
     box-shadow: $shadow-warning;
@@ -194,7 +194,7 @@ const handleClick = (event: MouseEvent) => {
   }
 
   &--error {
-    background: linear-gradient(135deg, $error-color 0%, lighten($error-color, 10%) 100%);
+    background: linear-gradient(135deg, $error-color 0%, color-mix(in srgb, $error-color 90%, white 10%) 100%);
     color: white;
     border: 1px solid $error-color;
     box-shadow: $shadow-error;
@@ -205,7 +205,7 @@ const handleClick = (event: MouseEvent) => {
   }
 
   &--info {
-    background: linear-gradient(135deg, $info-color 0%, lighten($info-color, 10%) 100%);
+    background: linear-gradient(135deg, $info-color 0%, color-mix(in srgb, $info-color 90%, white 10%) 100%);
     color: white;
     border: 1px solid $info-color;
     box-shadow: 0 8px 25px rgba($info-color, 0.15);

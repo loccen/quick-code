@@ -85,7 +85,7 @@
           <el-pagination
             v-model:current-page="currentPage"
             v-model:page-size="pageSize"
-            :total="totalElements"
+            :total="total"
             :page-sizes="[12, 24, 48]"
             layout="total, sizes, prev, pager, next, jumper"
             @size-change="handleSizeChange"
@@ -250,8 +250,8 @@ onMounted(() => {
 </script>
 
 <style lang="scss" scoped>
-@import '@/styles/variables.scss';
-@import '@/styles/mixins.scss';
+@use '@/styles/variables' as *;
+@use '@/styles/mixins' as *;
 
 .market-view {
   min-height: 100vh;

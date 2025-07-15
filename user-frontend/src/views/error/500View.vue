@@ -48,8 +48,8 @@ appStore.setPageTitle('服务器错误')
 </script>
 
 <style lang="scss" scoped>
-@import '@/styles/variables.scss';
-@import '@/styles/mixins.scss';
+@use '@/styles/variables' as *;
+@use '@/styles/mixins' as *;
 
 .error-view {
   min-height: 100vh;

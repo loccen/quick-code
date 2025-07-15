@@ -2,6 +2,7 @@
  * 路由相关类型定义
  */
 import type { Component } from 'vue'
+import type { RouteMeta } from 'vue-router'
 
 // 扩展Vue Router的路由元信息类型
 declare module 'vue-router' {

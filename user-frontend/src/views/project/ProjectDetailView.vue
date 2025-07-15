@@ -25,8 +25,8 @@ appStore.setPageTitle('项目详情')
 </script>
 
 <style lang="scss" scoped>
-@import '@/styles/variables.scss';
-@import '@/styles/mixins.scss';
+@use '@/styles/variables' as *;
+@use '@/styles/mixins' as *;
 
 .project-detail-view {
   .page-header {

@@ -25,8 +25,8 @@ appStore.setPageTitle('权限管理')
 </script>
 
 <style lang="scss" scoped>
-@import '@/styles/variables.scss';
-@import '@/styles/mixins.scss';
+@use '@/styles/variables' as *;
+@use '@/styles/mixins' as *;
 
 .permission-management-view {
   .page-header {

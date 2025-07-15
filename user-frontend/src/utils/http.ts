@@ -31,6 +31,16 @@ class HttpClient {
   }
 
   /**
+   * 转换自定义配置到 Axios 配置
+   */
+  private convertConfig(config?: Partial<RequestConfig>): AxiosRequestConfig {
+    if (!config) return {}
+
+    const { auth, loading, showError, ...axiosConfig } = config
+    return axiosConfig
+  }
+
+  /**
    * 设置拦截器
    */
   private setupInterceptors() {
@@ -253,35 +263,40 @@ class HttpClient {
    * GET请求
    */
   get<T = any>(url: string, params?: any, config?: Partial<RequestConfig>): Promise<ApiResponse<T>> {
-    return this.instance.get(url, { params, ...config })
+    const axiosConfig = this.convertConfig(config)
+    return this.instance.get(url, { params, ...axiosConfig })
   }
 
   /**
    * POST请求
    */
   post<T = any>(url: string, data?: any, config?: Partial<RequestConfig>): Promise<ApiResponse<T>> {
-    return this.instance.post(url, data, config)
+    const axiosConfig = this.convertConfig(config)
+    return this.instance.post(url, data, axiosConfig)
   }
 
   /**
    * PUT请求
    */
   put<T = any>(url: string, data?: any, config?: Partial<RequestConfig>): Promise<ApiResponse<T>> {
-    return this.instance.put(url, data, config)
+    const axiosConfig = this.convertConfig(config)
+    return this.instance.put(url, data, axiosConfig)
   }
 
   /**
    * DELETE请求
    */
   delete<T = any>(url: string, config?: Partial<RequestConfig>): Promise<ApiResponse<T>> {
-    return this.instance.delete(url, config)
+    const axiosConfig = this.convertConfig(config)
+    return this.instance.delete(url, axiosConfig)
   }
 
   /**
    * PATCH请求
    */
   patch<T = any>(url: string, data?: any, config?: Partial<RequestConfig>): Promise<ApiResponse<T>> {
-    return this.instance.patch(url, data, config)
+    const axiosConfig = this.convertConfig(config)
+    return this.instance.patch(url, data, axiosConfig)
   }
 
   /**

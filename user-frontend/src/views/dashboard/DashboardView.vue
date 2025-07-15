@@ -182,6 +182,23 @@ import {
 import { onMounted, ref } from 'vue'
 import { useRouter } from 'vue-router'
 
+// 类型定义
+interface StatData {
+  title: string
+  value: string
+  change: string
+  changeType: 'increase' | 'decrease'
+  icon: string
+  variant: 'default' | 'primary' | 'success' | 'warning' | 'error'
+}
+
+interface QuickAction {
+  title: string
+  action: string
+  type: 'primary' | 'success' | 'warning' | 'error' | 'info' | 'default' | 'text'
+  icon: string
+}
+
 const router = useRouter()
 const userStore = useUserStore()
 const appStore = useAppStore()
@@ -198,7 +215,7 @@ const chartPeriods = [
 ]
 
 // 统计数据
-const statsData = ref([
+const statsData = ref<StatData[]>([
   {
     title: '总项目数',
     value: '24',
@@ -262,7 +279,7 @@ const recentActivities = ref([
 ])
 
 // 快速操作
-const quickActions = ref([
+const quickActions = ref<QuickAction[]>([
   {
     title: '创建项目',
     action: 'createProject',
@@ -355,8 +372,8 @@ onMounted(() => {
 </script>
 
 <style lang="scss" scoped>
-@import '@/styles/variables.scss';
-@import '@/styles/mixins.scss';
+@use '@/styles/variables' as *;
+@use '@/styles/mixins' as *;
 
 .dashboard-view {
   .page-header {

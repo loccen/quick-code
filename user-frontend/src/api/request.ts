@@ -1,5 +1,5 @@
 // HTTP请求工具
-import axios, { type AxiosInstance, type AxiosRequestConfig, type AxiosResponse } from 'axios'
+import axios, { type AxiosInstance, type AxiosRequestConfig, type AxiosResponse, type InternalAxiosRequestConfig } from 'axios'
 import { ElMessage } from 'element-plus'
 import { API_CONFIG } from './config'
 
@@ -14,7 +14,7 @@ const request: AxiosInstance = axios.create({
 
 // 请求拦截器
 request.interceptors.request.use(
-  (config: AxiosRequestConfig) => {
+  (config: InternalAxiosRequestConfig) => {
     // 检查是否为公开API，公开API不需要添加认证头
     const isPublicApi = config.url?.includes('/public/') ||
                        config.url?.includes('/auth/')
