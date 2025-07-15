@@ -3,6 +3,8 @@ package com.quickcode.common.exception;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Set;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.atomic.AtomicLong;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -37,11 +39,42 @@ import lombok.extern.slf4j.Slf4j;
 public class GlobalExceptionHandler {
 
     /**
+     * 异常统计计数器
+     */
+    private final Map<String, AtomicLong> exceptionCounters = new ConcurrentHashMap<>();
+
+    /**
+     * 记录异常统计
+     */
+    private void recordExceptionStatistics(String exceptionType, Integer errorCode) {
+        String key = exceptionType + "_" + errorCode;
+        exceptionCounters.computeIfAbsent(key, k -> new AtomicLong(0)).incrementAndGet();
+
+        // 每100次异常记录一次统计日志
+        long count = exceptionCounters.get(key).get();
+        if (count % 100 == 0) {
+            log.info("异常统计: {} 已发生 {} 次", key, count);
+        }
+    }
+
+    /**
+     * 获取异常统计信息
+     */
+    public Map<String, Long> getExceptionStatistics() {
+        Map<String, Long> stats = new HashMap<>();
+        exceptionCounters.forEach((key, counter) -> stats.put(key, counter.get()));
+        return stats;
+    }
+
+    /**
      * 处理业务异常
      */
     @ExceptionHandler(BusinessException.class)
     public ResponseEntity<ApiResponse<Object>> handleBusinessException(BusinessException e, HttpServletRequest request) {
         log.warn("业务异常: {} - {}", e.getCode(), e.getMessage());
+
+        // 记录异常统计
+        recordExceptionStatistics(e.getClass().getSimpleName(), e.getCode());
 
         ApiResponse<Object> response = ApiResponse.error(e.getCode(), e.getMessage());
         if (e.getDetails() != null) {

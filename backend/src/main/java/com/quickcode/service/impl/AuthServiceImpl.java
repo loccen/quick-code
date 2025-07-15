@@ -99,7 +99,8 @@ public class AuthServiceImpl implements AuthService {
   @Override
   public JwtResponse refreshToken(String refreshToken) {
     // TODO: 实现令牌刷新逻辑
-    throw new UnsupportedOperationException("令牌刷新功能尚未实现");
+    throw com.quickcode.common.exception.InvalidStateException
+        .withCode(5005, "令牌刷新功能尚未实现");
   }
 
   @Override
@@ -217,19 +218,22 @@ public class AuthServiceImpl implements AuthService {
   @Override
   public String enableTwoFactor(Long userId) {
     // TODO: 实现启用双因素认证逻辑
-    throw new UnsupportedOperationException("启用双因素认证功能尚未实现");
+    throw com.quickcode.common.exception.InvalidStateException
+        .withCode(5005, "启用双因素认证功能尚未实现");
   }
 
   @Override
   public void disableTwoFactor(Long userId, String code) {
     // TODO: 实现禁用双因素认证逻辑
-    throw new UnsupportedOperationException("禁用双因素认证功能尚未实现");
+    throw com.quickcode.common.exception.InvalidStateException
+        .withCode(5005, "禁用双因素认证功能尚未实现");
   }
 
   @Override
   public boolean verifyTwoFactorCode(Long userId, String code) {
     // TODO: 实现验证双因素认证码逻辑
-    throw new UnsupportedOperationException("验证双因素认证码功能尚未实现");
+    throw com.quickcode.common.exception.InvalidStateException
+        .withCode(5005, "验证双因素认证码功能尚未实现");
   }
 
   @Override

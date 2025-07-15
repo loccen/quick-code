@@ -197,19 +197,22 @@ public class UserServiceImpl implements UserService {
   @Override
   public String enableTwoFactor(Long userId) {
     // TODO: 实现启用双因素认证逻辑
-    throw new UnsupportedOperationException("启用双因素认证功能尚未实现");
+    throw com.quickcode.common.exception.InvalidStateException
+        .withCode(5005, "启用双因素认证功能尚未实现");
   }
 
   @Override
   public void disableTwoFactor(Long userId) {
     // TODO: 实现禁用双因素认证逻辑
-    throw new UnsupportedOperationException("禁用双因素认证功能尚未实现");
+    throw com.quickcode.common.exception.InvalidStateException
+        .withCode(5005, "禁用双因素认证功能尚未实现");
   }
 
   @Override
   public boolean verifyTwoFactorCode(Long userId, String code) {
     // TODO: 实现验证双因素认证码逻辑
-    throw new UnsupportedOperationException("验证双因素认证码功能尚未实现");
+    throw com.quickcode.common.exception.InvalidStateException
+        .withCode(5005, "验证双因素认证码功能尚未实现");
   }
 
   @Override
@@ -267,13 +270,15 @@ public class UserServiceImpl implements UserService {
   @Override
   public void recordLoginSuccess(Long userId, String loginIp) {
     // TODO: 实现记录登录成功逻辑
-    throw new UnsupportedOperationException("记录登录成功功能尚未实现");
+    throw com.quickcode.common.exception.InvalidStateException
+        .withCode(5005, "记录登录成功功能尚未实现");
   }
 
   @Override
   public void recordLoginFailure(Long userId) {
     // TODO: 实现记录登录失败逻辑
-    throw new UnsupportedOperationException("记录登录失败功能尚未实现");
+    throw com.quickcode.common.exception.InvalidStateException
+        .withCode(5005, "记录登录失败功能尚未实现");
   }
 
   @Override
