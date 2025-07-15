@@ -271,7 +271,7 @@
                         <exclude>**/*IntegrationTest.java</exclude>
                         <exclude>**/*IT.java</exclude>
                     </excludes>
-                    <argLine>-Dfile.encoding=UTF-8</argLine>
+                    <argLine>@{argLine} -Dfile.encoding=UTF-8</argLine>
                 </configuration>
             </plugin>
 
@@ -304,6 +304,8 @@
                 <version>0.8.11</version>
                 <executions>
                     <execution>
+                        <id>prepare-agent</id>
+                        <phase>initialize</phase>
                         <goals>
                             <goal>prepare-agent</goal>
                         </goals>
@@ -368,6 +370,7 @@
                                 <exclude>**/*IntegrationTest.java</exclude>
                                 <exclude>**/*IT.java</exclude>
                             </excludes>
+                            <argLine>@{argLine} -Dfile.encoding=UTF-8</argLine>
                         </configuration>
                     </plugin>
                 </plugins>
@@ -408,6 +411,7 @@
                         <executions>
                             <execution>
                                 <id>prepare-agent</id>
+                                <phase>initialize</phase>
                                 <goals>
                                     <goal>prepare-agent</goal>
                                 </goals>
