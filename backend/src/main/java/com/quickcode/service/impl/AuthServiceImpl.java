@@ -40,12 +40,12 @@ public class AuthServiceImpl implements AuthService {
 
     // 验证密码是否一致
     if (!request.isPasswordMatched()) {
-      throw new IllegalArgumentException("密码和确认密码不一致");
+      throw com.quickcode.common.exception.AuthenticationFailedException.passwordMismatch();
     }
 
     // 验证是否同意用户协议和隐私政策
     if (!request.isAgreeTerms()) {
-      throw new IllegalArgumentException("必须同意用户协议和隐私政策");
+      throw com.quickcode.common.exception.AuthenticationFailedException.termsNotAgreed();
     }
 
     // 验证邮箱验证码
@@ -114,12 +114,13 @@ public class AuthServiceImpl implements AuthService {
 
     // 查找具有该验证令牌的用户
     User user = userService.findByEmailVerificationToken(token)
-        .orElseThrow(() -> new IllegalArgumentException("无效的验证令牌"));
+        .orElseThrow(() -> com.quickcode.common.exception.AuthenticationFailedException
+            .invalidEmailCode("无效的验证令牌"));
 
     // 检查令牌是否过期
     if (user.getEmailVerificationExpiresAt() == null
         || user.getEmailVerificationExpiresAt().isBefore(LocalDateTime.now())) {
-      throw new IllegalStateException("验证令牌已过期");
+      throw com.quickcode.common.exception.InvalidStateException.verificationTokenExpired();
     }
 
     // 验证邮箱
@@ -138,11 +139,12 @@ public class AuthServiceImpl implements AuthService {
 
     // 查找用户
     User user = userService.findByEmail(email)
-        .orElseThrow(() -> new IllegalArgumentException("邮箱不存在: " + email));
+        .orElseThrow(() -> com.quickcode.common.exception.ResourceNotFoundException
+            .userByEmail(email));
 
     // 检查邮箱是否已验证
     if (user.getEmailVerified()) {
-      throw new IllegalStateException("邮箱已验证，无需重复验证");
+      throw com.quickcode.common.exception.InvalidStateException.emailAlreadyVerified();
     }
 
     // 生成验证令牌（开发和测试环境使用固定验证码）
@@ -162,7 +164,8 @@ public class AuthServiceImpl implements AuthService {
 
     // 查找用户
     User user = userService.findByEmail(email)
-        .orElseThrow(() -> new IllegalArgumentException("邮箱不存在: " + email));
+        .orElseThrow(() -> com.quickcode.common.exception.ResourceNotFoundException
+            .userByEmail(email));
 
     // 生成密码重置令牌（开发和测试环境使用固定验证码）
     user.setPasswordResetToken(emailProperties.getPasswordResetCode());
@@ -181,12 +184,14 @@ public class AuthServiceImpl implements AuthService {
 
     // 查找具有该重置令牌的用户
     User user = userService.findByPasswordResetToken(token)
-        .orElseThrow(() -> new IllegalArgumentException("无效的重置令牌"));
+        .orElseThrow(() -> com.quickcode.common.exception.AuthenticationFailedException
+            .invalidEmailCode("无效的重置令牌"));
 
     // 检查令牌是否过期
     if (user.getPasswordResetExpiresAt() == null
         || user.getPasswordResetExpiresAt().isBefore(LocalDateTime.now())) {
-      throw new IllegalStateException("重置令牌已过期");
+      throw com.quickcode.common.exception.InvalidStateException
+          .verificationTokenExpired("重置令牌已过期");
     }
 
     // 重置密码
@@ -245,7 +250,7 @@ public class AuthServiceImpl implements AuthService {
 
     // 在开发和测试环境中，直接验证固定验证码
     if (!emailProperties.getVerificationCode().equals(code)) {
-      throw new IllegalArgumentException("邮箱验证码不正确");
+      throw com.quickcode.common.exception.AuthenticationFailedException.invalidEmailCode();
     }
 
     log.debug("邮箱验证码验证成功: email={}", email);

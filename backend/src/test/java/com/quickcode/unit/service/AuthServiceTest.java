@@ -66,6 +66,8 @@ class AuthServiceTest {
     registerRequest.setEmail("new@example.com");
     registerRequest.setPassword("Password123!");
     registerRequest.setConfirmPassword("Password123!");
+    registerRequest.setEmailCode("123456"); // 使用固定验证码
+    registerRequest.setAgreeTerms(true); // 同意用户协议
 
     loginRequest = new LoginRequest();
     loginRequest.setUsernameOrEmail("testuser");
@@ -84,6 +86,7 @@ class AuthServiceTest {
       String refreshToken = "refresh.token.here";
       List<String> permissions = Arrays.asList("USER_READ", "USER_WRITE");
 
+      when(emailProperties.getVerificationCode()).thenReturn("123456"); // Mock 邮箱验证码
       when(userService.register(registerRequest.getUsername(), registerRequest.getEmail(),
           registerRequest.getPassword())).thenReturn(testUser);
       when(jwtUtils.generateAccessToken(any(Authentication.class))).thenReturn(accessToken);
@@ -121,7 +124,8 @@ class AuthServiceTest {
 
       // Act & Assert
       assertThatThrownBy(() -> authService.register(registerRequest))
-          .isInstanceOf(IllegalArgumentException.class).hasMessage("密码和确认密码不一致");
+          .isInstanceOf(com.quickcode.common.exception.AuthenticationFailedException.class)
+          .hasMessage("密码和确认密码不一致");
     }
   }
 
@@ -256,7 +260,8 @@ class AuthServiceTest {
 
       // Act & Assert
       assertThatThrownBy(() -> authService.sendEmailVerification(email))
-          .isInstanceOf(IllegalArgumentException.class).hasMessage("邮箱不存在: " + email);
+          .isInstanceOf(com.quickcode.common.exception.ResourceNotFoundException.class)
+          .hasMessage("用户 (邮箱: " + email + ") 不存在");
     }
 
     @Test
@@ -270,7 +275,7 @@ class AuthServiceTest {
 
       // Act & Assert
       assertThatThrownBy(() -> authService.sendEmailVerification(email))
-          .isInstanceOf(IllegalStateException.class).hasMessage("邮箱已验证，无需重复验证");
+          .isInstanceOf(com.quickcode.common.exception.InvalidStateException.class).hasMessage("邮箱已验证，无需重复验证");
     }
 
     @Test
@@ -305,7 +310,8 @@ class AuthServiceTest {
 
       // Act & Assert
       assertThatThrownBy(() -> authService.verifyEmail(token))
-          .isInstanceOf(IllegalArgumentException.class).hasMessage("无效的验证令牌");
+          .isInstanceOf(com.quickcode.common.exception.AuthenticationFailedException.class)
+          .hasMessage("无效的验证令牌");
     }
 
     @Test
@@ -322,7 +328,7 @@ class AuthServiceTest {
 
       // Act & Assert
       assertThatThrownBy(() -> authService.verifyEmail(token))
-          .isInstanceOf(IllegalStateException.class).hasMessage("验证令牌已过期");
+          .isInstanceOf(com.quickcode.common.exception.InvalidStateException.class).hasMessage("验证令牌已过期");
     }
   }
 
@@ -361,7 +367,8 @@ class AuthServiceTest {
 
       // Act & Assert
       assertThatThrownBy(() -> authService.sendPasswordResetEmail(email))
-          .isInstanceOf(IllegalArgumentException.class).hasMessage("邮箱不存在: " + email);
+          .isInstanceOf(com.quickcode.common.exception.ResourceNotFoundException.class)
+          .hasMessage("用户 (邮箱: " + email + ") 不存在");
     }
 
     @Test
@@ -396,7 +403,8 @@ class AuthServiceTest {
 
       // Act & Assert
       assertThatThrownBy(() -> authService.resetPassword(token, "NewPassword123!"))
-          .isInstanceOf(IllegalArgumentException.class).hasMessage("无效的重置令牌");
+          .isInstanceOf(com.quickcode.common.exception.AuthenticationFailedException.class)
+          .hasMessage("无效的重置令牌");
     }
 
     @Test
@@ -412,7 +420,7 @@ class AuthServiceTest {
 
       // Act & Assert
       assertThatThrownBy(() -> authService.resetPassword(token, "NewPassword123!"))
-          .isInstanceOf(IllegalStateException.class).hasMessage("重置令牌已过期");
+          .isInstanceOf(com.quickcode.common.exception.InvalidStateException.class).hasMessage("重置令牌已过期");
     }
   }
 }

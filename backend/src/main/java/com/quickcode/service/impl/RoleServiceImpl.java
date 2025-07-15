@@ -39,7 +39,7 @@ public class RoleServiceImpl implements RoleService {
     log.debug("创建角色: roleCode={}, roleName={}", role.getRoleCode(), role.getRoleName());
 
     if (existsByRoleCode(role.getRoleCode())) {
-      throw new IllegalArgumentException("角色代码已存在: " + role.getRoleCode());
+      throw com.quickcode.common.exception.DuplicateResourceException.roleCodeExists(role.getRoleCode());
     }
 
     Role savedRole = roleRepository.save(role);
@@ -52,7 +52,7 @@ public class RoleServiceImpl implements RoleService {
   public Role findById(Long id) {
     log.debug("根据ID查找角色: id={}", id);
     return roleRepository.findById(id)
-        .orElseThrow(() -> new IllegalArgumentException("角色不存在: " + id));
+        .orElseThrow(() -> com.quickcode.common.exception.ResourceNotFoundException.role(id));
   }
 
   @Override
@@ -71,7 +71,7 @@ public class RoleServiceImpl implements RoleService {
     // 如果角色代码发生变化，检查新代码是否已存在
     if (!existingRole.getRoleCode().equals(role.getRoleCode())
         && existsByRoleCode(role.getRoleCode())) {
-      throw new IllegalArgumentException("角色代码已存在: " + role.getRoleCode());
+      throw com.quickcode.common.exception.DuplicateResourceException.roleCodeExists(role.getRoleCode());
     }
 
     existingRole.setRoleCode(role.getRoleCode());
@@ -91,7 +91,9 @@ public class RoleServiceImpl implements RoleService {
     Role role = findById(id);
 
     if (isRoleInUse(id)) {
-      throw new IllegalStateException("角色正在被用户使用，无法删除: " + role.getRoleCode());
+      throw com.quickcode.common.exception.InvalidStateException
+          .withCode(com.quickcode.common.exception.ErrorCode.USER_DISABLED,
+              "角色正在被用户使用，无法删除: " + role.getRoleCode());
     }
 
     roleRepository.delete(role);
@@ -125,7 +127,7 @@ public class RoleServiceImpl implements RoleService {
 
     Role role = findById(roleId);
     Permission permission = permissionRepository.findById(permissionId)
-        .orElseThrow(() -> new IllegalArgumentException("权限不存在: " + permissionId));
+        .orElseThrow(() -> com.quickcode.common.exception.ResourceNotFoundException.permission(permissionId));
 
     role.addPermission(permission);
     roleRepository.save(role);
@@ -139,7 +141,7 @@ public class RoleServiceImpl implements RoleService {
 
     Role role = findById(roleId);
     Permission permission = permissionRepository.findById(permissionId)
-        .orElseThrow(() -> new IllegalArgumentException("权限不存在: " + permissionId));
+        .orElseThrow(() -> com.quickcode.common.exception.ResourceNotFoundException.permission(permissionId));
 
     role.removePermission(permission);
     roleRepository.save(role);

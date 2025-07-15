@@ -3,7 +3,7 @@ package com.quickcode.common.exception;
 /**
  * 资源不存在异常
  * 当请求的资源不存在时抛出
- * 
+ *
  * @author QuickCode Team
  * @since 1.0.0
  */
@@ -11,6 +11,10 @@ public class ResourceNotFoundException extends BusinessException {
 
     public ResourceNotFoundException(String message) {
         super(404, message);
+    }
+
+    public ResourceNotFoundException(Integer code, String message) {
+        super(code, message);
     }
 
     public ResourceNotFoundException(String resourceType, Object id) {

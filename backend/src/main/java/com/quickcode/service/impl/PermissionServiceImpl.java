@@ -36,7 +36,7 @@ public class PermissionServiceImpl implements PermissionService {
         permission.getPermissionName());
 
     if (existsByPermissionCode(permission.getPermissionCode())) {
-      throw new IllegalArgumentException("权限代码已存在: " + permission.getPermissionCode());
+      throw com.quickcode.common.exception.DuplicateResourceException.permissionCodeExists(permission.getPermissionCode());
     }
 
     Permission savedPermission = permissionRepository.save(permission);
@@ -50,7 +50,7 @@ public class PermissionServiceImpl implements PermissionService {
   public Permission findById(Long id) {
     log.debug("根据ID查找权限: id={}", id);
     return permissionRepository.findById(id)
-        .orElseThrow(() -> new IllegalArgumentException("权限不存在: " + id));
+        .orElseThrow(() -> com.quickcode.common.exception.ResourceNotFoundException.permission(id));
   }
 
   @Override
@@ -69,7 +69,7 @@ public class PermissionServiceImpl implements PermissionService {
     // 如果权限代码发生变化，检查新代码是否已存在
     if (!existingPermission.getPermissionCode().equals(permission.getPermissionCode())
         && existsByPermissionCode(permission.getPermissionCode())) {
-      throw new IllegalArgumentException("权限代码已存在: " + permission.getPermissionCode());
+      throw com.quickcode.common.exception.DuplicateResourceException.permissionCodeExists(permission.getPermissionCode());
     }
 
     existingPermission.setPermissionCode(permission.getPermissionCode());
@@ -92,7 +92,8 @@ public class PermissionServiceImpl implements PermissionService {
     Permission permission = findById(id);
 
     if (isPermissionInUse(id)) {
-      throw new IllegalStateException("权限正在被角色使用，无法删除: " + permission.getPermissionCode());
+      throw com.quickcode.common.exception.InvalidStateException
+          .withCode(400, "权限正在被角色使用，无法删除: " + permission.getPermissionCode());
     }
 
     permissionRepository.delete(permission);
@@ -185,7 +186,7 @@ public class PermissionServiceImpl implements PermissionService {
     // 检查权限代码是否重复
     for (Permission permission : permissions) {
       if (existsByPermissionCode(permission.getPermissionCode())) {
-        throw new IllegalArgumentException("权限代码已存在: " + permission.getPermissionCode());
+        throw com.quickcode.common.exception.DuplicateResourceException.permissionCodeExists(permission.getPermissionCode());
       }
     }
 

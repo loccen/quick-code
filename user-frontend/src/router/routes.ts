@@ -99,6 +99,15 @@ export const publicRoutes: RouteRecordRaw[] = [
           hidden: true
         }
       },
+      {
+        path: 'test/exception',
+        name: 'ExceptionTest',
+        component: () => import('@/views/test/ExceptionTest.vue'),
+        meta: {
+          title: '异常处理测试',
+          hidden: true
+        }
+      }
 
     ]
   }

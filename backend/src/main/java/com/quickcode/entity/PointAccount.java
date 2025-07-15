@@ -99,7 +99,7 @@ public class PointAccount extends BaseEntity {
    */
   public void addPoints(BigDecimal amount) {
     if (amount.compareTo(BigDecimal.ZERO) <= 0) {
-      throw new IllegalArgumentException("增加的积分必须大于0");
+      throw com.quickcode.common.exception.InvalidParameterException.invalidPointAmount();
     }
 
     this.totalPoints = this.totalPoints.add(amount);
@@ -112,11 +112,11 @@ public class PointAccount extends BaseEntity {
    */
   public void deductPoints(BigDecimal amount) {
     if (amount.compareTo(BigDecimal.ZERO) <= 0) {
-      throw new IllegalArgumentException("扣减的积分必须大于0");
+      throw com.quickcode.common.exception.InvalidParameterException.invalidPointAmount();
     }
 
     if (!hasEnoughPoints(amount)) {
-      throw new IllegalArgumentException("可用积分不足");
+      throw com.quickcode.common.exception.InsufficientResourceException.insufficientPoints();
     }
 
     this.availablePoints = this.availablePoints.subtract(amount);
@@ -128,11 +128,11 @@ public class PointAccount extends BaseEntity {
    */
   public void freezePoints(BigDecimal amount) {
     if (amount.compareTo(BigDecimal.ZERO) <= 0) {
-      throw new IllegalArgumentException("冻结的积分必须大于0");
+      throw com.quickcode.common.exception.InvalidParameterException.invalidPointAmount();
     }
 
     if (!hasEnoughPoints(amount)) {
-      throw new IllegalArgumentException("可用积分不足");
+      throw com.quickcode.common.exception.InsufficientResourceException.insufficientPoints();
     }
 
     this.availablePoints = this.availablePoints.subtract(amount);
@@ -144,11 +144,11 @@ public class PointAccount extends BaseEntity {
    */
   public void unfreezePoints(BigDecimal amount) {
     if (amount.compareTo(BigDecimal.ZERO) <= 0) {
-      throw new IllegalArgumentException("解冻的积分必须大于0");
+      throw com.quickcode.common.exception.InvalidParameterException.invalidPointAmount();
     }
 
     if (frozenPoints.compareTo(amount) < 0) {
-      throw new IllegalArgumentException("冻结积分不足");
+      throw com.quickcode.common.exception.InsufficientResourceException.insufficientFrozenPoints();
     }
 
     this.frozenPoints = this.frozenPoints.subtract(amount);
@@ -160,11 +160,11 @@ public class PointAccount extends BaseEntity {
    */
   public void deductFrozenPoints(BigDecimal amount) {
     if (amount.compareTo(BigDecimal.ZERO) <= 0) {
-      throw new IllegalArgumentException("扣减的积分必须大于0");
+      throw com.quickcode.common.exception.InvalidParameterException.invalidPointAmount();
     }
 
     if (frozenPoints.compareTo(amount) < 0) {
-      throw new IllegalArgumentException("冻结积分不足");
+      throw com.quickcode.common.exception.InsufficientResourceException.insufficientFrozenPoints();
     }
 
     this.frozenPoints = this.frozenPoints.subtract(amount);

@@ -95,7 +95,8 @@ class PermissionServiceTest {
 
       // Act & Assert
       assertThatThrownBy(() -> permissionService.createPermission(newPermission))
-          .isInstanceOf(IllegalArgumentException.class).hasMessage("权限代码已存在: user:read");
+          .isInstanceOf(com.quickcode.common.exception.DuplicateResourceException.class)
+          .hasMessage("权限代码已存在: user:read");
 
       verify(permissionRepository).existsByPermissionCode(newPermission.getPermissionCode());
       verify(permissionRepository, never()).save(any(Permission.class));
@@ -165,7 +166,8 @@ class PermissionServiceTest {
 
       // Act & Assert
       assertThatThrownBy(() -> permissionService.findById(permissionId))
-          .isInstanceOf(IllegalArgumentException.class).hasMessage("权限不存在: " + permissionId);
+          .isInstanceOf(com.quickcode.common.exception.ResourceNotFoundException.class)
+          .hasMessage("权限 (ID: " + permissionId + ") 不存在");
 
       verify(permissionRepository).findById(permissionId);
     }
@@ -342,7 +344,8 @@ class PermissionServiceTest {
 
       // Act & Assert
       assertThatThrownBy(() -> permissionService.updatePermission(permissionId, updatePermission))
-          .isInstanceOf(IllegalArgumentException.class).hasMessage("权限代码已存在: existing:code");
+          .isInstanceOf(com.quickcode.common.exception.DuplicateResourceException.class)
+          .hasMessage("权限代码已存在: existing:code");
 
       verify(permissionRepository).findById(permissionId);
       verify(permissionRepository).existsByPermissionCode(updatePermission.getPermissionCode());
@@ -383,7 +386,7 @@ class PermissionServiceTest {
 
       // Act & Assert
       assertThatThrownBy(() -> permissionService.deletePermission(permissionId))
-          .isInstanceOf(IllegalStateException.class)
+          .isInstanceOf(com.quickcode.common.exception.InvalidStateException.class)
           .hasMessage("权限正在被角色使用，无法删除: " + testPermission.getPermissionCode());
 
       verify(permissionRepository).findById(permissionId);

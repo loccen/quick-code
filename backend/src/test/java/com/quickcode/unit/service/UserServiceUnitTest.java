@@ -1,10 +1,13 @@
 package com.quickcode.unit.service;
 
-import com.quickcode.entity.User;
-import com.quickcode.repository.UserRepository;
-import com.quickcode.repository.RoleRepository;
-import com.quickcode.service.impl.UserServiceImpl;
-import com.quickcode.testutil.TestDataFactory;
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyString;
+import static org.mockito.Mockito.never;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
+import java.util.Optional;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -13,17 +16,16 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.security.crypto.password.PasswordEncoder;
-
-import java.util.Optional;
-
-import static org.assertj.core.api.Assertions.*;
-import static org.mockito.ArgumentMatchers.*;
-import static org.mockito.Mockito.*;
+import com.quickcode.entity.User;
+import com.quickcode.repository.RoleRepository;
+import com.quickcode.repository.UserRepository;
+import com.quickcode.service.impl.UserServiceImpl;
+import com.quickcode.testutil.TestDataFactory;
 
 /**
  * UserService纯单元测试
  * 不依赖Spring上下文，使用Mockito进行Mock
- * 
+ *
  * @author QuickCode Team
  * @since 1.0.0
  */
@@ -184,7 +186,7 @@ class UserServiceUnitTest {
 
         // Act & Assert
         assertThatThrownBy(() -> userService.register(username, email, password))
-                .isInstanceOf(IllegalArgumentException.class)
+                .isInstanceOf(com.quickcode.common.exception.DuplicateResourceException.class)
                 .hasMessageContaining("用户名已存在");
 
         verify(userRepository).existsByUsername(username);
@@ -205,7 +207,7 @@ class UserServiceUnitTest {
 
         // Act & Assert
         assertThatThrownBy(() -> userService.register(username, email, password))
-                .isInstanceOf(IllegalArgumentException.class)
+                .isInstanceOf(com.quickcode.common.exception.DuplicateResourceException.class)
                 .hasMessageContaining("邮箱已存在");
 
         verify(userRepository).existsByUsername(username);
@@ -248,7 +250,7 @@ class UserServiceUnitTest {
 
         // Act & Assert
         assertThatThrownBy(() -> userService.login(usernameOrEmail, password))
-                .isInstanceOf(IllegalArgumentException.class)
+                .isInstanceOf(com.quickcode.common.exception.ResourceNotFoundException.class)
                 .hasMessageContaining("用户不存在");
 
         verify(userRepository).findByUsernameOrEmail(usernameOrEmail);
@@ -269,7 +271,7 @@ class UserServiceUnitTest {
 
         // Act & Assert
         assertThatThrownBy(() -> userService.login(username, password))
-                .isInstanceOf(IllegalArgumentException.class)
+                .isInstanceOf(com.quickcode.common.exception.AuthenticationFailedException.class)
                 .hasMessageContaining("密码错误");
 
         verify(userRepository).findByUsernameOrEmail(username);
@@ -311,8 +313,8 @@ class UserServiceUnitTest {
 
         // Act & Assert
         assertThatThrownBy(() -> userService.updateUserInfo(userId, newNickname, newPhone))
-                .isInstanceOf(IllegalArgumentException.class)
-                .hasMessageContaining("用户不存在");
+                .isInstanceOf(com.quickcode.common.exception.ResourceNotFoundException.class)
+                .hasMessage("用户 (ID: " + userId + ") 不存在");
 
         verify(userRepository).findById(userId);
         verify(userRepository, never()).save(any(User.class));

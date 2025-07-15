@@ -38,12 +38,12 @@ public class UserServiceImpl implements UserService {
 
     // 检查用户名是否已存在
     if (userRepository.existsByUsername(username)) {
-      throw new IllegalArgumentException("用户名已存在: " + username);
+      throw com.quickcode.common.exception.DuplicateResourceException.usernameExists(username);
     }
 
     // 检查邮箱是否已存在
     if (userRepository.existsByEmail(email)) {
-      throw new IllegalArgumentException("邮箱已存在: " + email);
+      throw com.quickcode.common.exception.DuplicateResourceException.emailExists(email);
     }
 
     // 创建新用户
@@ -63,21 +63,24 @@ public class UserServiceImpl implements UserService {
 
     // 查找用户
     User user = userRepository.findByUsernameOrEmail(usernameOrEmail)
-        .orElseThrow(() -> new IllegalArgumentException("用户不存在: " + usernameOrEmail));
+        .orElseThrow(() -> new com.quickcode.common.exception.ResourceNotFoundException(
+            "用户不存在: " + usernameOrEmail));
 
     // 验证密码
     if (!passwordEncoder.matches(password, user.getPassword())) {
-      throw new IllegalArgumentException("密码错误");
+      throw com.quickcode.common.exception.AuthenticationFailedException
+          .invalidCredentials("密码错误");
     }
 
     // 检查用户状态
     if (User.Status.DISABLED.getCode().equals(user.getStatus())) {
-      throw new IllegalStateException("用户已被禁用");
+      throw com.quickcode.common.exception.InvalidStateException.userDisabled();
     }
 
     // 检查是否被锁定
     if (user.isLocked()) {
-      throw new IllegalStateException("用户已被锁定，请稍后再试");
+      throw com.quickcode.common.exception.InvalidStateException
+          .userLocked("用户已被锁定，请稍后再试");
     }
 
     log.info("用户登录成功: username={}, id={}", user.getUsername(), user.getId());
@@ -119,7 +122,7 @@ public class UserServiceImpl implements UserService {
     log.debug("更新用户信息: userId={}, nickname={}, phone={}", userId, nickname, phone);
 
     User user = userRepository.findById(userId)
-        .orElseThrow(() -> new IllegalArgumentException("用户不存在: " + userId));
+        .orElseThrow(() -> com.quickcode.common.exception.ResourceNotFoundException.user(userId));
 
     user.setNickname(nickname);
     user.setPhone(phone);
@@ -135,7 +138,7 @@ public class UserServiceImpl implements UserService {
     log.debug("更新用户头像: userId={}, avatarUrl={}", userId, avatarUrl);
 
     User user = userRepository.findById(userId)
-        .orElseThrow(() -> new IllegalArgumentException("用户不存在: " + userId));
+        .orElseThrow(() -> com.quickcode.common.exception.ResourceNotFoundException.user(userId));
 
     user.setAvatarUrl(avatarUrl);
 
@@ -150,11 +153,12 @@ public class UserServiceImpl implements UserService {
     log.debug("修改用户密码: userId={}", userId);
 
     User user = userRepository.findById(userId)
-        .orElseThrow(() -> new IllegalArgumentException("用户不存在: " + userId));
+        .orElseThrow(() -> com.quickcode.common.exception.ResourceNotFoundException.user(userId));
 
     // 验证旧密码
     if (!passwordEncoder.matches(oldPassword, user.getPassword())) {
-      throw new IllegalArgumentException("原密码错误");
+      throw com.quickcode.common.exception.AuthenticationFailedException
+          .invalidCredentials("原密码错误");
     }
 
     // 设置新密码
@@ -169,7 +173,7 @@ public class UserServiceImpl implements UserService {
     log.debug("重置用户密码: email={}", email);
 
     User user = userRepository.findByEmail(email)
-        .orElseThrow(() -> new IllegalArgumentException("用户不存在: " + email));
+        .orElseThrow(() -> com.quickcode.common.exception.ResourceNotFoundException.userByEmail(email));
 
     user.setPassword(passwordEncoder.encode(newPassword));
     userRepository.save(user);
@@ -182,7 +186,7 @@ public class UserServiceImpl implements UserService {
     log.debug("验证用户邮箱: userId={}", userId);
 
     User user = userRepository.findById(userId)
-        .orElseThrow(() -> new IllegalArgumentException("用户不存在: " + userId));
+        .orElseThrow(() -> com.quickcode.common.exception.ResourceNotFoundException.user(userId));
 
     user.setEmailVerified(true);
     userRepository.save(user);
@@ -213,7 +217,7 @@ public class UserServiceImpl implements UserService {
     log.debug("锁定用户: userId={}, lockUntil={}", userId, lockUntil);
 
     User user = userRepository.findById(userId)
-        .orElseThrow(() -> new IllegalArgumentException("用户不存在: " + userId));
+        .orElseThrow(() -> com.quickcode.common.exception.ResourceNotFoundException.user(userId));
 
     user.setLockedUntil(lockUntil);
     userRepository.save(user);
@@ -226,7 +230,7 @@ public class UserServiceImpl implements UserService {
     log.debug("解锁用户: userId={}", userId);
 
     User user = userRepository.findById(userId)
-        .orElseThrow(() -> new IllegalArgumentException("用户不存在: " + userId));
+        .orElseThrow(() -> com.quickcode.common.exception.ResourceNotFoundException.user(userId));
 
     user.setLockedUntil(null);
     userRepository.save(user);
@@ -239,7 +243,7 @@ public class UserServiceImpl implements UserService {
     log.debug("禁用用户: userId={}", userId);
 
     User user = userRepository.findById(userId)
-        .orElseThrow(() -> new IllegalArgumentException("用户不存在: " + userId));
+        .orElseThrow(() -> com.quickcode.common.exception.ResourceNotFoundException.user(userId));
 
     user.setStatus(User.Status.DISABLED.getCode());
     userRepository.save(user);
@@ -252,7 +256,7 @@ public class UserServiceImpl implements UserService {
     log.debug("启用用户: userId={}", userId);
 
     User user = userRepository.findById(userId)
-        .orElseThrow(() -> new IllegalArgumentException("用户不存在: " + userId));
+        .orElseThrow(() -> com.quickcode.common.exception.ResourceNotFoundException.user(userId));
 
     user.setStatus(User.Status.ACTIVE.getCode());
     userRepository.save(user);
@@ -277,10 +281,10 @@ public class UserServiceImpl implements UserService {
     log.debug("为用户分配角色: userId={}, roleCode={}", userId, roleCode);
 
     User user = userRepository.findById(userId)
-        .orElseThrow(() -> new IllegalArgumentException("用户不存在: " + userId));
+        .orElseThrow(() -> com.quickcode.common.exception.ResourceNotFoundException.user(userId));
 
     Role role = roleRepository.findByRoleCode(roleCode)
-        .orElseThrow(() -> new IllegalArgumentException("角色不存在: " + roleCode));
+        .orElseThrow(() -> com.quickcode.common.exception.ResourceNotFoundException.roleByCode(roleCode));
 
     user.addRole(role);
     userRepository.save(user);
@@ -293,10 +297,10 @@ public class UserServiceImpl implements UserService {
     log.debug("移除用户角色: userId={}, roleCode={}", userId, roleCode);
 
     User user = userRepository.findById(userId)
-        .orElseThrow(() -> new IllegalArgumentException("用户不存在: " + userId));
+        .orElseThrow(() -> com.quickcode.common.exception.ResourceNotFoundException.user(userId));
 
     Role role = roleRepository.findByRoleCode(roleCode)
-        .orElseThrow(() -> new IllegalArgumentException("角色不存在: " + roleCode));
+        .orElseThrow(() -> com.quickcode.common.exception.ResourceNotFoundException.roleByCode(roleCode));
 
     user.removeRole(role);
     userRepository.save(user);
@@ -310,7 +314,7 @@ public class UserServiceImpl implements UserService {
     log.debug("检查用户角色: userId={}, roleCode={}", userId, roleCode);
 
     User user = userRepository.findById(userId)
-        .orElseThrow(() -> new IllegalArgumentException("用户不存在: " + userId));
+        .orElseThrow(() -> com.quickcode.common.exception.ResourceNotFoundException.user(userId));
 
     return user.hasRole(roleCode);
   }
@@ -321,7 +325,7 @@ public class UserServiceImpl implements UserService {
     log.debug("检查用户权限: userId={}, permissionCode={}", userId, permissionCode);
 
     User user = userRepository.findById(userId)
-        .orElseThrow(() -> new IllegalArgumentException("用户不存在: " + userId));
+        .orElseThrow(() -> com.quickcode.common.exception.ResourceNotFoundException.user(userId));
 
     return user.getRoles().stream().anyMatch(role -> role.hasPermission(permissionCode));
   }
@@ -332,7 +336,7 @@ public class UserServiceImpl implements UserService {
     log.debug("获取用户权限: userId={}", userId);
 
     User user = userRepository.findById(userId)
-        .orElseThrow(() -> new IllegalArgumentException("用户不存在: " + userId));
+        .orElseThrow(() -> com.quickcode.common.exception.ResourceNotFoundException.user(userId));
 
     return user.getRoles().stream().flatMap(role -> role.getPermissionCodes().stream()).distinct()
         .sorted().toList();
@@ -444,7 +448,7 @@ public class UserServiceImpl implements UserService {
   @Override
   public User getById(Long id) {
     return userRepository.findById(id)
-        .orElseThrow(() -> new IllegalArgumentException("用户不存在: " + id));
+        .orElseThrow(() -> com.quickcode.common.exception.ResourceNotFoundException.user(id));
   }
 
   @Override

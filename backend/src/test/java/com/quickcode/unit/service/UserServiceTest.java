@@ -115,7 +115,8 @@ class UserServiceTest {
 
       // Act & Assert
       assertThatThrownBy(() -> userService.register(username, email, password))
-          .isInstanceOf(IllegalArgumentException.class).hasMessageContaining("用户名已存在");
+          .isInstanceOf(com.quickcode.common.exception.DuplicateResourceException.class)
+          .hasMessageContaining("用户名已存在");
 
       verify(userRepository).existsByUsername(username);
       verify(userRepository, never()).existsByEmail(anyString());
@@ -135,7 +136,8 @@ class UserServiceTest {
 
       // Act & Assert
       assertThatThrownBy(() -> userService.register(username, email, password))
-          .isInstanceOf(IllegalArgumentException.class).hasMessageContaining("邮箱已存在");
+          .isInstanceOf(com.quickcode.common.exception.DuplicateResourceException.class)
+          .hasMessageContaining("邮箱已存在");
 
       verify(userRepository).existsByUsername(username);
       verify(userRepository).existsByEmail(email);
@@ -206,7 +208,8 @@ class UserServiceTest {
 
       // Act & Assert
       assertThatThrownBy(() -> userService.login(usernameOrEmail, password))
-          .isInstanceOf(IllegalArgumentException.class).hasMessageContaining("用户不存在");
+          .isInstanceOf(com.quickcode.common.exception.ResourceNotFoundException.class)
+          .hasMessageContaining("用户不存在");
 
       verify(userRepository).findByUsernameOrEmail(usernameOrEmail);
       verify(passwordEncoder, never()).matches(anyString(), anyString());
@@ -226,7 +229,8 @@ class UserServiceTest {
 
       // Act & Assert
       assertThatThrownBy(() -> userService.login(username, password))
-          .isInstanceOf(IllegalArgumentException.class).hasMessageContaining("密码错误");
+          .isInstanceOf(com.quickcode.common.exception.AuthenticationFailedException.class)
+          .hasMessageContaining("密码错误");
 
       verify(userRepository).findByUsernameOrEmail(username);
       verify(passwordEncoder).matches(password, encodedPassword);
@@ -247,7 +251,8 @@ class UserServiceTest {
 
       // Act & Assert
       assertThatThrownBy(() -> userService.login(username, password))
-          .isInstanceOf(IllegalStateException.class).hasMessageContaining("用户已被禁用");
+          .isInstanceOf(com.quickcode.common.exception.InvalidStateException.class)
+          .hasMessageContaining("用户已被禁用");
 
       verify(userRepository).findByUsernameOrEmail(username);
       verify(passwordEncoder).matches(password, encodedPassword);
@@ -269,7 +274,8 @@ class UserServiceTest {
 
       // Act & Assert
       assertThatThrownBy(() -> userService.login(username, password))
-          .isInstanceOf(IllegalStateException.class).hasMessageContaining("用户已被锁定");
+          .isInstanceOf(com.quickcode.common.exception.InvalidStateException.class)
+          .hasMessageContaining("用户已被锁定");
 
       verify(userRepository).findByUsernameOrEmail(username);
       verify(passwordEncoder).matches(password, encodedPassword);
@@ -408,7 +414,8 @@ class UserServiceTest {
 
       // Act & Assert
       assertThatThrownBy(() -> userService.updateUserInfo(userId, newNickname, newPhone))
-          .isInstanceOf(IllegalArgumentException.class).hasMessageContaining("用户不存在");
+          .isInstanceOf(com.quickcode.common.exception.ResourceNotFoundException.class)
+          .hasMessage("用户 (ID: " + userId + ") 不存在");
 
       verify(userRepository).findById(userId);
       verify(userRepository, never()).save(any(User.class));
@@ -487,7 +494,8 @@ class UserServiceTest {
 
       // Act & Assert
       assertThatThrownBy(() -> userService.changePassword(userId, oldPassword, newPassword))
-          .isInstanceOf(IllegalArgumentException.class).hasMessageContaining("原密码错误");
+          .isInstanceOf(com.quickcode.common.exception.AuthenticationFailedException.class)
+          .hasMessageContaining("原密码错误");
 
       verify(userRepository).findById(userId);
       verify(passwordEncoder).matches(oldPassword, encodedOldPassword);
@@ -665,7 +673,8 @@ class UserServiceTest {
 
       // Act & Assert
       assertThatThrownBy(() -> userService.assignRole(userId, roleCode))
-          .isInstanceOf(IllegalArgumentException.class).hasMessage("用户不存在: " + userId);
+          .isInstanceOf(com.quickcode.common.exception.ResourceNotFoundException.class)
+          .hasMessage("用户 (ID: " + userId + ") 不存在");
 
       verify(userRepository).findById(userId);
       verify(roleRepository, never()).findByRoleCode(anyString());
@@ -684,7 +693,8 @@ class UserServiceTest {
 
       // Act & Assert
       assertThatThrownBy(() -> userService.assignRole(userId, roleCode))
-          .isInstanceOf(IllegalArgumentException.class).hasMessage("角色不存在: " + roleCode);
+          .isInstanceOf(com.quickcode.common.exception.ResourceNotFoundException.class)
+          .hasMessage("角色 (代码: " + roleCode + ") 不存在");
 
       verify(userRepository).findById(userId);
       verify(roleRepository).findByRoleCode(roleCode);

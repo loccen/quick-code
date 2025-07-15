@@ -96,7 +96,8 @@ class RoleServiceTest {
 
       // Act & Assert
       assertThatThrownBy(() -> roleService.createRole(newRole))
-          .isInstanceOf(IllegalArgumentException.class).hasMessage("角色代码已存在: USER");
+          .isInstanceOf(com.quickcode.common.exception.DuplicateResourceException.class)
+          .hasMessage("角色代码已存在: USER");
 
       verify(roleRepository).existsByRoleCode(newRole.getRoleCode());
       verify(roleRepository, never()).save(any(Role.class));
@@ -134,7 +135,8 @@ class RoleServiceTest {
 
       // Act & Assert
       assertThatThrownBy(() -> roleService.findById(roleId))
-          .isInstanceOf(IllegalArgumentException.class).hasMessage("角色不存在: " + roleId);
+          .isInstanceOf(com.quickcode.common.exception.ResourceNotFoundException.class)
+          .hasMessage("角色 (ID: " + roleId + ") 不存在");
 
       verify(roleRepository).findById(roleId);
     }
@@ -253,7 +255,8 @@ class RoleServiceTest {
 
       // Act & Assert
       assertThatThrownBy(() -> roleService.updateRole(roleId, updateRole))
-          .isInstanceOf(IllegalArgumentException.class).hasMessage("角色代码已存在: EXISTING_CODE");
+          .isInstanceOf(com.quickcode.common.exception.DuplicateResourceException.class)
+          .hasMessage("角色代码已存在: EXISTING_CODE");
 
       verify(roleRepository).findById(roleId);
       verify(roleRepository).existsByRoleCode(updateRole.getRoleCode());
@@ -294,7 +297,7 @@ class RoleServiceTest {
 
       // Act & Assert
       assertThatThrownBy(() -> roleService.deleteRole(roleId))
-          .isInstanceOf(IllegalStateException.class)
+          .isInstanceOf(com.quickcode.common.exception.InvalidStateException.class)
           .hasMessage("角色正在被用户使用，无法删除: " + testRole.getRoleCode());
 
       verify(roleRepository).findById(roleId);
@@ -340,7 +343,8 @@ class RoleServiceTest {
 
       // Act & Assert
       assertThatThrownBy(() -> roleService.assignPermission(roleId, permissionId))
-          .isInstanceOf(IllegalArgumentException.class).hasMessage("权限不存在: " + permissionId);
+          .isInstanceOf(com.quickcode.common.exception.ResourceNotFoundException.class)
+          .hasMessage("权限 (ID: " + permissionId + ") 不存在");
 
       verify(roleRepository).findById(roleId);
       verify(permissionRepository).findById(permissionId);
