@@ -62,7 +62,7 @@ services:
       - AUTO_APPROVE_PROJECTS=${AUTO_APPROVE_PROJECTS:-false}
 
       # 前端配置
-      - VITE_API_BASE_URL=${VITE_API_BASE_URL:-http://localhost:8080}
+      - VITE_API_BASE_URL=${VITE_API_BASE_URL:-http://localhost:8080/api}
       - VITE_WS_URL=${VITE_WS_URL:-ws://localhost:8080/ws}
       - VITE_ENABLE_MOCK=${VITE_ENABLE_MOCK:-false}
       - VITE_ENABLE_DEVTOOLS=${VITE_ENABLE_DEVTOOLS:-true}
