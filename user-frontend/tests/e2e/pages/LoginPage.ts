@@ -1,7 +1,7 @@
 /**
  * 登录页面对象模型
  */
-import { Page, Locator } from '@playwright/test'
+import { Locator, Page } from '@playwright/test'
 import { BasePage } from './BasePage'
 
 export class LoginPage extends BasePage {
@@ -17,7 +17,7 @@ export class LoginPage extends BasePage {
 
   constructor(page: Page) {
     super(page)
-    
+
     // 初始化页面元素
     this.usernameInput = page.locator('[data-testid="username-input"]')
     this.passwordInput = page.locator('[data-testid="password-input"]')
@@ -85,11 +85,11 @@ export class LoginPage extends BasePage {
   async login(username: string, password: string, rememberMe = false) {
     await this.fillUsername(username)
     await this.fillPassword(password)
-    
+
     if (rememberMe) {
       await this.toggleRememberMe()
     }
-    
+
     await this.clickLogin()
   }
 
@@ -106,9 +106,9 @@ export class LoginPage extends BasePage {
   async waitForLoginComplete() {
     // 等待加载动画消失
     await this.waitForHidden('[data-testid="loading-spinner"]')
-    
+
     // 等待跳转到仪表盘
-    await this.page.waitForURL('/dashboard', { timeout: 10000 })
+    await this.page.waitForURL('/user/dashboard', { timeout: 10000 })
   }
 
   /**

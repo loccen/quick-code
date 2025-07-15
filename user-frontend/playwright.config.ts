@@ -66,8 +66,8 @@ export default defineConfig({
   outputDir: 'test-results/artifacts',
 
   // 全局设置和拆卸
-  globalSetup: require.resolve('./tests/e2e/global-setup.ts'),
-  globalTeardown: require.resolve('./tests/e2e/global-teardown.ts'),
+  globalSetup: './tests/e2e/global-setup.ts',
+  globalTeardown: './tests/e2e/global-teardown.ts',
 
   // 测试超时
   timeout: 30 * 1000,

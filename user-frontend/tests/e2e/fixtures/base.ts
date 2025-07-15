@@ -2,13 +2,15 @@
  * Playwright测试基础fixtures
  */
 import { test as base, expect } from '@playwright/test'
-import { LoginPage } from '../pages/LoginPage'
 import { DashboardPage } from '../pages/DashboardPage'
+import { LoginPage } from '../pages/LoginPage'
 import { ProfilePage } from '../pages/ProfilePage'
+import { RegisterPage } from '../pages/RegisterPage'
 
 // 扩展测试上下文
 type TestFixtures = {
   loginPage: LoginPage
+  registerPage: RegisterPage
   dashboardPage: DashboardPage
   profilePage: ProfilePage
 }
@@ -25,6 +27,12 @@ export const test = base.extend<TestFixtures, WorkerFixtures>({
   loginPage: async ({ page }, use) => {
     const loginPage = new LoginPage(page)
     await use(loginPage)
+  },
+
+  // 注册页面对象
+  registerPage: async ({ page }, use) => {
+    const registerPage = new RegisterPage(page)
+    await use(registerPage)
   },
 
   // 仪表盘页面对象

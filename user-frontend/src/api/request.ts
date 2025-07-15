@@ -40,7 +40,7 @@ request.interceptors.request.use(
 request.interceptors.response.use(
   (response: AxiosResponse) => {
     console.log('收到响应:', response.status, response.data)
-    return response
+    return response.data
   },
   (error) => {
     console.error('响应错误:', error)

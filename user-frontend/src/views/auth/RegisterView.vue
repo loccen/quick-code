@@ -35,6 +35,7 @@
               size="large"
               clearable
               :prefix-icon="User"
+              data-testid="username-input"
             />
           </el-form-item>
 
@@ -45,6 +46,7 @@
               size="large"
               clearable
               :prefix-icon="Message"
+              data-testid="email-input"
             />
           </el-form-item>
 
@@ -57,6 +59,7 @@
               show-password
               clearable
               :prefix-icon="Lock"
+              data-testid="password-input"
             />
           </el-form-item>
 
@@ -69,6 +72,7 @@
               show-password
               clearable
               :prefix-icon="Lock"
+              data-testid="confirm-password-input"
             />
           </el-form-item>
 
@@ -80,10 +84,12 @@
                 size="large"
                 clearable
                 :prefix-icon="Key"
+                data-testid="email-code-input"
               />
               <ModernButton
                 :disabled="codeCountdown > 0"
                 @click="sendEmailCode"
+                data-testid="send-code-button"
               >
                 {{ codeCountdown > 0 ? `${codeCountdown}s` : '发送验证码' }}
               </ModernButton>
@@ -91,7 +97,7 @@
           </el-form-item>
 
           <el-form-item prop="agreeTerms">
-            <el-checkbox v-model="registerForm.agreeTerms">
+            <el-checkbox v-model="registerForm.agreeTerms" data-testid="agree-terms-checkbox">
               我已阅读并同意
               <a href="#" class="terms-link">《用户协议》</a>
               和
@@ -106,15 +112,22 @@
               block
               :loading="loading"
               @click="handleRegister"
+              data-testid="register-button"
             >
               {{ loading ? '注册中...' : '注册' }}
             </ModernButton>
+            <!-- 加载状态指示器 -->
+            <div v-if="loading" class="loading-spinner" data-testid="loading-spinner">
+              <el-icon class="is-loading">
+                <Loading />
+              </el-icon>
+            </div>
           </el-form-item>
         </el-form>
 
         <div class="register-footer">
           <span>已有账户？</span>
-          <router-link to="/login" class="login-link">立即登录</router-link>
+          <router-link to="/login" class="login-link" data-testid="login-link">立即登录</router-link>
         </div>
       </ModernCard>
     </div>
@@ -122,18 +135,19 @@
 </template>
 
 <script setup lang="ts">
+import { authApi } from '@/api/modules/auth'
 import ModernButton from '@/components/ui/ModernButton.vue'
 import ModernCard from '@/components/ui/ModernCard.vue'
-import { authApi } from '@/api/modules/auth'
 import { useAppStore } from '@/stores/app'
 import { useUserStore } from '@/stores/user'
 import type { RegisterRequest } from '@/types/user'
-import { Key, Lock, Message, User } from '@element-plus/icons-vue'
+import { Key, Loading, Lock, Message, User } from '@element-plus/icons-vue'
 import { ElForm, ElMessage } from 'element-plus'
 import { reactive, ref } from 'vue'
-import { useRouter } from 'vue-router'
+import { useRoute, useRouter } from 'vue-router'
 
 const router = useRouter()
+const route = useRoute()
 const userStore = useUserStore()
 const appStore = useAppStore()
 
@@ -230,8 +244,9 @@ const handleRegister = async () => {
     const success = await userStore.register(registerForm)
 
     if (success) {
-      ElMessage.success('注册成功，请登录')
-      router.push('/login')
+      // 注册成功后，用户已自动登录，处理重定向
+      const redirect = route.query.redirect as string || '/user/dashboard'
+      router.push(redirect)
     }
   } catch (error) {
     console.error('注册失败:', error)

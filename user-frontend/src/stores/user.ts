@@ -85,6 +85,13 @@ export const useUserStore = defineStore('user', () => {
   const login = async (loginData: LoginRequest): Promise<boolean> => {
     try {
       const response = await authApi.login(loginData)
+
+      // 检查响应中的业务错误码
+      if (response.code !== 200) {
+        ElMessage.error(response.message || '登录失败')
+        return false
+      }
+
       const { accessToken, refreshToken: refreshTokenValue, user: userInfo } = response.data
 
       setTokens(accessToken, refreshTokenValue)
@@ -94,6 +101,7 @@ export const useUserStore = defineStore('user', () => {
       return true
     } catch (error) {
       console.error('登录失败:', error)
+      ElMessage.error('网络错误，请稍后重试')
       return false
     }
   }
@@ -103,11 +111,25 @@ export const useUserStore = defineStore('user', () => {
    */
   const register = async (registerData: RegisterRequest): Promise<boolean> => {
     try {
-      await authApi.register(registerData)
-      ElMessage.success('注册成功，请登录')
+      const response = await authApi.register(registerData)
+      console.log(response)
+      // 检查响应中的业务错误码
+      if (response.code !== 200) {
+        ElMessage.error(response.message || '注册失败')
+        return false
+      }
+
+      // 注册成功后，后端返回完整的认证信息，直接设置登录状态
+      const { accessToken, refreshToken: refreshTokenValue, user: userInfo } = response.data
+
+      setTokens(accessToken, refreshTokenValue)
+      setUser(userInfo)
+
+      ElMessage.success('注册成功，欢迎加入速码网！')
       return true
     } catch (error) {
       console.error('注册失败:', error)
+      ElMessage.error('网络错误，请稍后重试')
       return false
     }
   }
