@@ -49,12 +49,11 @@ export default defineConfig(({ command, mode }) => {
       cors: true,
       proxy: {
         '/api': {
-          target: env.VITE_API_BASE_URL || 'http://localhost:8080',
+          target: env.VITE_API_BASE_URL || 'http://localhost:8080/api',
           changeOrigin: true,
-          secure: false,
-          rewrite: (path) => path.replace(/^\/api/, '/api')
+          secure: false
+            }
         }
-      }
     },
 
     build: {

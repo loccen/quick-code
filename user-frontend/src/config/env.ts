@@ -28,7 +28,7 @@ export const getEnvConfig = (): EnvConfig => {
   return {
     APP_TITLE: import.meta.env.VITE_APP_TITLE || '速码网',
     APP_ENV: import.meta.env.VITE_APP_ENV || 'development',
-    API_BASE_URL: import.meta.env.VITE_API_BASE_URL || 'http://localhost:8080',
+    API_BASE_URL: import.meta.env.VITE_API_BASE_URL || 'http://localhost:8080/api',
     API_TIMEOUT: Number(import.meta.env.VITE_API_TIMEOUT) || 10000,
     TOKEN_KEY: import.meta.env.VITE_TOKEN_KEY || 'access_token',
     REFRESH_TOKEN_KEY: import.meta.env.VITE_REFRESH_TOKEN_KEY || 'refresh_token',

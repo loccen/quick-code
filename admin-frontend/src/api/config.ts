@@ -1,11 +1,11 @@
 // 管理后台API配置文件
 export const API_CONFIG = {
   // 基础URL
-  BASE_URL: import.meta.env.VITE_API_BASE_URL || 'http://localhost:8080',
+  BASE_URL: import.meta.env.VITE_API_BASE_URL || 'http://localhost:8080/api',
 
   // WebSocket URL
   WS_URL: import.meta.env.VITE_WS_URL || 'ws://localhost:8080/ws',
-  
+
   // 上传URL
   UPLOAD_URL: import.meta.env.VITE_UPLOAD_URL || 'http://localhost:8080/api/upload',
 
