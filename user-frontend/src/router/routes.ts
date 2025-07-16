@@ -120,23 +120,11 @@ export const mainRoutes: RouteRecordRaw[] = [
     path: '/user',
     name: 'UserLayout',
     component: () => import('@/layouts/MainLayout.vue'),
-    redirect: '/user/dashboard',
+    redirect: '/user/profile',
     meta: {
       requiresAuth: true
     },
     children: [
-      {
-        path: 'dashboard',
-        name: 'Dashboard',
-        component: () => import('@/views/dashboard/DashboardView.vue'),
-        meta: {
-          title: '仪表盘',
-          icon: 'Dashboard',
-          requiresAuth: true,
-          affix: true,
-          keepAlive: true
-        }
-      },
       {
         path: 'profile',
         name: 'Profile',

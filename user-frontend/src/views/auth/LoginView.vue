@@ -181,7 +181,7 @@ const handleLogin = async () => {
       ElMessage.success('登录成功')
 
       // 获取重定向路径
-      const redirect = route.query.redirect as string || '/user/dashboard'
+      const redirect = route.query.redirect as string || '/user/profile'
       router.push(redirect)
     } else {
       errorMessage.value = '用户名或密码错误'
@@ -199,9 +199,9 @@ onMounted(() => {
   // 设置页面标题
   appStore.setPageTitle('用户登录')
 
-  // 如果已登录，重定向到仪表盘
+  // 如果已登录，重定向到个人中心
   if (userStore.isAuthenticated) {
-    router.push('/user/dashboard')
+    router.push('/user/profile')
   }
 })
 </script>

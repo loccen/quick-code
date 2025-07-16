@@ -1,7 +1,7 @@
 /**
  * 注册页面对象模型
  */
-import { Page, Locator } from '@playwright/test'
+import { Locator, Page } from '@playwright/test'
 import { BasePage } from './BasePage'
 
 export interface RegisterFormData {
@@ -29,7 +29,7 @@ export class RegisterPage extends BasePage {
 
   constructor(page: Page) {
     super(page)
-    
+
     // 初始化页面元素
     this.usernameInput = page.locator('[data-testid="username-input"]')
     this.emailInput = page.locator('[data-testid="email-input"]')
@@ -142,9 +142,9 @@ export class RegisterPage extends BasePage {
   async waitForRegisterComplete() {
     // 等待加载动画消失
     await this.waitForHidden('[data-testid="loading-spinner"]')
-    
-    // 等待跳转到仪表盘（注册成功后自动登录）
-    await this.page.waitForURL('/user/dashboard', { timeout: 10000 })
+
+    // 等待跳转到个人中心（注册成功后自动登录）
+    await this.page.waitForURL('/user/profile', { timeout: 10000 })
   }
 
   /**

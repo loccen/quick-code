@@ -2,7 +2,6 @@
  * Playwright测试基础fixtures
  */
 import { test as base, expect } from '@playwright/test'
-import { DashboardPage } from '../pages/DashboardPage'
 import { LoginPage } from '../pages/LoginPage'
 import { ProfilePage } from '../pages/ProfilePage'
 import { RegisterPage } from '../pages/RegisterPage'
@@ -11,7 +10,6 @@ import { RegisterPage } from '../pages/RegisterPage'
 type TestFixtures = {
   loginPage: LoginPage
   registerPage: RegisterPage
-  dashboardPage: DashboardPage
   profilePage: ProfilePage
 }
 
@@ -33,12 +31,6 @@ export const test = base.extend<TestFixtures, WorkerFixtures>({
   registerPage: async ({ page }, use) => {
     const registerPage = new RegisterPage(page)
     await use(registerPage)
-  },
-
-  // 仪表盘页面对象
-  dashboardPage: async ({ page }, use) => {
-    const dashboardPage = new DashboardPage(page)
-    await use(dashboardPage)
   },
 
   // 个人中心页面对象

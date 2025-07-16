@@ -23,9 +23,9 @@ export function setupRouterGuards(router: Router) {
       appStore.setPageTitle(to.meta.title)
     }
 
-    // 如果已登录且访问登录页，重定向到用户仪表盘
+    // 如果已登录且访问登录页，重定向到用户个人中心
     if (to.path === '/login' && userStore.isAuthenticated) {
-      next('/user/dashboard')
+      next('/user/profile')
       return
     }
 

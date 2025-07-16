@@ -23,11 +23,6 @@
             router
             class="sidebar-menu"
           >
-            <el-menu-item index="/dashboard">
-              <el-icon><DataBoard /></el-icon>
-              <template #title>仪表盘</template>
-            </el-menu-item>
-
             <el-sub-menu index="/projects">
               <template #title>
                 <el-icon><FolderOpened /></el-icon>
@@ -209,7 +204,7 @@ import { useUserStore } from '@/stores/user'
 import { getRouteBreadcrumb } from '@/utils/breadcrumb'
 import {
     ArrowDown,
-    DataBoard, FolderOpened,
+    FolderOpened,
     Menu,
     Moon, MoreFilled,
     Setting,

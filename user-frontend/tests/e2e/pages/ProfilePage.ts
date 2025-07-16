@@ -1,7 +1,7 @@
 /**
  * 个人中心页面对象模型
  */
-import { Page, Locator } from '@playwright/test'
+import { Locator, Page } from '@playwright/test'
 import { BasePage } from './BasePage'
 
 export class ProfilePage extends BasePage {
@@ -21,7 +21,7 @@ export class ProfilePage extends BasePage {
 
   constructor(page: Page) {
     super(page)
-    
+
     // 初始化页面元素
     this.avatarUpload = page.locator('[data-testid="avatar-upload"]')
     this.nicknameInput = page.locator('[data-testid="nickname-input"]')
@@ -41,7 +41,7 @@ export class ProfilePage extends BasePage {
    * 导航到个人中心页面
    */
   async navigate() {
-    await this.goto('/profile')
+    await this.goto('/user/profile')
     await this.waitForLoad()
   }
 

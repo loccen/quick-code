@@ -245,7 +245,7 @@ const handleRegister = async () => {
 
     if (success) {
       // 注册成功后，用户已自动登录，处理重定向
-      const redirect = route.query.redirect as string || '/user/dashboard'
+      const redirect = route.query.redirect as string || '/user/profile'
       router.push(redirect)
     }
   } catch (error) {

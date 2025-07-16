@@ -21,7 +21,7 @@ const register = async (registerData: RegisterRequest): Promise<boolean> => {
 ```typescript
 const register = async (registerData: RegisterRequest): Promise<boolean> => {
   // ... 省略验证逻辑
-  
+
   // 注册成功后，后端返回完整的认证信息，直接设置登录状态
   const { accessToken, refreshToken: refreshTokenValue, user: userInfo } = response.data
 
@@ -76,7 +76,7 @@ if (success) {
 ### 2. 智能重定向
 - 检查 URL 参数中的 `redirect` 参数
 - 如果存在重定向地址，跳转到指定页面
-- 否则跳转到默认的用户仪表盘页面 (`/user/dashboard`)
+- 否则跳转到默认的用户个人中心页面 (`/user/profile`)
 
 ### 3. 一致的用户体验
 - 注册和登录流程保持一致
@@ -89,7 +89,7 @@ if (success) {
 ```json
 {
   "code": 200,
-  "message": "注册成功", 
+  "message": "注册成功",
   "data": {
     "accessToken": "...",
     "refreshToken": "...",

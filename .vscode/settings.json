@@ -1,6 +1,6 @@
 {
     "java.compile.nullAnalysis.mode": "automatic",
-    "java.configuration.updateBuildConfiguration": "interactive",
+    "java.configuration.updateBuildConfiguration": "automatic",
     "typescript.preferences.includePackageJsonAutoImports": "on",
     "typescript.suggest.autoImports": true,
     "typescript.updateImportsOnFileMove.enabled": "always",
@@ -58,13 +58,10 @@
         "vuejs"
     ],
     "files.exclude": {
-        "**/node_modules": true,
-        "**/dist": true,
-        "**/target": true,
-        "**/.git": true,
         "**/.DS_Store": true,
-        "**/test-results": true,
-        "**/playwright-report": true
+        "**/.git": true,
+        "**/dist": true,
+        "**/node_modules": true
     },
     "search.exclude": {
         "**/node_modules": true,

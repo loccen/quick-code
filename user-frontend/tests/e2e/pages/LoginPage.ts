@@ -107,8 +107,8 @@ export class LoginPage extends BasePage {
     // 等待加载动画消失
     await this.waitForHidden('[data-testid="loading-spinner"]')
 
-    // 等待跳转到仪表盘
-    await this.page.waitForURL('/user/dashboard', { timeout: 10000 })
+    // 等待跳转到个人中心
+    await this.page.waitForURL('/user/profile', { timeout: 10000 })
   }
 
   /**

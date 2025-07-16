@@ -81,7 +81,8 @@ public class GlobalExceptionHandler {
             response.setData(e.getDetails());
         }
 
-        return ResponseEntity.status(getHttpStatus(e.getCode())).body(response);
+        // 业务逻辑错误返回200状态码，让前端正常处理响应体中的错误信息
+        return ResponseEntity.ok(response);
     }
 
     /**
@@ -283,7 +284,8 @@ public class GlobalExceptionHandler {
         log.warn("认证失败异常: {}", e.getMessage());
 
         ApiResponse<Object> response = ApiResponse.error(e.getCode(), e.getMessage());
-        return ResponseEntity.status(getHttpStatus(e.getCode())).body(response);
+        // 业务逻辑错误返回200状态码，让前端正常处理响应体中的错误信息
+        return ResponseEntity.ok(response);
     }
 
     /**
@@ -294,7 +296,8 @@ public class GlobalExceptionHandler {
         log.warn("资源重复异常: {}", e.getMessage());
 
         ApiResponse<Object> response = ApiResponse.error(e.getCode(), e.getMessage());
-        return ResponseEntity.status(getHttpStatus(e.getCode())).body(response);
+        // 业务逻辑错误返回200状态码，让前端正常处理响应体中的错误信息
+        return ResponseEntity.ok(response);
     }
 
     /**
@@ -305,7 +308,8 @@ public class GlobalExceptionHandler {
         log.warn("状态无效异常: {}", e.getMessage());
 
         ApiResponse<Object> response = ApiResponse.error(e.getCode(), e.getMessage());
-        return ResponseEntity.status(getHttpStatus(e.getCode())).body(response);
+        // 业务逻辑错误返回200状态码，让前端正常处理响应体中的错误信息
+        return ResponseEntity.ok(response);
     }
 
     /**

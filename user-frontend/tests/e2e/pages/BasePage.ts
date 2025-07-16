@@ -1,13 +1,20 @@
 /**
  * 页面对象模型基类
  */
-import { Page, Locator, expect } from '@playwright/test'
+import { Locator, Page } from '@playwright/test'
 
 export abstract class BasePage {
   protected page: Page
 
   constructor(page: Page) {
     this.page = page
+  }
+
+  /**
+   * 获取页面对象
+   */
+  getPage(): Page {
+    return this.page
   }
 
   /**
@@ -147,7 +154,7 @@ export abstract class BasePage {
    * 截图
    */
   async screenshot(name: string, options?: { fullPage?: boolean }) {
-    await this.page.screenshot({ 
+    await this.page.screenshot({
       path: `test-results/screenshots/${name}.png`,
       fullPage: options?.fullPage || false
     })
