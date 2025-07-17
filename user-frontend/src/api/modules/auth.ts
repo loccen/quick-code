@@ -6,7 +6,8 @@ import type { ApiResponse } from '@/types/api'
 import type {
     LoginRequest,
     LoginResponse,
-    RegisterRequest
+    RegisterRequest,
+    TwoFactorVerifyRequest
 } from '@/types/user'
 import { request } from '../request'
 
@@ -102,6 +103,13 @@ export const authApi = {
     return request.get('/auth/check-email', {
       params: { email }
     })
+  },
+
+  /**
+   * 验证2FA代码（登录时使用）
+   */
+  verifyTwoFactorLogin(data: TwoFactorVerifyRequest): Promise<ApiResponse<LoginResponse>> {
+    return request.post('/auth/verify-2fa', data)
   }
 }
 

@@ -88,6 +88,8 @@ export interface LoginRequest {
   rememberMe?: boolean
   /** 验证码 */
   captcha?: string
+  /** 2FA验证码 */
+  totpCode?: string
 }
 
 /**
@@ -104,6 +106,10 @@ export interface LoginResponse {
   expiresIn: number
   /** 用户信息 */
   user: User
+  /** 是否需要2FA验证 */
+  requiresTwoFactor?: boolean
+  /** 临时令牌（用于2FA验证） */
+  tempToken?: string
 }
 
 /**
@@ -154,16 +160,10 @@ export interface ChangePasswordRequest {
  * 更新用户信息请求
  */
 export interface UpdateUserRequest {
-  /** 昵称 */
-  nickname?: string
   /** 头像URL */
   avatar?: string
-  /** 手机号 */
-  phone?: string
-  /** 性别 */
-  gender?: 'MALE' | 'FEMALE' | 'OTHER'
-  /** 生日 */
-  birthday?: string
+  /** 昵称 */
+  nickname?: string
   /** 个人简介 */
   bio?: string
 }
@@ -200,4 +200,52 @@ export interface UserQueryParams {
   createdAtStart?: string
   /** 创建时间结束 */
   createdAtEnd?: string
+}
+
+/**
+ * 双因素认证设置请求
+ */
+export interface TwoFactorSetupRequest {
+  /** 是否启用2FA */
+  enabled: boolean
+  /** TOTP验证码（启用时必填） */
+  totpCode?: string
+}
+
+/**
+ * 双因素认证设置响应
+ */
+export interface TwoFactorSetupResponse {
+  /** 密钥（用于生成QR码） */
+  secret: string
+  /** QR码数据URL */
+  qrCodeUrl: string
+  /** 备用恢复码 */
+  backupCodes: string[]
+}
+
+/**
+ * 双因素认证验证请求
+ */
+export interface TwoFactorVerifyRequest {
+  /** TOTP验证码 */
+  totpCode: string
+}
+
+/**
+ * 双因素认证状态响应
+ */
+export interface TwoFactorStatusResponse {
+  /** 是否已启用2FA */
+  enabled: boolean
+  /** 备用恢复码数量 */
+  backupCodesCount: number
+}
+
+/**
+ * 生成备用恢复码响应
+ */
+export interface BackupCodesResponse {
+  /** 新的备用恢复码 */
+  backupCodes: string[]
 }

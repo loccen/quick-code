@@ -193,7 +193,6 @@ export const useUserStore = defineStore('user', () => {
     try {
       const response = await userApi.updateCurrentUser(userData)
       setUser(response.data)
-      ElMessage.success('用户信息更新成功')
       return true
     } catch (error) {
       console.error('更新用户信息失败:', error)
@@ -211,7 +210,7 @@ export const useUserStore = defineStore('user', () => {
         user.value.avatarUrl = response.data.url
         localStorage.setItem('user_info', JSON.stringify(user.value))
       }
-      ElMessage.success('头像上传成功')
+      // 不在这里显示成功提示，由调用组件负责显示
       return true
     } catch (error) {
       console.error('头像上传失败:', error)

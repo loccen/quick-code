@@ -118,14 +118,21 @@ public class UserServiceImpl implements UserService {
   }
 
   @Override
-  public User updateUserInfo(Long userId, String nickname, String phone) {
-    log.debug("更新用户信息: userId={}, nickname={}, phone={}", userId, nickname, phone);
+  public User updateUserInfo(Long userId, String nickname, String bio, String avatar) {
+    log.debug("更新用户信息: userId={}, nickname={}, bio={}, avatar={}", userId, nickname, bio, avatar);
 
     User user = userRepository.findById(userId)
         .orElseThrow(() -> com.quickcode.common.exception.ResourceNotFoundException.user(userId));
 
-    user.setNickname(nickname);
-    user.setPhone(phone);
+    if (nickname != null) {
+      user.setNickname(nickname);
+    }
+    if (bio != null) {
+      user.setBio(bio);
+    }
+    if (avatar != null) {
+      user.setAvatarUrl(avatar);
+    }
 
     User updatedUser = userRepository.save(user);
     log.info("用户信息更新成功: userId={}", userId);

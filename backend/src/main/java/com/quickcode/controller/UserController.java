@@ -10,12 +10,22 @@ import com.quickcode.service.UserService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
 
+import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
+import java.nio.file.StandardCopyOption;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
+import java.util.UUID;
 
 /**
  * 用户控制器
@@ -31,6 +41,12 @@ import java.util.List;
 public class UserController extends BaseController {
 
     private final UserService userService;
+
+    @Value("${app.file.upload-path:/uploads}")
+    private String uploadPath;
+
+    @Value("${app.base-url:http://localhost:8080}")
+    private String baseUrl;
 
     /**
      * 获取当前用户信息
@@ -54,11 +70,12 @@ public class UserController extends BaseController {
     @PreAuthorize("isAuthenticated()")
     public ApiResponse<UserProfileResponse> updateCurrentUserProfile(@Valid @RequestBody UserInfoRequest request) {
         Long userId = getCurrentUserId();
-        log.info("更新用户信息: userId={}, nickname={}", userId, request.getNickname());
-        
-        User user = userService.updateUserInfo(userId, request.getNickname(), request.getPhone());
+        log.info("更新用户信息: userId={}, nickname={}, bio={}, avatar={}",
+                userId, request.getNickname(), request.getBio(), request.getAvatar());
+
+        User user = userService.updateUserInfo(userId, request.getNickname(), request.getBio(), request.getAvatar());
         UserProfileResponse response = UserProfileResponse.fromUser(user);
-        
+
         return success(response, "更新用户信息成功");
     }
 
@@ -77,17 +94,71 @@ public class UserController extends BaseController {
     }
 
     /**
-     * 更新用户头像
+     * 上传用户头像
+     */
+    @PostMapping("/me/avatar")
+    @PreAuthorize("isAuthenticated()")
+    public ApiResponse<Map<String, String>> uploadAvatar(@RequestParam("file") MultipartFile file) {
+        Long userId = getCurrentUserId();
+        log.info("上传头像请求: userId={}, fileName={}, fileSize={}",
+                userId, file.getOriginalFilename(), file.getSize());
+
+        try {
+            // 验证文件
+            validateAvatarFile(file);
+
+            // 生成文件名
+            String fileName = generateFileName(file.getOriginalFilename());
+
+            // 确保上传目录存在
+            Path uploadDir;
+            if (uploadPath.startsWith("/")) {
+                // 绝对路径
+                uploadDir = Paths.get(uploadPath, "avatars");
+            } else {
+                // 相对路径，基于当前工作目录
+                uploadDir = Paths.get(System.getProperty("user.dir"), uploadPath, "avatars");
+            }
+            Files.createDirectories(uploadDir);
+
+            // 保存文件
+            Path filePath = uploadDir.resolve(fileName);
+            Files.copy(file.getInputStream(), filePath, StandardCopyOption.REPLACE_EXISTING);
+
+            // 生成访问URL
+            String fileUrl = baseUrl + "/uploads/avatars/" + fileName;
+
+            // 更新用户头像URL
+            userService.updateAvatar(userId, fileUrl);
+
+            Map<String, String> result = new HashMap<>();
+            result.put("url", fileUrl);
+            result.put("fileName", fileName);
+
+            log.info("头像上传成功: userId={}, fileUrl={}", userId, fileUrl);
+            return success(result, "头像上传成功");
+
+        } catch (IOException e) {
+            log.error("头像上传失败: userId={}, error={}", userId, e.getMessage(), e);
+            return error("文件上传失败");
+        } catch (IllegalArgumentException e) {
+            log.warn("头像上传验证失败: userId={}, error={}", userId, e.getMessage());
+            return error(e.getMessage());
+        }
+    }
+
+    /**
+     * 更新用户头像URL
      */
     @PutMapping("/avatar")
     @PreAuthorize("isAuthenticated()")
     public ApiResponse<UserProfileResponse> updateAvatar(@RequestParam String avatarUrl) {
         Long userId = getCurrentUserId();
         log.info("更新用户头像: userId={}, avatarUrl={}", userId, avatarUrl);
-        
+
         User user = userService.updateAvatar(userId, avatarUrl);
         UserProfileResponse response = UserProfileResponse.fromUser(user);
-        
+
         return success(response, "头像更新成功");
     }
 
@@ -243,5 +314,56 @@ public class UserController extends BaseController {
                 .toList();
         
         return success(response, "查询成功");
+    }
+
+    /**
+     * 验证头像文件
+     */
+    private void validateAvatarFile(MultipartFile file) {
+        if (file.isEmpty()) {
+            throw new IllegalArgumentException("文件不能为空");
+        }
+
+        // 检查文件大小 (2MB)
+        long maxSize = 2L * 1024 * 1024;
+        if (file.getSize() > maxSize) {
+            throw new IllegalArgumentException("文件大小不能超过2MB");
+        }
+
+        // 检查文件类型
+        String contentType = file.getContentType();
+        if (contentType == null || !contentType.startsWith("image/")) {
+            throw new IllegalArgumentException("只支持图片文件");
+        }
+
+        // 检查文件扩展名
+        String originalFilename = file.getOriginalFilename();
+        if (originalFilename == null) {
+            throw new IllegalArgumentException("文件名不能为空");
+        }
+
+        String extension = getFileExtension(originalFilename).toLowerCase();
+        if (!extension.matches("\\.(jpg|jpeg|png|gif|webp)$")) {
+            throw new IllegalArgumentException("只支持 JPG、PNG、GIF、WebP 格式的图片");
+        }
+    }
+
+    /**
+     * 生成唯一文件名
+     */
+    private String generateFileName(String originalFilename) {
+        String extension = getFileExtension(originalFilename);
+        return UUID.randomUUID().toString() + extension;
+    }
+
+    /**
+     * 获取文件扩展名
+     */
+    private String getFileExtension(String filename) {
+        int lastDotIndex = filename.lastIndexOf('.');
+        if (lastDotIndex == -1) {
+            return "";
+        }
+        return filename.substring(lastDotIndex);
     }
 }

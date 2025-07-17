@@ -53,7 +53,7 @@ public interface UserService extends BaseService<User, Long> {
   /**
    * 更新用户信息
    */
-  User updateUserInfo(Long userId, String nickname, String phone);
+  User updateUserInfo(Long userId, String nickname, String bio, String avatar);
 
   /**
    * 更新用户头像

@@ -20,27 +20,18 @@
           >
             <!-- 头像上传 -->
             <el-form-item label="头像">
-              <div class="avatar-upload" data-testid="avatar-upload">
-                <el-upload
-                  class="avatar-uploader"
-                  :show-file-list="false"
-                  :before-upload="beforeAvatarUpload"
-                  :on-success="handleAvatarSuccess"
-                  action="#"
-                  :http-request="uploadAvatar"
-                >
-                  <el-avatar
-                    v-if="profileForm.avatar"
-                    :src="profileForm.avatar"
-                    :size="80"
-                    class="avatar"
-                  />
-                  <div v-else class="avatar-placeholder">
-                    <el-icon><Plus /></el-icon>
-                    <div class="upload-text">上传头像</div>
-                  </div>
-                </el-upload>
-              </div>
+              <AvatarUpload
+                v-model="profileForm.avatar"
+                :size="100"
+                :max-size="2"
+                :recommend-size="200"
+                :crop-size="200"
+                :enable-crop="true"
+                @upload-success="handleAvatarSuccess"
+                @upload-error="handleAvatarError"
+                @upload-progress="handleAvatarProgress"
+                data-testid="avatar-upload"
+              />
             </el-form-item>
 
             <el-form-item label="昵称" prop="nickname">
@@ -61,26 +52,6 @@
               />
             </el-form-item>
 
-
-
-            <el-form-item label="性别" prop="gender">
-              <el-radio-group v-model="profileForm.gender">
-                <el-radio value="MALE">男</el-radio>
-                <el-radio value="FEMALE">女</el-radio>
-                <el-radio value="OTHER">其他</el-radio>
-              </el-radio-group>
-            </el-form-item>
-
-            <el-form-item label="生日" prop="birthday">
-              <el-date-picker
-                v-model="profileForm.birthday"
-                type="date"
-                placeholder="请选择生日"
-                format="YYYY-MM-DD"
-                value-format="YYYY-MM-DD"
-              />
-            </el-form-item>
-
             <el-form-item label="个人简介" prop="bio">
               <el-input
                 v-model="profileForm.bio"
@@ -88,7 +59,7 @@
                 type="textarea"
                 :rows="4"
                 placeholder="请输入个人简介"
-                maxlength="200"
+                maxlength="500"
                 show-word-limit
               />
             </el-form-item>
@@ -136,7 +107,11 @@
                 <div class="security-title">双因素认证</div>
                 <div class="security-desc">增强账户安全性，建议开启</div>
               </div>
-              <ModernButton size="small">
+              <ModernButton
+                size="small"
+                @click="show2FADialog = true"
+                data-testid="setup-2fa-button"
+              >
                 设置
               </ModernButton>
             </div>
@@ -257,16 +232,28 @@
         </ModernButton>
       </template>
     </el-dialog>
+
+    <!-- 双因素认证设置对话框 -->
+    <el-dialog
+      v-model="show2FADialog"
+      title="双因素认证设置"
+      width="600px"
+      :before-close="handle2FADialogClose"
+    >
+      <TwoFactorSetup @setup-complete="handle2FASetupComplete" />
+    </el-dialog>
   </div>
 </template>
 
 <script setup lang="ts">
+import AvatarUpload from '@/components/upload/AvatarUpload.vue'
 import ModernButton from '@/components/ui/ModernButton.vue'
 import ModernCard from '@/components/ui/ModernCard.vue'
+import TwoFactorSetup from '@/components/security/TwoFactorSetup.vue'
 import { useAppStore } from '@/stores/app'
 import { useUserStore } from '@/stores/user'
 import type { ChangePasswordRequest, UpdateUserRequest } from '@/types/user'
-import { Plus } from '@element-plus/icons-vue'
+
 import { ElForm, ElMessage } from 'element-plus'
 import { onMounted, reactive, ref } from 'vue'
 
@@ -281,8 +268,6 @@ const passwordFormRef = ref<InstanceType<typeof ElForm>>()
 const profileForm = reactive<UpdateUserRequest & { email: string }>({
   nickname: '',
   avatar: '',
-  gender: undefined,
-  birthday: '',
   bio: '',
   email: ''
 })
@@ -331,6 +316,7 @@ const changingPassword = ref(false)
 const showPasswordDialog = ref(false)
 const showRechargeDialog = ref(false)
 const showPointsHistory = ref(false)
+const show2FADialog = ref(false)
 
 // 积分数据
 const pointsData = reactive({
@@ -354,45 +340,27 @@ const initFormData = () => {
     Object.assign(profileForm, {
       nickname: userStore.user.nickname || '',
       avatar: userStore.user.avatarUrl || '',
-      gender: userStore.user.gender,
-      birthday: userStore.user.birthday || '',
       bio: userStore.user.bio || '',
       email: userStore.user.email
     })
   }
 }
 
-// 头像上传前验证
-const beforeAvatarUpload = (file: File) => {
-  const isImage = file.type.startsWith('image/')
-  const isLt2M = file.size / 1024 / 1024 < 2
-
-  if (!isImage) {
-    ElMessage.error('只能上传图片文件!')
-    return false
-  }
-  if (!isLt2M) {
-    ElMessage.error('图片大小不能超过2MB!')
-    return false
-  }
-  return true
-}
-
-// 自定义上传
-const uploadAvatar = async ({ file }: { file: File }) => {
-  try {
-    const success = await userStore.uploadAvatar(file)
-    if (success && userStore.user) {
-      profileForm.avatar = userStore.user.avatarUrl || ''
-    }
-  } catch (error) {
-    console.error('头像上传失败:', error)
-  }
-}
-
 // 头像上传成功
-const handleAvatarSuccess = () => {
-  ElMessage.success('头像上传成功')
+const handleAvatarSuccess = (url: string) => {
+  profileForm.avatar = url
+  // 不需要显示成功提示，AvatarUpload组件已经处理了
+}
+
+// 头像上传错误
+const handleAvatarError = (error: Error) => {
+  console.error('头像上传失败:', error)
+  ElMessage.error('头像上传失败')
+}
+
+// 头像上传进度
+const handleAvatarProgress = (progress: number) => {
+  console.log('上传进度:', progress)
 }
 
 // 保存个人信息
@@ -403,11 +371,14 @@ const saveProfile = async () => {
     await profileFormRef.value.validate()
     saving.value = true
 
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
     const { email, ...updateData } = profileForm
     const success = await userStore.updateUser(updateData)
 
     if (success) {
       ElMessage.success('个人信息保存成功')
+    } else {
+      ElMessage.error('个人信息保存失败')
     }
   } catch (error) {
     console.error('保存失败:', error)
@@ -456,6 +427,17 @@ const changePassword = async () => {
 const handlePasswordDialogClose = () => {
   passwordFormRef.value?.resetFields()
   showPasswordDialog.value = false
+}
+
+// 关闭2FA对话框
+const handle2FADialogClose = () => {
+  show2FADialog.value = false
+}
+
+// 处理2FA设置完成
+const handle2FASetupComplete = () => {
+  show2FADialog.value = false
+  ElMessage.success('双因素认证设置完成')
 }
 
 
@@ -509,10 +491,36 @@ onMounted(() => {
 
   .profile-card {
     margin-bottom: $spacing-lg;
-    background: var(--gradient-glass);
-    backdrop-filter: var(--glass-blur-sm);
-    border: 1px solid var(--glass-border);
-    box-shadow: var(--shadow-layered-md);
+    background: rgba(255, 255, 255, 0.25);
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
+    border: 1px solid rgba(255, 255, 255, 0.18);
+    border-radius: $radius-2xl;
+    box-shadow:
+      0 3px 6px rgba(0, 0, 0, 0.16),
+      0 3px 6px rgba(0, 0, 0, 0.23);
+    transition: all 0.3s ease;
+    overflow: hidden;
+    position: relative;
+
+    // 增强毛玻璃效果的边框高光
+    &::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      height: 1px;
+      background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.8), transparent);
+      z-index: 1;
+    }
+
+    &:hover {
+      transform: translateY(-2px);
+      box-shadow:
+        0 10px 20px rgba(0, 0, 0, 0.19),
+        0 6px 6px rgba(0, 0, 0, 0.23);
+    }
 
     .profile-form {
       .avatar-upload {
@@ -563,6 +571,36 @@ onMounted(() => {
 
       :deep(.el-form-item) {
         margin-bottom: $spacing-lg;
+        position: relative;
+
+        .el-form-item__label {
+          color: var(--text-primary);
+          font-weight: 500;
+          font-size: $font-size-sm;
+        }
+
+        // 表单验证错误提示优化
+        .el-form-item__error {
+          position: absolute !important;
+          top: 100% !important;
+          left: 0 !important;
+          right: 0 !important;
+          transform: none !important;
+          color: #ffffff !important;
+          background: rgba(255, 77, 79, 0.9) !important;
+          padding: $spacing-xs $spacing-sm !important;
+          border-radius: $radius-md !important;
+          font-size: $font-size-xs !important;
+          font-weight: 500 !important;
+          margin-top: $spacing-xs !important;
+          box-shadow:
+            0 2px 8px rgba(255, 77, 79, 0.3),
+            0 1px 3px rgba(0, 0, 0, 0.2) !important;
+          backdrop-filter: blur(10px) !important;
+          -webkit-backdrop-filter: blur(10px) !important;
+          border: 1px solid rgba(255, 77, 79, 0.5) !important;
+          z-index: 10 !important;
+        }
 
         .el-input,
         .el-textarea,
@@ -571,18 +609,28 @@ onMounted(() => {
           .el-textarea__inner {
             border-radius: $radius-lg;
             transition: all 0.3s ease;
-            background: rgba(255, 255, 255, 0.8);
+            background: rgba(255, 255, 255, 0.6);
             backdrop-filter: blur(10px);
+            -webkit-backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.3);
+            box-shadow:
+              0 1px 3px rgba(0, 0, 0, 0.12),
+              0 1px 2px rgba(0, 0, 0, 0.24);
 
             &:hover {
-              border-color: var(--primary-hover);
-              box-shadow: var(--shadow-sm);
+              border-color: rgba(24, 144, 255, 0.5);
+              box-shadow:
+                0 2px 8px rgba(0, 0, 0, 0.06),
+                0 0 0 3px rgba(24, 144, 255, 0.1);
+              transform: translateY(-1px);
             }
 
             &.is-focus {
-              border-color: var(--primary-color);
-              box-shadow: var(--shadow-primary);
-              transform: translateY(-1px);
+              border-color: #1890ff;
+              box-shadow:
+                0 8px 25px rgba(24, 144, 255, 0.15),
+                0 0 0 3px rgba(24, 144, 255, 0.1);
+              transform: translateY(-2px);
             }
           }
         }
@@ -594,10 +642,36 @@ onMounted(() => {
 
   .security-card {
     margin-bottom: $spacing-lg;
-    background: var(--gradient-glass);
-    backdrop-filter: var(--glass-blur-sm);
-    border: 1px solid var(--glass-border);
-    box-shadow: var(--shadow-layered-md);
+    background: rgba(255, 255, 255, 0.25);
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
+    border: 1px solid rgba(255, 255, 255, 0.18);
+    border-radius: $radius-2xl;
+    box-shadow:
+      0 3px 6px rgba(0, 0, 0, 0.16),
+      0 3px 6px rgba(0, 0, 0, 0.23);
+    transition: all 0.3s ease;
+    overflow: hidden;
+    position: relative;
+
+    // 增强毛玻璃效果的边框高光
+    &::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      height: 1px;
+      background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.8), transparent);
+      z-index: 1;
+    }
+
+    &:hover {
+      transform: translateY(-2px);
+      box-shadow:
+        0 10px 20px rgba(0, 0, 0, 0.19),
+        0 6px 6px rgba(0, 0, 0, 0.23);
+    }
 
     .security-items {
       .security-item {
@@ -611,10 +685,16 @@ onMounted(() => {
         }
 
         &:hover {
-          background: rgba(24, 144, 255, 0.02);
+          background: rgba(24, 144, 255, 0.05);
+          backdrop-filter: blur(10px);
+          -webkit-backdrop-filter: blur(10px);
           border-radius: $radius-md;
           margin: 0 (-$spacing-sm);
           padding: $spacing-md $spacing-sm;
+          box-shadow:
+            0 2px 8px rgba(24, 144, 255, 0.1),
+            0 1px 3px rgba(0, 0, 0, 0.1);
+          transform: translateX(4px);
         }
 
         .security-info {
@@ -637,10 +717,36 @@ onMounted(() => {
 
   .points-card {
     margin-bottom: $spacing-lg;
-    background: var(--gradient-glass);
-    backdrop-filter: var(--glass-blur-sm);
-    border: 1px solid var(--glass-border);
-    box-shadow: var(--shadow-layered-md);
+    background: rgba(255, 255, 255, 0.25);
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
+    border: 1px solid rgba(255, 255, 255, 0.18);
+    border-radius: $radius-2xl;
+    box-shadow:
+      0 3px 6px rgba(0, 0, 0, 0.16),
+      0 3px 6px rgba(0, 0, 0, 0.23);
+    transition: all 0.3s ease;
+    overflow: hidden;
+    position: relative;
+
+    // 增强毛玻璃效果的边框高光
+    &::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      height: 1px;
+      background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.8), transparent);
+      z-index: 1;
+    }
+
+    &:hover {
+      transform: translateY(-2px);
+      box-shadow:
+        0 10px 20px rgba(0, 0, 0, 0.19),
+        0 6px 6px rgba(0, 0, 0, 0.23);
+    }
 
     .points-overview {
       text-align: center;
@@ -680,14 +786,22 @@ onMounted(() => {
       .stat-item {
         text-align: center;
         padding: $spacing-md;
-        background: var(--gradient-glass);
+        background: rgba(255, 255, 255, 0.1);
+        backdrop-filter: blur(10px);
+        -webkit-backdrop-filter: blur(10px);
+        border: 1px solid rgba(255, 255, 255, 0.18);
         border-radius: $radius-lg;
-        box-shadow: var(--shadow-sm);
+        box-shadow:
+          0 1px 3px rgba(0, 0, 0, 0.12),
+          0 1px 2px rgba(0, 0, 0, 0.24);
         transition: all 0.3s ease;
 
         &:hover {
           transform: translateY(-2px);
-          box-shadow: var(--shadow-md);
+          box-shadow:
+            0 4px 12px rgba(0, 0, 0, 0.1),
+            0 0 0 1px rgba(255, 255, 255, 0.2);
+          background: rgba(255, 255, 255, 0.15);
         }
 
         .stat-value {
@@ -706,10 +820,36 @@ onMounted(() => {
   }
 
   .stats-card {
-    background: var(--gradient-glass);
-    backdrop-filter: var(--glass-blur-sm);
-    border: 1px solid var(--glass-border);
-    box-shadow: var(--shadow-layered-md);
+    background: rgba(255, 255, 255, 0.25);
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
+    border: 1px solid rgba(255, 255, 255, 0.18);
+    border-radius: $radius-2xl;
+    box-shadow:
+      0 3px 6px rgba(0, 0, 0, 0.16),
+      0 3px 6px rgba(0, 0, 0, 0.23);
+    transition: all 0.3s ease;
+    overflow: hidden;
+    position: relative;
+
+    // 增强毛玻璃效果的边框高光
+    &::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      height: 1px;
+      background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.8), transparent);
+      z-index: 1;
+    }
+
+    &:hover {
+      transform: translateY(-2px);
+      box-shadow:
+        0 10px 20px rgba(0, 0, 0, 0.19),
+        0 6px 6px rgba(0, 0, 0, 0.23);
+    }
 
     .account-stats {
       display: grid;
@@ -719,15 +859,22 @@ onMounted(() => {
       .stat-item {
         text-align: center;
         padding: $spacing-lg;
-        background: var(--gradient-card);
+        background: rgba(255, 255, 255, 0.1);
+        backdrop-filter: blur(10px);
+        -webkit-backdrop-filter: blur(10px);
+        border: 1px solid rgba(255, 255, 255, 0.18);
         border-radius: $radius-xl;
-        box-shadow: var(--shadow-layered-sm);
+        box-shadow:
+          0 1px 3px rgba(0, 0, 0, 0.12),
+          0 1px 2px rgba(0, 0, 0, 0.24);
         transition: all 0.3s ease;
-        border: 1px solid var(--glass-border);
 
         &:hover {
           transform: translateY(-3px);
-          box-shadow: var(--shadow-layered-md);
+          box-shadow:
+            0 3px 6px rgba(0, 0, 0, 0.16),
+            0 3px 6px rgba(0, 0, 0, 0.23);
+          background: rgba(255, 255, 255, 0.15);
         }
 
         .stat-value {
@@ -749,6 +896,72 @@ onMounted(() => {
     }
   }
 }
+
+// 微交互动画
+@keyframes fadeInUp {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes shimmer {
+  0% {
+    background-position: -200px 0;
+  }
+  100% {
+    background-position: calc(200px + 100%) 0;
+  }
+}
+
+@keyframes pulse {
+  0%, 100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.8;
+  }
+}
+
+  // 页面加载动画
+  .profile-card,
+  .security-card,
+  .points-card,
+  .stats-card {
+    animation: fadeInUp 0.6s ease-out;
+    animation-fill-mode: both;
+
+    &:nth-child(1) { animation-delay: 0.1s; }
+    &:nth-child(2) { animation-delay: 0.2s; }
+    &:nth-child(3) { animation-delay: 0.3s; }
+    &:nth-child(4) { animation-delay: 0.4s; }
+  }
+
+  // 加载状态动画
+  .loading-shimmer {
+    background: linear-gradient(
+      90deg,
+      rgba(255, 255, 255, 0.1) 0%,
+      rgba(255, 255, 255, 0.3) 50%,
+      rgba(255, 255, 255, 0.1) 100%
+    );
+    background-size: 200px 100%;
+    animation: shimmer 1.5s infinite;
+  }
+
+  // 数据更新动画
+  .stat-value,
+  .balance-amount {
+    transition: all 0.3s ease;
+
+    &.updating {
+      animation: pulse 1s infinite;
+    }
+  }
 
 // 响应式设计
 @include respond-below('lg') {

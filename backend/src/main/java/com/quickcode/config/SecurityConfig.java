@@ -91,8 +91,9 @@ public class SecurityConfig {
             // API文档
             .requestMatchers("/swagger-ui.html", "/swagger-ui/**", "/v3/api-docs/**", "/api-docs/**").permitAll()
 
-            // 静态资源
+            // 静态资源和上传文件
             .requestMatchers("/favicon.ico", "/error").permitAll()
+            .requestMatchers("/uploads/**").permitAll() // 允许公开访问上传的文件
 
             // 其他所有请求都需要认证
             .anyRequest().authenticated())
@@ -143,7 +144,8 @@ public class SecurityConfig {
     // 允许的请求头
     configuration
         .setAllowedHeaders(Arrays.asList("Authorization", "Content-Type", "X-Requested-With",
-            "Accept", "Origin", "Access-Control-Request-Method", "Access-Control-Request-Headers"));
+            "Accept", "Origin", "Access-Control-Request-Method", "Access-Control-Request-Headers",
+            "X-Request-ID"));
 
     // 暴露的响应头
     configuration.setExposedHeaders(

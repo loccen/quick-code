@@ -384,19 +384,21 @@ class UserServiceTest {
       // Arrange
       Long userId = testUser.getId();
       String newNickname = "新昵称";
-      String newPhone = "13900139000";
+      String newBio = "这是我的新个人简介";
+      String newAvatar = "https://example.com/avatar.jpg";
 
       when(userRepository.findById(userId)).thenReturn(Optional.of(testUser));
       when(userRepository.save(any(User.class)))
           .thenAnswer(invocation -> invocation.getArgument(0));
 
       // Act
-      User result = userService.updateUserInfo(userId, newNickname, newPhone);
+      User result = userService.updateUserInfo(userId, newNickname, newBio, newAvatar);
 
       // Assert
       assertThat(result).isNotNull();
       assertThat(result.getNickname()).isEqualTo(newNickname);
-      assertThat(result.getPhone()).isEqualTo(newPhone);
+      assertThat(result.getBio()).isEqualTo(newBio);
+      assertThat(result.getAvatarUrl()).isEqualTo(newAvatar);
 
       verify(userRepository).findById(userId);
       verify(userRepository).save(testUser);
@@ -408,17 +410,46 @@ class UserServiceTest {
       // Arrange
       Long userId = 999L;
       String newNickname = "新昵称";
-      String newPhone = "13900139000";
+      String newBio = "新简介";
+      String newAvatar = "https://example.com/avatar.jpg";
 
       when(userRepository.findById(userId)).thenReturn(Optional.empty());
 
       // Act & Assert
-      assertThatThrownBy(() -> userService.updateUserInfo(userId, newNickname, newPhone))
+      assertThatThrownBy(() -> userService.updateUserInfo(userId, newNickname, newBio, newAvatar))
           .isInstanceOf(com.quickcode.common.exception.ResourceNotFoundException.class)
           .hasMessage("用户 (ID: " + userId + ") 不存在");
 
       verify(userRepository).findById(userId);
       verify(userRepository, never()).save(any(User.class));
+    }
+
+    @Test
+    @DisplayName("应该支持部分字段更新")
+    void shouldSupportPartialFieldUpdate() {
+      // Arrange
+      Long userId = testUser.getId();
+      String originalBio = testUser.getBio();
+      String originalAvatar = testUser.getAvatarUrl();
+
+      // 只更新昵称
+      String newNickname = "新昵称";
+
+      when(userRepository.findById(userId)).thenReturn(Optional.of(testUser));
+      when(userRepository.save(any(User.class)))
+          .thenAnswer(invocation -> invocation.getArgument(0));
+
+      // Act
+      User result = userService.updateUserInfo(userId, newNickname, null, null);
+
+      // Assert
+      assertThat(result).isNotNull();
+      assertThat(result.getNickname()).isEqualTo(newNickname);
+      assertThat(result.getBio()).isEqualTo(originalBio); // 保持原值
+      assertThat(result.getAvatarUrl()).isEqualTo(originalAvatar); // 保持原值
+
+      verify(userRepository).findById(userId);
+      verify(userRepository).save(testUser);
     }
 
     @Test

@@ -118,14 +118,19 @@ class UserControllerTest {
       // Arrange
       UserPrincipal userPrincipal = TestSecurityConfig.createTestUserPrincipal();
       UserInfoRequest request =
-          UserInfoRequest.builder().nickname("新昵称").phone("13900139000").bio("这是我的个人简介").build();
+          UserInfoRequest.builder()
+              .nickname("新昵称")
+              .bio("这是我的个人简介")
+              .avatar("https://example.com/avatar.jpg")
+              .build();
 
       User updatedUser = TestDataFactory.createTestUser();
       updatedUser.setId(1L);
       updatedUser.setNickname(request.getNickname());
-      updatedUser.setPhone(request.getPhone());
+      updatedUser.setBio(request.getBio());
+      updatedUser.setAvatarUrl(request.getAvatar());
 
-      when(userService.updateUserInfo(1L, request.getNickname(), request.getPhone()))
+      when(userService.updateUserInfo(1L, request.getNickname(), request.getBio(), request.getAvatar()))
           .thenReturn(updatedUser);
 
       // Act & Assert
@@ -140,9 +145,10 @@ class UserControllerTest {
           .andExpect(status().isOk()).andExpect(jsonPath("$.success").value(true))
           .andExpect(jsonPath("$.message").value("更新用户信息成功"))
           .andExpect(jsonPath("$.data.nickname").value(request.getNickname()))
-          .andExpect(jsonPath("$.data.phone").value(request.getPhone()));
+          .andExpect(jsonPath("$.data.bio").value(request.getBio()))
+          .andExpect(jsonPath("$.data.avatarUrl").value(request.getAvatar()));
 
-      verify(userService).updateUserInfo(1L, request.getNickname(), request.getPhone());
+      verify(userService).updateUserInfo(1L, request.getNickname(), request.getBio(), request.getAvatar());
     }
 
     @Test
@@ -156,7 +162,7 @@ class UserControllerTest {
 
       // 这个测试应该在参数验证阶段就失败，不会调用UserService
       // 但为了防止意外调用，我们提供一个Mock
-      when(userService.updateUserInfo(anyLong(), anyString(), anyString())).thenReturn(testUser);
+      when(userService.updateUserInfo(anyLong(), anyString(), anyString(), anyString())).thenReturn(testUser);
 
       // Act & Assert
       mockMvc
@@ -170,7 +176,7 @@ class UserControllerTest {
           .andExpect(status().isBadRequest());
 
       // 验证参数验证在UserService调用之前就拦截了请求
-      verify(userService, never()).updateUserInfo(anyLong(), anyString(), anyString());
+      verify(userService, never()).updateUserInfo(anyLong(), anyString(), anyString(), anyString());
     }
   }
 

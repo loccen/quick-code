@@ -114,7 +114,7 @@ app:
 
   # 文件存储配置
   file:
-    upload-path: ${UPLOAD_PATH:/uploads}
+    upload-path: ${UPLOAD_PATH:./uploads}
     max-size: ${MAX_FILE_SIZE:100MB}
     allowed-types: ${ALLOWED_FILE_TYPES:.zip,.rar,.tar.gz,.7z}
 

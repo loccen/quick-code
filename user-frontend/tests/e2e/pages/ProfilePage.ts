@@ -18,6 +18,21 @@ export class ProfilePage extends BasePage {
   private readonly newPasswordInput: Locator
   private readonly confirmPasswordInput: Locator
   private readonly submitPasswordButton: Locator
+  private readonly editProfileButton: Locator
+  private readonly usernameInput: Locator
+  private readonly birthdayInput: Locator
+  private readonly saveProfileButton: Locator
+  private readonly cancelEditButton: Locator
+  private readonly confirmChangePasswordButton: Locator
+  private readonly setup2FAButton: Locator
+  private readonly pointsBalance: Locator
+  private readonly rechargePointsButton: Locator
+  private readonly pointsHistoryButton: Locator
+  private readonly totalProjects: Locator
+  private readonly totalDownloads: Locator
+  private readonly totalUploads: Locator
+  private readonly memberDays: Locator
+  private readonly userNickname: Locator
 
   constructor(page: Page) {
     super(page)
@@ -35,6 +50,21 @@ export class ProfilePage extends BasePage {
     this.newPasswordInput = page.locator('[data-testid="new-password-input"]')
     this.confirmPasswordInput = page.locator('[data-testid="confirm-password-input"]')
     this.submitPasswordButton = page.locator('[data-testid="submit-password-button"]')
+    this.editProfileButton = page.locator('[data-testid="edit-profile-button"]')
+    this.usernameInput = page.locator('[data-testid="username-input"]')
+    this.birthdayInput = page.locator('[data-testid="birthday-input"]')
+    this.saveProfileButton = page.locator('[data-testid="save-profile-button"]')
+    this.cancelEditButton = page.locator('[data-testid="cancel-edit-button"]')
+    this.confirmChangePasswordButton = page.locator('[data-testid="confirm-change-password-button"]')
+    this.setup2FAButton = page.locator('[data-testid="setup-2fa-button"]')
+    this.pointsBalance = page.locator('[data-testid="points-balance"]')
+    this.rechargePointsButton = page.locator('[data-testid="recharge-points-button"]')
+    this.pointsHistoryButton = page.locator('[data-testid="points-history-button"]')
+    this.totalProjects = page.locator('[data-testid="total-projects"]')
+    this.totalDownloads = page.locator('[data-testid="total-downloads"]')
+    this.totalUploads = page.locator('[data-testid="total-uploads"]')
+    this.memberDays = page.locator('[data-testid="member-days"]')
+    this.userNickname = page.locator('[data-testid="user-nickname"]')
   }
 
   /**
