@@ -1,11 +1,13 @@
 <template>
   <div class="profile-view">
-    <div class="page-header">
-      <h1 class="page-title">个人中心</h1>
-      <p class="page-subtitle">管理您的个人信息和账户设置</p>
-    </div>
+    <!-- 页面容器 -->
+    <div class="container">
+      <div class="page-header">
+        <h1 class="page-title">个人中心</h1>
+        <p class="page-subtitle">管理您的个人信息和账户设置</p>
+      </div>
 
-    <el-row :gutter="24">
+      <el-row :gutter="24">
       <!-- 左侧个人信息 -->
       <el-col :xs="24" :lg="16">
         <ModernCard title="个人信息" class="profile-card">
@@ -59,14 +61,7 @@
               />
             </el-form-item>
 
-            <el-form-item label="手机号" prop="phone">
-              <el-input
-                v-model="profileForm.phone"
-                data-testid="phone-input"
-                placeholder="请输入手机号"
-                clearable
-              />
-            </el-form-item>
+
 
             <el-form-item label="性别" prop="gender">
               <el-radio-group v-model="profileForm.gender">
@@ -138,13 +133,11 @@
 
             <div class="security-item">
               <div class="security-info">
-                <div class="security-title">手机绑定</div>
-                <div class="security-desc">
-                  {{ profileForm.phone ? `已绑定 ${profileForm.phone}` : '未绑定手机号' }}
-                </div>
+                <div class="security-title">双因素认证</div>
+                <div class="security-desc">增强账户安全性，建议开启</div>
               </div>
               <ModernButton size="small">
-                {{ profileForm.phone ? '更换' : '绑定' }}
+                设置
               </ModernButton>
             </div>
 
@@ -154,6 +147,35 @@
                 <div class="security-desc">已验证 {{ profileForm.email }}</div>
               </div>
               <el-tag type="success" size="small">已验证</el-tag>
+            </div>
+          </div>
+        </ModernCard>
+
+        <!-- 积分账户 -->
+        <ModernCard title="积分账户" class="points-card">
+          <div class="points-overview">
+            <div class="points-balance">
+              <div class="balance-amount">{{ pointsData.balance }}</div>
+              <div class="balance-label">当前积分</div>
+            </div>
+            <div class="points-actions">
+              <ModernButton type="primary" size="small" @click="showRechargeDialog = true">
+                充值积分
+              </ModernButton>
+              <ModernButton size="small" @click="showPointsHistory = true">
+                交易记录
+              </ModernButton>
+            </div>
+          </div>
+
+          <div class="points-stats">
+            <div class="stat-item">
+              <div class="stat-value">{{ pointsData.totalEarned }}</div>
+              <div class="stat-label">累计收益</div>
+            </div>
+            <div class="stat-item">
+              <div class="stat-value">{{ pointsData.totalSpent }}</div>
+              <div class="stat-label">累计消费</div>
             </div>
           </div>
         </ModernCard>
@@ -176,7 +198,8 @@
           </div>
         </ModernCard>
       </el-col>
-    </el-row>
+      </el-row>
+    </div>
 
     <!-- 修改密码对话框 -->
     <el-dialog
@@ -258,7 +281,6 @@ const passwordFormRef = ref<InstanceType<typeof ElForm>>()
 const profileForm = reactive<UpdateUserRequest & { email: string }>({
   nickname: '',
   avatar: '',
-  phone: '',
   gender: undefined,
   birthday: '',
   bio: '',
@@ -277,9 +299,6 @@ const profileRules = {
   nickname: [
     { required: true, message: '请输入昵称', trigger: 'blur' },
     { min: 2, max: 20, message: '昵称长度在2-20个字符', trigger: 'blur' }
-  ],
-  phone: [
-    { pattern: /^1[3-9]\d{9}$/, message: '请输入正确的手机号', trigger: 'blur' }
   ]
 }
 
@@ -310,6 +329,17 @@ const passwordRules = {
 const saving = ref(false)
 const changingPassword = ref(false)
 const showPasswordDialog = ref(false)
+const showRechargeDialog = ref(false)
+const showPointsHistory = ref(false)
+
+// 积分数据
+const pointsData = reactive({
+  balance: 2580,
+  totalEarned: 5200,
+  totalSpent: 2620
+})
+
+
 
 // 账户统计
 const accountStats = reactive({
@@ -324,7 +354,6 @@ const initFormData = () => {
     Object.assign(profileForm, {
       nickname: userStore.user.nickname || '',
       avatar: userStore.user.avatarUrl || '',
-      phone: userStore.user.phone || '',
       gender: userStore.user.gender,
       birthday: userStore.user.birthday || '',
       bio: userStore.user.bio || '',
@@ -429,6 +458,8 @@ const handlePasswordDialogClose = () => {
   showPasswordDialog.value = false
 }
 
+
+
 // 页面初始化
 onMounted(() => {
   appStore.setPageTitle('个人中心')
@@ -441,6 +472,23 @@ onMounted(() => {
 @use '@/styles/mixins' as *;
 
 .profile-view {
+  min-height: calc(100vh - 200px);
+  padding: $spacing-xl 0;
+
+  .container {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 0 $spacing-lg;
+
+    @include respond-below('lg') {
+      padding: 0 $spacing-md;
+    }
+
+    @include respond-below('md') {
+      padding: 0 $spacing-sm;
+    }
+  }
+
   .page-header {
     margin-bottom: $spacing-xl;
 
@@ -461,6 +509,10 @@ onMounted(() => {
 
   .profile-card {
     margin-bottom: $spacing-lg;
+    background: var(--gradient-glass);
+    backdrop-filter: var(--glass-blur-sm);
+    border: 1px solid var(--glass-border);
+    box-shadow: var(--shadow-layered-md);
 
     .profile-form {
       .avatar-upload {
@@ -471,21 +523,24 @@ onMounted(() => {
             cursor: pointer;
             position: relative;
             overflow: hidden;
-            transition: all var(--transition-base);
+            transition: all 0.3s ease;
             @include flex-center();
-            width: 80px;
-            height: 80px;
+            width: 100px;
+            height: 100px;
+            background: var(--gradient-glass);
 
             &:hover {
               border-color: var(--primary-color);
-              @include shadow-colored(var(--primary-color), 0.2);
+              box-shadow: var(--shadow-primary);
+              transform: translateY(-2px);
             }
           }
 
           .avatar {
-            width: 80px;
-            height: 80px;
-            @include shadow-sm();
+            width: 100px;
+            height: 100px;
+            box-shadow: var(--shadow-layered-sm);
+            border-radius: $radius-xl;
           }
 
           .avatar-placeholder {
@@ -495,11 +550,12 @@ onMounted(() => {
             color: var(--text-tertiary);
 
             .el-icon {
-              font-size: 24px;
+              font-size: 28px;
             }
 
             .upload-text {
-              font-size: $font-size-xs;
+              font-size: $font-size-sm;
+              font-weight: 500;
             }
           }
         }
@@ -514,15 +570,19 @@ onMounted(() => {
           .el-input__wrapper,
           .el-textarea__inner {
             border-radius: $radius-lg;
-            transition: all var(--transition-base);
+            transition: all 0.3s ease;
+            background: rgba(255, 255, 255, 0.8);
+            backdrop-filter: blur(10px);
 
             &:hover {
-              border-color: rgba(var(--primary-color), 0.5);
+              border-color: var(--primary-hover);
+              box-shadow: var(--shadow-sm);
             }
 
             &.is-focus {
               border-color: var(--primary-color);
-              @include shadow-colored(var(--primary-color), 0.1);
+              box-shadow: var(--shadow-primary);
+              transform: translateY(-1px);
             }
           }
         }
@@ -530,17 +590,31 @@ onMounted(() => {
     }
   }
 
+
+
   .security-card {
     margin-bottom: $spacing-lg;
+    background: var(--gradient-glass);
+    backdrop-filter: var(--glass-blur-sm);
+    border: 1px solid var(--glass-border);
+    box-shadow: var(--shadow-layered-md);
 
     .security-items {
       .security-item {
         @include flex-between();
         padding: $spacing-md 0;
         border-bottom: 1px solid var(--border-light);
+        transition: all 0.3s ease;
 
         &:last-child {
           border-bottom: none;
+        }
+
+        &:hover {
+          background: rgba(24, 144, 255, 0.02);
+          border-radius: $radius-md;
+          margin: 0 (-$spacing-sm);
+          padding: $spacing-md $spacing-sm;
         }
 
         .security-info {
@@ -561,10 +635,46 @@ onMounted(() => {
     }
   }
 
-  .stats-card {
-    .account-stats {
+  .points-card {
+    margin-bottom: $spacing-lg;
+    background: var(--gradient-glass);
+    backdrop-filter: var(--glass-blur-sm);
+    border: 1px solid var(--glass-border);
+    box-shadow: var(--shadow-layered-md);
+
+    .points-overview {
+      text-align: center;
+      margin-bottom: $spacing-lg;
+
+      .points-balance {
+        margin-bottom: $spacing-md;
+
+        .balance-amount {
+          font-size: $font-size-3xl;
+          font-weight: 700;
+          background: var(--gradient-primary);
+          -webkit-background-clip: text;
+          -webkit-text-fill-color: transparent;
+          background-clip: text;
+          margin-bottom: $spacing-xs;
+        }
+
+        .balance-label {
+          color: var(--text-secondary);
+          font-size: $font-size-sm;
+        }
+      }
+
+      .points-actions {
+        display: flex;
+        gap: $spacing-sm;
+        justify-content: center;
+      }
+    }
+
+    .points-stats {
       display: grid;
-      grid-template-columns: 1fr;
+      grid-template-columns: 1fr 1fr;
       gap: $spacing-md;
 
       .stat-item {
@@ -572,11 +682,17 @@ onMounted(() => {
         padding: $spacing-md;
         background: var(--gradient-glass);
         border-radius: $radius-lg;
-        @include shadow-sm();
+        box-shadow: var(--shadow-sm);
+        transition: all 0.3s ease;
+
+        &:hover {
+          transform: translateY(-2px);
+          box-shadow: var(--shadow-md);
+        }
 
         .stat-value {
           font-size: $font-size-xl;
-          font-weight: $font-weight-bold;
+          font-weight: 600;
           color: var(--primary-color);
           margin-bottom: $spacing-xs;
         }
@@ -588,15 +704,62 @@ onMounted(() => {
       }
     }
   }
+
+  .stats-card {
+    background: var(--gradient-glass);
+    backdrop-filter: var(--glass-blur-sm);
+    border: 1px solid var(--glass-border);
+    box-shadow: var(--shadow-layered-md);
+
+    .account-stats {
+      display: grid;
+      grid-template-columns: 1fr;
+      gap: $spacing-md;
+
+      .stat-item {
+        text-align: center;
+        padding: $spacing-lg;
+        background: var(--gradient-card);
+        border-radius: $radius-xl;
+        box-shadow: var(--shadow-layered-sm);
+        transition: all 0.3s ease;
+        border: 1px solid var(--glass-border);
+
+        &:hover {
+          transform: translateY(-3px);
+          box-shadow: var(--shadow-layered-md);
+        }
+
+        .stat-value {
+          font-size: $font-size-2xl;
+          font-weight: 700;
+          background: var(--gradient-primary);
+          -webkit-background-clip: text;
+          -webkit-text-fill-color: transparent;
+          background-clip: text;
+          margin-bottom: $spacing-xs;
+        }
+
+        .stat-label {
+          color: var(--text-secondary);
+          font-size: $font-size-sm;
+          font-weight: 500;
+        }
+      }
+    }
+  }
 }
 
 // 响应式设计
 @include respond-below('lg') {
   .profile-view {
     .security-card,
+    .points-card,
     .stats-card {
       margin-top: $spacing-lg;
     }
+
+
   }
 }
 
@@ -628,15 +791,39 @@ onMounted(() => {
       }
     }
 
+
+
+    .points-card {
+      .points-overview {
+        .balance-amount {
+          font-size: $font-size-2xl;
+        }
+
+        .points-actions {
+          flex-direction: column;
+          gap: $spacing-xs;
+        }
+      }
+
+      .points-stats {
+        grid-template-columns: 1fr;
+        gap: $spacing-sm;
+
+        .stat-item {
+          padding: $spacing-sm;
+        }
+      }
+    }
+
     .account-stats {
-      grid-template-columns: repeat(3, 1fr);
+      grid-template-columns: 1fr;
       gap: $spacing-sm;
 
       .stat-item {
-        padding: $spacing-sm;
+        padding: $spacing-md;
 
         .stat-value {
-          font-size: $font-size-lg;
+          font-size: $font-size-xl;
         }
       }
     }

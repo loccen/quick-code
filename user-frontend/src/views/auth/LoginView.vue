@@ -127,8 +127,9 @@ import ModernCard from '@/components/ui/ModernCard.vue'
 import { useAppStore } from '@/stores/app'
 import { useUserStore } from '@/stores/user'
 import type { LoginRequest } from '@/types/user'
+import { performSmartRedirect } from '@/utils/redirect'
 import { Loading, Lock, User, WarningFilled } from '@element-plus/icons-vue'
-import { ElForm, ElMessage } from 'element-plus'
+import { ElForm } from 'element-plus'
 import { onMounted, reactive, ref } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 
@@ -178,11 +179,12 @@ const handleLogin = async () => {
     const success = await userStore.login(loginForm)
 
     if (success) {
-      ElMessage.success('登录成功')
-
-      // 获取重定向路径
-      const redirect = route.query.redirect as string || '/user/profile'
-      router.push(redirect)
+      // 执行智能重定向
+      performSmartRedirect(
+        router,
+        route.query.redirect as string,
+        '/user/profile'
+      )
     } else {
       errorMessage.value = '用户名或密码错误'
     }
@@ -199,9 +201,13 @@ onMounted(() => {
   // 设置页面标题
   appStore.setPageTitle('用户登录')
 
-  // 如果已登录，重定向到个人中心
+  // 如果已登录，执行智能重定向
   if (userStore.isAuthenticated) {
-    router.push('/user/profile')
+    performSmartRedirect(
+      router,
+      route.query.redirect as string,
+      '/user/profile'
+    )
   }
 })
 </script>

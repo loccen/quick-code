@@ -141,6 +141,7 @@ import ModernCard from '@/components/ui/ModernCard.vue'
 import { useAppStore } from '@/stores/app'
 import { useUserStore } from '@/stores/user'
 import type { RegisterRequest } from '@/types/user'
+import { performSmartRedirect } from '@/utils/redirect'
 import { Key, Loading, Lock, Message, User } from '@element-plus/icons-vue'
 import { ElForm, ElMessage } from 'element-plus'
 import { reactive, ref } from 'vue'
@@ -244,9 +245,12 @@ const handleRegister = async () => {
     const success = await userStore.register(registerForm)
 
     if (success) {
-      // 注册成功后，用户已自动登录，处理重定向
-      const redirect = route.query.redirect as string || '/user/profile'
-      router.push(redirect)
+      // 注册成功后，用户已自动登录，执行智能重定向
+      performSmartRedirect(
+        router,
+        route.query.redirect as string,
+        '/user/profile'
+      )
     }
   } catch (error) {
     console.error('注册失败:', error)

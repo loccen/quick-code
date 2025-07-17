@@ -15,8 +15,6 @@
             <ul class="nav-links">
               <li><router-link to="/" class="nav-link" :class="{ active: $route.path === '/' }">首页</router-link></li>
               <li><router-link to="/market" class="nav-link" :class="{ active: $route.path === '/market' }">项目市场</router-link></li>
-              <li><a href="#" class="nav-link">上传项目</a></li>
-              <li><a href="#" class="nav-link">我的项目</a></li>
             </ul>
           </div>
 
@@ -31,13 +29,50 @@
 
           <div class="nav-user">
             <div class="user-actions" v-if="!userStore.isAuthenticated">
-              <router-link to="/login" class="btn btn-outline">登录</router-link>
-              <router-link to="/register" class="btn btn-primary">注册</router-link>
+              <router-link :to="generateLoginUrlWithRedirect()" class="btn btn-outline">登录</router-link>
+              <router-link :to="generateRegisterUrlWithRedirect()" class="btn btn-primary">注册</router-link>
             </div>
 
             <div class="user-actions" v-else>
-              <span class="username">{{ userStore.user?.username || '用户' }}</span>
-              <button class="btn btn-outline" @click="handleLogout">退出登录</button>
+              <el-dropdown class="user-dropdown" @command="handleUserCommand">
+                <div class="user-info">
+                  <el-avatar
+                    :src="userStore.user?.avatarUrl"
+                    :size="32"
+                    class="user-avatar"
+                  >
+                    <el-icon><User /></el-icon>
+                  </el-avatar>
+                  <span class="user-name">
+                    {{ userStore.user?.nickname || userStore.user?.username || '用户' }}
+                  </span>
+                  <el-icon class="dropdown-icon"><ArrowDown /></el-icon>
+                </div>
+                <template #dropdown>
+                  <el-dropdown-menu>
+                    <el-dropdown-item command="profile">
+                      <el-icon><User /></el-icon>
+                      个人中心
+                    </el-dropdown-item>
+                    <el-dropdown-item command="my-projects">
+                      <el-icon><FolderOpened /></el-icon>
+                      我的项目
+                    </el-dropdown-item>
+                    <el-dropdown-item command="upload-project">
+                      <el-icon><Upload /></el-icon>
+                      上传项目
+                    </el-dropdown-item>
+                    <el-dropdown-item command="my-orders">
+                      <el-icon><ShoppingCart /></el-icon>
+                      我的订单
+                    </el-dropdown-item>
+                    <el-dropdown-item divided command="logout">
+                      <el-icon><SwitchButton /></el-icon>
+                      退出登录
+                    </el-dropdown-item>
+                  </el-dropdown-menu>
+                </template>
+              </el-dropdown>
             </div>
           </div>
 
@@ -59,13 +94,16 @@
 </template>
 
 <script setup lang="ts">
+import Footer from '@/components/Footer.vue'
 import { useUserStore } from '@/stores/user'
+import { generateLoginUrl, generateRegisterUrl } from '@/utils/redirect'
+import { ArrowDown, FolderOpened, ShoppingCart, SwitchButton, Upload, User } from '@element-plus/icons-vue'
 import { ElMessage } from 'element-plus'
 import { ref } from 'vue'
-import { useRouter } from 'vue-router'
-import Footer from '@/components/Footer.vue'
+import { useRoute, useRouter } from 'vue-router'
 
 const router = useRouter()
+const route = useRoute()
 const userStore = useUserStore()
 
 // 响应式数据
@@ -89,6 +127,43 @@ const handleSearch = () => {
  */
 const toggleMobileMenu = () => {
   mobileMenuOpen.value = !mobileMenuOpen.value
+}
+
+/**
+ * 处理用户菜单命令
+ */
+const handleUserCommand = (command: string) => {
+  switch (command) {
+    case 'profile':
+      router.push('/user/profile')
+      break
+    case 'my-projects':
+      router.push('/user/my-projects')
+      break
+    case 'upload-project':
+      router.push('/upload')
+      break
+    case 'my-orders':
+      router.push('/user/my-orders')
+      break
+    case 'logout':
+      handleLogout()
+      break
+  }
+}
+
+/**
+ * 生成带redirect参数的登录URL
+ */
+const generateLoginUrlWithRedirect = () => {
+  return generateLoginUrl(route.fullPath)
+}
+
+/**
+ * 生成带redirect参数的注册URL
+ */
+const generateRegisterUrlWithRedirect = () => {
+  return generateRegisterUrl(route.fullPath)
 }
 
 /**
@@ -278,24 +353,41 @@ const handleLogout = async () => {
           }
         }
 
-        .user-info {
-          display: flex;
-          align-items: center;
-          gap: $spacing-sm;
-          padding: $spacing-sm $spacing-md;
-          border-radius: $radius-lg;
-          background: rgba(255, 255, 255, 0.1);
-          backdrop-filter: $glass-blur-sm;
-          cursor: pointer;
-          transition: all 0.3s ease;
+        .user-dropdown {
+          .user-info {
+            display: flex;
+            align-items: center;
+            gap: $spacing-sm;
+            padding: $spacing-sm $spacing-md;
+            border-radius: $radius-lg;
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: $glass-blur-sm;
+            cursor: pointer;
+            transition: all 0.3s ease;
 
-          &:hover {
-            background: rgba(255, 255, 255, 0.2);
-          }
+            &:hover {
+              background: rgba(255, 255, 255, 0.2);
+            }
 
-          .username {
-            font-weight: 500;
-            color: $text-primary;
+            .user-avatar {
+              border: 2px solid rgba(255, 255, 255, 0.3);
+            }
+
+            .user-name {
+              font-weight: 500;
+              color: $text-primary;
+              font-size: $font-size-sm;
+            }
+
+            .dropdown-icon {
+              color: $text-secondary;
+              font-size: $font-size-xs;
+              transition: transform 0.3s ease;
+            }
+
+            &:hover .dropdown-icon {
+              transform: rotate(180deg);
+            }
           }
         }
       }

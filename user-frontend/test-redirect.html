@@ -1,0 +1,151 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>智能跳转功能测试</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+            line-height: 1.6;
+        }
+        .test-case {
+            background: #f5f5f5;
+            padding: 15px;
+            margin: 10px 0;
+            border-radius: 5px;
+            border-left: 4px solid #007bff;
+        }
+        .test-case h3 {
+            margin-top: 0;
+            color: #007bff;
+        }
+        .test-link {
+            display: inline-block;
+            background: #007bff;
+            color: white;
+            padding: 8px 16px;
+            text-decoration: none;
+            border-radius: 4px;
+            margin: 5px 5px 5px 0;
+        }
+        .test-link:hover {
+            background: #0056b3;
+        }
+        .expected {
+            background: #e8f5e8;
+            padding: 10px;
+            border-radius: 4px;
+            margin-top: 10px;
+        }
+        .note {
+            background: #fff3cd;
+            padding: 10px;
+            border-radius: 4px;
+            margin: 20px 0;
+            border-left: 4px solid #ffc107;
+        }
+    </style>
+</head>
+<body>
+    <h1>🧪 智能跳转功能测试页面</h1>
+    
+    <div class="note">
+        <strong>测试说明：</strong>
+        <p>请在<strong>未登录状态</strong>下测试以下链接，检查是否正确带上了redirect参数。</p>
+        <p>测试完成后，请登录验证是否能正确跳转回原页面。</p>
+    </div>
+
+    <div class="test-case">
+        <h3>测试1: 项目市场页面登录按钮</h3>
+        <p>访问项目市场页面，点击Header中的"登录"按钮</p>
+        <a href="http://localhost:3000/market" class="test-link" target="_blank">访问项目市场</a>
+        <div class="expected">
+            <strong>期望结果：</strong> 点击登录按钮后，URL应该是：<br>
+            <code>http://localhost:3000/login?redirect=%2Fmarket</code>
+        </div>
+    </div>
+
+    <div class="test-case">
+        <h3>测试2: 项目详情页面登录按钮</h3>
+        <p>访问项目详情页面，点击Header中的"登录"按钮</p>
+        <a href="http://localhost:3000/market/project/1" class="test-link" target="_blank">访问项目详情</a>
+        <div class="expected">
+            <strong>期望结果：</strong> 点击登录按钮后，URL应该是：<br>
+            <code>http://localhost:3000/login?redirect=%2Fmarket%2Fproject%2F1</code>
+        </div>
+    </div>
+
+    <div class="test-case">
+        <h3>测试3: 项目详情页面内的登录链接</h3>
+        <p>访问项目详情页面，点击页面内的"登录"链接</p>
+        <a href="http://localhost:3000/market/project/1" class="test-link" target="_blank">访问项目详情</a>
+        <div class="expected">
+            <strong>期望结果：</strong> 点击页面内的登录链接后，URL应该是：<br>
+            <code>http://localhost:3000/login?redirect=%2Fmarket%2Fproject%2F1</code>
+        </div>
+    </div>
+
+    <div class="test-case">
+        <h3>测试4: 项目详情页面购买按钮</h3>
+        <p>访问项目详情页面，点击"立即购买"按钮（未登录状态）</p>
+        <a href="http://localhost:3000/market/project/1" class="test-link" target="_blank">访问项目详情</a>
+        <div class="expected">
+            <strong>期望结果：</strong> 点击购买按钮后，应该跳转到：<br>
+            <code>http://localhost:3000/login?redirect=%2Fmarket%2Fproject%2F1</code>
+        </div>
+    </div>
+
+    <div class="test-case">
+        <h3>测试5: 项目详情页面演示按钮</h3>
+        <p>访问项目详情页面，点击"在线演示"按钮（未登录状态）</p>
+        <a href="http://localhost:3000/market/project/1" class="test-link" target="_blank">访问项目详情</a>
+        <div class="expected">
+            <strong>期望结果：</strong> 点击演示按钮后，应该跳转到：<br>
+            <code>http://localhost:3000/login?redirect=%2Fmarket%2Fproject%2F1</code>
+        </div>
+    </div>
+
+    <div class="test-case">
+        <h3>测试6: 项目市场页面购买按钮</h3>
+        <p>访问项目市场页面，点击项目卡片上的购买按钮（未登录状态）</p>
+        <a href="http://localhost:3000/market" class="test-link" target="_blank">访问项目市场</a>
+        <div class="expected">
+            <strong>期望结果：</strong> 点击购买按钮后，应该跳转到：<br>
+            <code>http://localhost:3000/login?redirect=%2Fmarket%2Fproject%2F{项目ID}</code>
+        </div>
+    </div>
+
+    <div class="test-case">
+        <h3>测试7: 用户页面访问</h3>
+        <p>直接访问需要登录的用户页面</p>
+        <a href="http://localhost:3000/user/profile" class="test-link" target="_blank">个人中心</a>
+        <a href="http://localhost:3000/user/my-projects" class="test-link" target="_blank">我的项目</a>
+        <a href="http://localhost:3000/user/my-orders" class="test-link" target="_blank">我的订单</a>
+        <div class="expected">
+            <strong>期望结果：</strong> 应该自动跳转到对应的登录页面：<br>
+            <code>http://localhost:3000/login?redirect=%2Fuser%2Fprofile</code><br>
+            <code>http://localhost:3000/login?redirect=%2Fuser%2Fmy-projects</code><br>
+            <code>http://localhost:3000/login?redirect=%2Fuser%2Fmy-orders</code>
+        </div>
+    </div>
+
+    <div class="note">
+        <strong>登录后验证：</strong>
+        <p>完成上述测试后，请使用测试账号登录，验证是否能正确跳转回原页面。</p>
+        <p><strong>测试账号：</strong> test@example.com / password123</p>
+    </div>
+
+    <h2>🔧 修复内容总结</h2>
+    <ul>
+        <li>✅ 修复了Header中登录/注册按钮的redirect参数问题</li>
+        <li>✅ 修复了项目详情页面内登录链接的redirect参数问题</li>
+        <li>✅ 确保了项目市场和项目详情页面的所有登录入口都正确传递redirect参数</li>
+        <li>✅ 购买和演示按钮在未登录时正确跳转到带redirect的登录页面</li>
+        <li>✅ 路由守卫自动为需要登录的页面添加redirect参数</li>
+    </ul>
+</body>
+</html>

@@ -35,5 +35,5 @@ export default router
 
 // 导出路由相关工具
 export { createAuthGuard, createPermissionGuard, createRoleGuard, setupRouterGuards } from './guards'
-export { basicRoutes, dynamicRoutes, mainRoutes, publicRoutes, routes } from './routes'
+export { basicRoutes, dynamicRoutes, publicRoutes, routes, userRoutes } from './routes'
 

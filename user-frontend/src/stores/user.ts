@@ -146,8 +146,8 @@ export const useUserStore = defineStore('user', () => {
       clearUserState()
       ElMessage.success('已退出登录')
 
-      // 跳转到登录页
-      window.location.href = '/login'
+      // 跳转到首页
+      window.location.href = '/'
     }
   }
 

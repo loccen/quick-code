@@ -1,9 +1,11 @@
 <template>
   <div class="my-orders-view">
-    <div class="page-header">
-      <h1 class="page-title">我的订单</h1>
-      <p class="page-subtitle">查看您的购买记录和订单状态</p>
-    </div>
+    <!-- 页面容器 -->
+    <div class="container">
+      <div class="page-header">
+        <h1 class="page-title">我的订单</h1>
+        <p class="page-subtitle">查看您的购买记录和订单状态</p>
+      </div>
 
     <!-- 订单筛选 -->
     <div class="filter-section">
@@ -138,15 +140,16 @@
       <el-empty description="暂无订单记录" />
     </div>
 
-    <!-- 分页 -->
-    <div v-if="totalPages > 1" class="pagination-container">
-      <el-pagination
-        v-model:current-page="currentPage"
-        v-model:page-size="pageSize"
-        :total="totalElements"
-        layout="total, prev, pager, next"
-        @current-change="handlePageChange"
-      />
+      <!-- 分页 -->
+      <div v-if="totalPages > 1" class="pagination-container">
+        <el-pagination
+          v-model:current-page="currentPage"
+          v-model:page-size="pageSize"
+          :total="totalElements"
+          layout="total, prev, pager, next"
+          @current-change="handlePageChange"
+        />
+      </div>
     </div>
   </div>
 </template>
@@ -344,6 +347,23 @@ onMounted(() => {
 @use '@/styles/mixins' as *;
 
 .my-orders-view {
+  min-height: calc(100vh - 200px);
+  padding: $spacing-xl 0;
+
+  .container {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 0 $spacing-lg;
+
+    @include respond-below('lg') {
+      padding: 0 $spacing-md;
+    }
+
+    @include respond-below('md') {
+      padding: 0 $spacing-sm;
+    }
+  }
+
   .page-header {
     margin-bottom: $spacing-xl;
 

@@ -87,7 +87,7 @@
             
             <div v-if="!userStore.isAuthenticated" class="login-tip">
               <p>
-                <router-link to="/login" class="login-link">登录</router-link>
+                <router-link :to="{ path: '/login', query: { redirect: route.fullPath } }" class="login-link">登录</router-link>
                 后即可购买和体验项目
               </p>
             </div>

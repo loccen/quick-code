@@ -107,9 +107,17 @@
                   <el-icon><User /></el-icon>
                   个人中心
                 </el-dropdown-item>
-                <el-dropdown-item command="settings">
-                  <el-icon><Setting /></el-icon>
-                  系统设置
+                <el-dropdown-item command="my-projects">
+                  <el-icon><FolderOpened /></el-icon>
+                  我的项目
+                </el-dropdown-item>
+                <el-dropdown-item command="upload-project">
+                  <el-icon><Upload /></el-icon>
+                  上传项目
+                </el-dropdown-item>
+                <el-dropdown-item command="my-orders">
+                  <el-icon><ShoppingCart /></el-icon>
+                  我的订单
                 </el-dropdown-item>
                 <el-dropdown-item divided command="logout">
                   <el-icon><SwitchButton /></el-icon>
@@ -208,8 +216,10 @@ import {
     Menu,
     Moon, MoreFilled,
     Setting,
+    ShoppingCart,
     Sunny,
     SwitchButton,
+    Upload,
     User
 } from '@element-plus/icons-vue'
 import { ElMessageBox } from 'element-plus'
@@ -251,10 +261,16 @@ const toggleTheme = () => {
 const handleUserCommand = async (command: string) => {
   switch (command) {
     case 'profile':
-      router.push('/profile')
+      router.push('/user/profile')
       break
-    case 'settings':
-      router.push('/settings')
+    case 'my-projects':
+      router.push('/user/my-projects')
+      break
+    case 'upload-project':
+      router.push('/upload')
+      break
+    case 'my-orders':
+      router.push('/user/my-orders')
       break
     case 'logout':
       try {

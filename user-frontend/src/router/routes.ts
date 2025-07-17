@@ -113,13 +113,13 @@ export const publicRoutes: RouteRecordRaw[] = [
 ]
 
 /**
- * 主要路由（需要认证）
+ * 用户相关路由（使用公共布局）
  */
-export const mainRoutes: RouteRecordRaw[] = [
+export const userRoutes: RouteRecordRaw[] = [
   {
     path: '/user',
     name: 'UserLayout',
-    component: () => import('@/layouts/MainLayout.vue'),
+    component: () => import('@/layouts/PublicLayout.vue'),
     redirect: '/user/profile',
     meta: {
       requiresAuth: true
@@ -132,30 +132,17 @@ export const mainRoutes: RouteRecordRaw[] = [
         meta: {
           title: '个人中心',
           icon: 'User',
-          requiresAuth: true,
-          hidden: true
-        }
-      },
-      {
-        path: 'settings',
-        name: 'Settings',
-        component: () => import('@/views/user/SettingsView.vue'),
-        meta: {
-          title: '系统设置',
-          icon: 'Setting',
-          requiresAuth: true,
-          hidden: true
+          requiresAuth: true
         }
       },
       {
         path: 'my-projects',
         name: 'MyProjects',
-        component: () => import('@/views/project/MyProjectsView.vue'),
+        component: () => import('@/views/user/MyProjectsView.vue'),
         meta: {
           title: '我的项目',
           icon: 'FolderOpened',
-          requiresAuth: true,
-          permissions: ['project:view']
+          requiresAuth: true
         }
       },
       {
@@ -184,51 +171,11 @@ export const mainRoutes: RouteRecordRaw[] = [
 
 /**
  * 动态路由（根据权限加载）
+ * 注意：管理员功能由独立的 admin-frontend 项目提供
  */
 export const dynamicRoutes: RouteRecordRaw[] = [
-  {
-    path: '/admin',
-    name: 'Admin',
-    component: () => import('@/layouts/MainLayout.vue'),
-    meta: {
-      title: '系统管理',
-      icon: 'Setting',
-      requiresAuth: true,
-      roles: ['admin']
-    },
-    children: [
-      {
-        path: 'users',
-        name: 'UserManagement',
-        component: () => import('@/views/admin/UserManagementView.vue'),
-        meta: {
-          title: '用户管理',
-          requiresAuth: true,
-          permissions: ['user:manage']
-        }
-      },
-      {
-        path: 'roles',
-        name: 'RoleManagement',
-        component: () => import('@/views/admin/RoleManagementView.vue'),
-        meta: {
-          title: '角色管理',
-          requiresAuth: true,
-          permissions: ['role:manage']
-        }
-      },
-      {
-        path: 'permissions',
-        name: 'PermissionManagement',
-        component: () => import('@/views/admin/PermissionManagementView.vue'),
-        meta: {
-          title: '权限管理',
-          requiresAuth: true,
-          permissions: ['permission:manage']
-        }
-      }
-    ]
-  }
+  // 当前用户端不包含管理员路由
+  // 所有管理功能都在 admin-frontend 项目中实现
 ]
 
 /**
@@ -237,7 +184,7 @@ export const dynamicRoutes: RouteRecordRaw[] = [
 export const routes: RouteRecordRaw[] = [
   ...basicRoutes,
   ...publicRoutes,
-  ...mainRoutes,
+  ...userRoutes,
   ...dynamicRoutes,
   // 404路由必须放在最后
   {

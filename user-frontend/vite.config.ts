@@ -45,7 +45,6 @@ export default defineConfig(({ command, mode }) => {
     server: {
       host: '0.0.0.0',
       port: parseInt(env.VITE_DEV_PORT) || 3000,
-      open: true,
       cors: true,
       proxy: {
         '/api': {
