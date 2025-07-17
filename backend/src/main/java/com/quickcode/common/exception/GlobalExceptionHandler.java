@@ -295,6 +295,9 @@ public class GlobalExceptionHandler {
     public ResponseEntity<ApiResponse<Object>> handleDuplicateResourceException(DuplicateResourceException e, HttpServletRequest request) {
         log.warn("资源重复异常: {}", e.getMessage());
 
+        // 记录异常统计
+        recordExceptionStatistics(e.getClass().getSimpleName(), e.getCode());
+
         ApiResponse<Object> response = ApiResponse.error(e.getCode(), e.getMessage());
         // 业务逻辑错误返回200状态码，让前端正常处理响应体中的错误信息
         return ResponseEntity.ok(response);
@@ -306,6 +309,9 @@ public class GlobalExceptionHandler {
     @ExceptionHandler(InvalidStateException.class)
     public ResponseEntity<ApiResponse<Object>> handleInvalidStateException(InvalidStateException e, HttpServletRequest request) {
         log.warn("状态无效异常: {}", e.getMessage());
+
+        // 记录异常统计
+        recordExceptionStatistics(e.getClass().getSimpleName(), e.getCode());
 
         ApiResponse<Object> response = ApiResponse.error(e.getCode(), e.getMessage());
         // 业务逻辑错误返回200状态码，让前端正常处理响应体中的错误信息

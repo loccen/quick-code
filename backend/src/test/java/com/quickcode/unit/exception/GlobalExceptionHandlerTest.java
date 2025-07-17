@@ -53,7 +53,7 @@ class GlobalExceptionHandlerTest {
             ResponseEntity<ApiResponse<Object>> response = exceptionHandler.handleAuthenticationFailedException(exception, request);
 
             // Assert
-            assertThat(response.getStatusCode()).isEqualTo(HttpStatus.UNAUTHORIZED);
+            assertThat(response.getStatusCode()).isEqualTo(HttpStatus.OK);
             assertThat(response.getBody()).isNotNull();
             assertThat(response.getBody().getCode()).isEqualTo(ErrorCode.PASSWORD_MISMATCH);
             assertThat(response.getBody().getMessage()).isEqualTo(ErrorCode.getDefaultMessage(ErrorCode.PASSWORD_MISMATCH));
@@ -70,7 +70,7 @@ class GlobalExceptionHandlerTest {
             ResponseEntity<ApiResponse<Object>> response = exceptionHandler.handleAuthenticationFailedException(exception, request);
 
             // Assert
-            assertThat(response.getStatusCode()).isEqualTo(HttpStatus.UNAUTHORIZED);
+            assertThat(response.getStatusCode()).isEqualTo(HttpStatus.OK);
             assertThat(response.getBody()).isNotNull();
             assertThat(response.getBody().getCode()).isEqualTo(ErrorCode.EMAIL_CODE_INVALID);
             assertThat(response.getBody().getMessage()).isEqualTo(ErrorCode.getDefaultMessage(ErrorCode.EMAIL_CODE_INVALID));
@@ -86,7 +86,7 @@ class GlobalExceptionHandlerTest {
             ResponseEntity<ApiResponse<Object>> response = exceptionHandler.handleAuthenticationFailedException(exception, request);
 
             // Assert
-            assertThat(response.getStatusCode()).isEqualTo(HttpStatus.UNAUTHORIZED);
+            assertThat(response.getStatusCode()).isEqualTo(HttpStatus.OK);
             assertThat(response.getBody()).isNotNull();
             assertThat(response.getBody().getCode()).isEqualTo(ErrorCode.TERMS_NOT_AGREED);
             assertThat(response.getBody().getMessage()).isEqualTo(ErrorCode.getDefaultMessage(ErrorCode.TERMS_NOT_AGREED));
@@ -107,7 +107,7 @@ class GlobalExceptionHandlerTest {
             ResponseEntity<ApiResponse<Object>> response = exceptionHandler.handleDuplicateResourceException(exception, request);
 
             // Assert
-            assertThat(response.getStatusCode()).isEqualTo(HttpStatus.CONFLICT);
+            assertThat(response.getStatusCode()).isEqualTo(HttpStatus.OK);
             assertThat(response.getBody()).isNotNull();
             assertThat(response.getBody().getCode()).isEqualTo(ErrorCode.USERNAME_EXISTS);
             assertThat(response.getBody().getMessage()).isEqualTo("用户名已存在: testuser");
@@ -124,7 +124,7 @@ class GlobalExceptionHandlerTest {
             ResponseEntity<ApiResponse<Object>> response = exceptionHandler.handleDuplicateResourceException(exception, request);
 
             // Assert
-            assertThat(response.getStatusCode()).isEqualTo(HttpStatus.CONFLICT);
+            assertThat(response.getStatusCode()).isEqualTo(HttpStatus.OK);
             assertThat(response.getBody()).isNotNull();
             assertThat(response.getBody().getCode()).isEqualTo(ErrorCode.EMAIL_EXISTS);
             assertThat(response.getBody().getMessage()).isEqualTo("邮箱已存在: test@example.com");
@@ -145,7 +145,7 @@ class GlobalExceptionHandlerTest {
             ResponseEntity<ApiResponse<Object>> response = exceptionHandler.handleInvalidStateException(exception, request);
 
             // Assert
-            assertThat(response.getStatusCode()).isEqualTo(HttpStatus.BAD_REQUEST);
+            assertThat(response.getStatusCode()).isEqualTo(HttpStatus.OK);
             assertThat(response.getBody()).isNotNull();
             assertThat(response.getBody().getCode()).isEqualTo(ErrorCode.USER_DISABLED);
             assertThat(response.getBody().getMessage()).isEqualTo(ErrorCode.getDefaultMessage(ErrorCode.USER_DISABLED));
@@ -161,7 +161,7 @@ class GlobalExceptionHandlerTest {
             ResponseEntity<ApiResponse<Object>> response = exceptionHandler.handleInvalidStateException(exception, request);
 
             // Assert
-            assertThat(response.getStatusCode()).isEqualTo(HttpStatus.BAD_REQUEST);
+            assertThat(response.getStatusCode()).isEqualTo(HttpStatus.OK);
             assertThat(response.getBody()).isNotNull();
             assertThat(response.getBody().getCode()).isEqualTo(ErrorCode.USER_LOCKED);
             assertThat(response.getBody().getMessage()).isEqualTo(ErrorCode.getDefaultMessage(ErrorCode.USER_LOCKED));
@@ -177,7 +177,7 @@ class GlobalExceptionHandlerTest {
             ResponseEntity<ApiResponse<Object>> response = exceptionHandler.handleInvalidStateException(exception, request);
 
             // Assert
-            assertThat(response.getStatusCode()).isEqualTo(HttpStatus.BAD_REQUEST);
+            assertThat(response.getStatusCode()).isEqualTo(HttpStatus.OK);
             assertThat(response.getBody()).isNotNull();
             assertThat(response.getBody().getCode()).isEqualTo(ErrorCode.EMAIL_ALREADY_VERIFIED);
             assertThat(response.getBody().getMessage()).isEqualTo(ErrorCode.getDefaultMessage(ErrorCode.EMAIL_ALREADY_VERIFIED));
