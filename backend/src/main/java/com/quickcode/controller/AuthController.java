@@ -9,7 +9,9 @@ import org.springframework.web.bind.annotation.RestController;
 import com.quickcode.common.response.ApiResponse;
 import com.quickcode.dto.auth.JwtResponse;
 import com.quickcode.dto.auth.LoginRequest;
+import com.quickcode.dto.auth.LoginResponse;
 import com.quickcode.dto.auth.RegisterRequest;
+import com.quickcode.dto.auth.TwoFactorLoginRequest;
 import com.quickcode.service.AuthService;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.Valid;
@@ -47,14 +49,30 @@ public class AuthController extends BaseController {
     }
 
     /**
-     * 用户登录
+     * 用户登录（第一步：用户名密码验证）
      */
     @PostMapping("/login")
-    public ApiResponse<JwtResponse> login(@Valid @RequestBody LoginRequest request,
-                                         HttpServletRequest httpRequest) {
+    public ApiResponse<LoginResponse> login(@Valid @RequestBody LoginRequest request,
+                                           HttpServletRequest httpRequest) {
         log.info("用户登录请求: {}", request.getUsernameOrEmail());
 
-        JwtResponse response = authService.login(request);
+        LoginResponse response = authService.login(request);
+
+        if (response.isRequiresTwoFactor()) {
+            return success(response, "需要双因素认证验证");
+        } else {
+            return success(response, "登录成功");
+        }
+    }
+
+    /**
+     * 双因素认证登录（第二步：TOTP验证码验证）
+     */
+    @PostMapping("/login/2fa")
+    public ApiResponse<JwtResponse> loginWithTwoFactor(@Valid @RequestBody TwoFactorLoginRequest request) {
+        log.info("双因素认证登录请求: userId={}", request.getUserId());
+
+        JwtResponse response = authService.loginWithTwoFactor(request);
         return success(response, "登录成功");
     }
 

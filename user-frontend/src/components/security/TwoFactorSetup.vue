@@ -36,24 +36,7 @@
         </div>
       </div>
 
-      <!-- 备用恢复码信息 -->
-      <div v-if="twoFactorStatus.enabled" class="backup-codes-info">
-        <div class="backup-header">
-          <el-icon><Key /></el-icon>
-          <span>备用恢复码</span>
-        </div>
-        <p class="backup-desc">
-          您有 {{ twoFactorStatus.backupCodesCount }} 个备用恢复码可用
-        </p>
-        <ModernButton
-          size="small"
-          @click="generateNewBackupCodes"
-          :loading="generatingCodes"
-          data-testid="generate-backup-codes-button"
-        >
-          生成新的恢复码
-        </ModernButton>
-      </div>
+
     </div>
 
     <!-- 2FA设置流程 -->
@@ -63,7 +46,6 @@
         <el-steps :active="currentStep" align-center>
           <el-step title="扫描二维码" />
           <el-step title="验证设置" />
-          <el-step title="保存恢复码" />
         </el-steps>
 
         <!-- 步骤1: 扫描二维码 -->
@@ -75,12 +57,12 @@
             </p>
             
             <div class="qr-container" data-testid="qr-code-container">
-              <div v-if="loading" class="qr-loading">
+              <div v-if="loading || generatingQR" class="qr-loading">
                 <el-icon class="loading-icon"><Loading /></el-icon>
                 <p>正在生成二维码...</p>
               </div>
-              <div v-else-if="setupData?.qrCodeUrl" class="qr-code">
-                <img :src="setupData.qrCodeUrl" alt="2FA QR Code" />
+              <div v-else-if="qrCodeDataUrl" class="qr-code">
+                <img :src="qrCodeDataUrl" alt="2FA QR Code" />
               </div>
               <div v-else class="qr-error">
                 <el-icon><WarningFilled /></el-icon>
@@ -149,61 +131,7 @@
           </div>
         </div>
 
-        <!-- 步骤3: 保存恢复码 -->
-        <div v-if="currentStep === 2" class="step-content">
-          <div class="backup-section">
-            <h3>保存备用恢复码</h3>
-            <p class="step-desc">
-              请将这些恢复码保存在安全的地方。当您无法使用认证应用时，可以使用这些代码登录。
-            </p>
 
-            <div class="backup-codes" data-testid="backup-codes">
-              <div
-                v-for="(code, index) in setupData?.backupCodes"
-                :key="index"
-                class="backup-code"
-              >
-                {{ code }}
-              </div>
-            </div>
-
-            <div class="backup-actions">
-              <ModernButton
-                @click="downloadBackupCodes"
-                data-testid="download-codes-button"
-              >
-                <el-icon><Download /></el-icon>
-                下载恢复码
-              </ModernButton>
-              <ModernButton
-                @click="copyBackupCodes"
-                data-testid="copy-codes-button"
-              >
-                <el-icon><CopyDocument /></el-icon>
-                复制恢复码
-              </ModernButton>
-            </div>
-
-            <el-checkbox
-              v-model="confirmSaved"
-              class="confirm-checkbox"
-              data-testid="confirm-saved-checkbox"
-            >
-              我已安全保存这些恢复码
-            </el-checkbox>
-          </div>
-
-          <div class="step-actions">
-            <ModernButton
-              type="primary"
-              :disabled="!confirmSaved"
-              @click="completeSetup"
-              data-testid="complete-setup-button"
-            >
-              完成设置
-            </ModernButton>
-          </div>
-        </div>
       </div>
     </div>
 
@@ -211,7 +139,7 @@
     <el-dialog
       v-model="showDisableDialog"
       title="禁用双因素认证"
-      width="400px"
+      width="450px"
       :before-close="handleDisableDialogClose"
     >
       <div class="disable-content">
@@ -235,45 +163,21 @@
       </div>
 
       <template #footer>
-        <ModernButton @click="showDisableDialog = false">取消</ModernButton>
-        <ModernButton
-          type="error"
-          :loading="disabling"
-          @click="disableTwoFactor"
-          data-testid="confirm-disable-button"
-        >
-          确认禁用
-        </ModernButton>
-      </template>
-    </el-dialog>
-
-    <!-- 备用恢复码显示对话框 -->
-    <el-dialog
-      v-model="showBackupCodesDialog"
-      title="新的备用恢复码"
-      width="500px"
-    >
-      <div class="new-backup-codes">
-        <p>请保存这些新的备用恢复码，旧的恢复码将失效：</p>
-        <div class="backup-codes">
-          <div
-            v-for="(code, index) in newBackupCodes"
-            :key="index"
-            class="backup-code"
+        <div class="dialog-footer">
+          <ModernButton @click="showDisableDialog = false">取消</ModernButton>
+          <ModernButton
+            type="error"
+            :loading="disabling"
+            @click="disableTwoFactor"
+            data-testid="confirm-disable-button"
           >
-            {{ code }}
-          </div>
+            确认禁用
+          </ModernButton>
         </div>
-      </div>
-
-      <template #footer>
-        <ModernButton @click="downloadNewBackupCodes">下载</ModernButton>
-        <ModernButton @click="copyNewBackupCodes">复制</ModernButton>
-        <ModernButton type="primary" @click="showBackupCodesDialog = false">
-          我已保存
-        </ModernButton>
       </template>
     </el-dialog>
+
+
   </div>
 </template>
 
@@ -287,14 +191,13 @@ import type {
 } from '@/types/user'
 import {
   CopyDocument,
-  Download,
-  Key,
   Loading,
   Lock,
   WarningFilled
 } from '@element-plus/icons-vue'
 import { ElForm, ElMessage } from 'element-plus'
 import { onMounted, reactive, ref } from 'vue'
+import QRCode from 'qrcode'
 
 // 表单引用
 const verifyFormRef = ref<InstanceType<typeof ElForm>>()
@@ -312,7 +215,8 @@ const currentStep = ref(0)
 const loading = ref(false)
 const verifying = ref(false)
 const disabling = ref(false)
-const generatingCodes = ref(false)
+const generatingQR = ref(false)
+const qrCodeDataUrl = ref<string>('')
 
 // 表单数据
 const verifyForm = reactive<TwoFactorVerifyRequest>({
@@ -325,9 +229,6 @@ const disableForm = reactive<TwoFactorVerifyRequest>({
 
 // 对话框状态
 const showDisableDialog = ref(false)
-const showBackupCodesDialog = ref(false)
-const confirmSaved = ref(false)
-const newBackupCodes = ref<string[]>([])
 
 // 表单验证规则
 const verifyRules = {
@@ -359,6 +260,27 @@ const loadTwoFactorStatus = async () => {
   }
 }
 
+// 生成二维码
+const generateQRCode = async (qrCodeUrl: string) => {
+  try {
+    generatingQR.value = true
+    const dataUrl = await QRCode.toDataURL(qrCodeUrl, {
+      width: 200,
+      margin: 2,
+      color: {
+        dark: '#000000',
+        light: '#FFFFFF'
+      }
+    })
+    qrCodeDataUrl.value = dataUrl
+  } catch (error) {
+    console.error('生成二维码失败:', error)
+    ElMessage.error('生成二维码失败')
+  } finally {
+    generatingQR.value = false
+  }
+}
+
 // 开始设置2FA
 const startSetup = async () => {
   try {
@@ -368,6 +290,11 @@ const startSetup = async () => {
       setupData.value = response.data
       showSetup.value = true
       currentStep.value = 0
+
+      // 生成二维码
+      if (response.data.qrCodeUrl) {
+        await generateQRCode(response.data.qrCodeUrl)
+      }
     }
   } catch (error) {
     console.error('获取2FA设置信息失败:', error)
@@ -383,12 +310,12 @@ const cancelSetup = () => {
   currentStep.value = 0
   setupData.value = undefined
   verifyForm.totpCode = ''
-  confirmSaved.value = false
+  qrCodeDataUrl.value = ''
 }
 
 // 下一步
 const nextStep = () => {
-  if (currentStep.value < 2) {
+  if (currentStep.value < 1) {
     currentStep.value++
   }
 }
@@ -408,31 +335,25 @@ const verifySetup = async () => {
     await verifyFormRef.value.validate()
     verifying.value = true
 
-    const response = await userApi.setupTwoFactor({
-      enabled: true,
+    const response = await userApi.enableTwoFactor({
       totpCode: verifyForm.totpCode
     })
 
-    if (response.code === 200 && response.data) {
-      setupData.value = response.data
-      currentStep.value = 2
-      ElMessage.success('2FA验证成功')
+    if (response.code === 200) {
+      // 直接完成设置
+      showSetup.value = false
+      currentStep.value = 0
+      qrCodeDataUrl.value = ''
+      verifyForm.totpCode = ''
+      loadTwoFactorStatus()
+      ElMessage.success('双因素认证启用成功')
     }
   } catch (error) {
-    console.error('2FA验证失败:', error)
+    console.error('2FA启用失败:', error)
     ElMessage.error('验证码错误，请重试')
   } finally {
     verifying.value = false
   }
-}
-
-// 完成设置
-const completeSetup = () => {
-  showSetup.value = false
-  currentStep.value = 0
-  confirmSaved.value = false
-  loadTwoFactorStatus()
-  ElMessage.success('双因素认证设置完成')
 }
 
 // 禁用2FA
@@ -465,24 +386,6 @@ const handleDisableDialogClose = () => {
   showDisableDialog.value = false
 }
 
-// 生成新的备用恢复码
-const generateNewBackupCodes = async () => {
-  try {
-    generatingCodes.value = true
-    const response = await userApi.generateBackupCodes()
-    if (response.code === 200 && response.data) {
-      newBackupCodes.value = response.data.backupCodes
-      showBackupCodesDialog.value = true
-      loadTwoFactorStatus()
-    }
-  } catch (error) {
-    console.error('生成备用恢复码失败:', error)
-    ElMessage.error('生成备用恢复码失败')
-  } finally {
-    generatingCodes.value = false
-  }
-}
-
 // 复制密钥
 const copySecret = async () => {
   if (setupData.value?.secret) {
@@ -494,58 +397,6 @@ const copySecret = async () => {
       ElMessage.error('复制失败')
     }
   }
-}
-
-// 复制备用恢复码
-const copyBackupCodes = async () => {
-  if (setupData.value?.backupCodes) {
-    try {
-      const codes = setupData.value.backupCodes.join('\n')
-      await navigator.clipboard.writeText(codes)
-      ElMessage.success('恢复码已复制到剪贴板')
-    } catch (error) {
-      console.error('复制失败:', error)
-      ElMessage.error('复制失败')
-    }
-  }
-}
-
-// 复制新的备用恢复码
-const copyNewBackupCodes = async () => {
-  try {
-    const codes = newBackupCodes.value.join('\n')
-    await navigator.clipboard.writeText(codes)
-    ElMessage.success('恢复码已复制到剪贴板')
-  } catch (error) {
-    console.error('复制失败:', error)
-    ElMessage.error('复制失败')
-  }
-}
-
-// 下载备用恢复码
-const downloadBackupCodes = () => {
-  if (setupData.value?.backupCodes) {
-    downloadCodes(setupData.value.backupCodes, 'backup-codes.txt')
-  }
-}
-
-// 下载新的备用恢复码
-const downloadNewBackupCodes = () => {
-  downloadCodes(newBackupCodes.value, 'new-backup-codes.txt')
-}
-
-// 下载恢复码文件
-const downloadCodes = (codes: string[], filename: string) => {
-  const content = codes.join('\n')
-  const blob = new Blob([content], { type: 'text/plain' })
-  const url = URL.createObjectURL(blob)
-  const link = document.createElement('a')
-  link.href = url
-  link.download = filename
-  document.body.appendChild(link)
-  link.click()
-  document.body.removeChild(link)
-  URL.revokeObjectURL(url)
 }
 
 // 组件挂载时加载状态
@@ -612,27 +463,7 @@ onMounted(() => {
       }
     }
 
-    .backup-codes-info {
-      @include glass-effect();
-      border: 1px solid var(--glass-border);
-      border-radius: $radius-lg;
-      padding: $spacing-lg;
-      @include shadow-layered-sm();
 
-      .backup-header {
-        @include flex-center();
-        gap: $spacing-xs;
-        margin-bottom: $spacing-sm;
-        font-weight: $font-weight-medium;
-        color: var(--text-primary);
-      }
-
-      .backup-desc {
-        color: var(--text-secondary);
-        font-size: $font-size-sm;
-        margin: 0 0 $spacing-md 0;
-      }
-    }
   }
 
   .setup-section {
@@ -741,46 +572,7 @@ onMounted(() => {
           }
         }
 
-        .backup-section {
-          .backup-codes {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
-            gap: $spacing-sm;
-            margin: $spacing-lg 0;
-            padding: $spacing-lg;
-            background: var(--gradient-glass);
-            border: 1px solid var(--glass-border);
-            border-radius: $radius-lg;
 
-            .backup-code {
-              background: rgba(255, 255, 255, 0.8);
-              border: 1px solid var(--border-light);
-              border-radius: $radius-md;
-              padding: $spacing-sm;
-              text-align: center;
-              font-family: 'Monaco', 'Menlo', 'Ubuntu Mono', monospace;
-              font-size: $font-size-sm;
-              font-weight: $font-weight-medium;
-              color: var(--text-primary);
-            }
-          }
-
-          .backup-actions {
-            @include flex-center();
-            gap: $spacing-sm;
-            margin-bottom: $spacing-lg;
-          }
-
-          .confirm-checkbox {
-            @include flex-center();
-            margin-top: $spacing-lg;
-
-            :deep(.el-checkbox__label) {
-              color: var(--text-primary);
-              font-weight: $font-weight-medium;
-            }
-          }
-        }
 
         .step-actions {
           @include flex-between();
@@ -806,30 +598,14 @@ onMounted(() => {
     }
   }
 
-  .new-backup-codes {
-    .backup-codes {
-      display: grid;
-      grid-template-columns: repeat(2, 1fr);
-      gap: $spacing-sm;
-      margin: $spacing-lg 0;
-      padding: $spacing-lg;
-      background: var(--gradient-glass);
-      border: 1px solid var(--glass-border);
-      border-radius: $radius-lg;
-
-      .backup-code {
-        background: rgba(255, 255, 255, 0.8);
-        border: 1px solid var(--border-light);
-        border-radius: $radius-md;
-        padding: $spacing-sm;
-        text-align: center;
-        font-family: 'Monaco', 'Menlo', 'Ubuntu Mono', monospace;
-        font-size: $font-size-sm;
-        font-weight: $font-weight-medium;
-        color: var(--text-primary);
-      }
-    }
+  .dialog-footer {
+    display: flex;
+    justify-content: flex-end;
+    gap: $spacing-md;
+    padding-top: $spacing-sm;
   }
+
+
 }
 
 // 动画
@@ -863,15 +639,7 @@ onMounted(() => {
           }
         }
 
-        .backup-section {
-          .backup-codes {
-            grid-template-columns: 1fr;
-          }
 
-          .backup-actions {
-            flex-direction: column;
-          }
-        }
 
         .step-actions {
           flex-direction: column;
@@ -880,9 +648,12 @@ onMounted(() => {
       }
     }
 
-    .new-backup-codes {
-      .backup-codes {
-        grid-template-columns: 1fr;
+    .dialog-footer {
+      flex-direction: column;
+      gap: $spacing-sm;
+
+      .modern-button {
+        width: 100%;
       }
     }
   }

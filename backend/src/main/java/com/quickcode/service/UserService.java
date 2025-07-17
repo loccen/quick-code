@@ -76,14 +76,19 @@ public interface UserService extends BaseService<User, Long> {
   void verifyEmail(Long userId);
 
   /**
-   * 启用双因素认证
+   * 生成双因素认证设置信息（不立即启用）
    */
-  String enableTwoFactor(Long userId);
+  String generateTwoFactorSecret(Long userId);
 
   /**
-   * 禁用双因素认证
+   * 启用双因素认证（需要验证TOTP代码）
    */
-  void disableTwoFactor(Long userId);
+  void enableTwoFactor(Long userId, String totpCode);
+
+  /**
+   * 禁用双因素认证（需要验证TOTP代码）
+   */
+  void disableTwoFactor(Long userId, String totpCode);
 
   /**
    * 验证双因素认证码

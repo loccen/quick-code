@@ -25,6 +25,7 @@
         <jwt.version>0.12.3</jwt.version>
         <minio.version>8.5.7</minio.version>
         <springdoc.version>2.3.0</springdoc.version>
+        <totp.version>1.7.1</totp.version>
     </properties>
 
     <dependencies>
@@ -127,6 +128,13 @@
             <groupId>cn.hutool</groupId>
             <artifactId>hutool-all</artifactId>
             <version>5.8.24</version>
+        </dependency>
+
+        <!-- TOTP 双因素认证 -->
+        <dependency>
+            <groupId>dev.samstevens.totp</groupId>
+            <artifactId>totp</artifactId>
+            <version>${totp.version}</version>
         </dependency>
 
         <!-- Lombok -->

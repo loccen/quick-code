@@ -4,9 +4,11 @@
  */
 import type { ApiResponse } from '@/types/api'
 import type {
+    JwtResponse,
     LoginRequest,
     LoginResponse,
     RegisterRequest,
+    TwoFactorLoginRequest,
     TwoFactorVerifyRequest
 } from '@/types/user'
 import { request } from '../request'
@@ -40,6 +42,13 @@ export const authApi = {
    */
   logout(): Promise<ApiResponse<void>> {
     return request.post('/auth/logout')
+  },
+
+  /**
+   * 双因素认证登录（第二步：TOTP验证码验证）
+   */
+  loginWithTwoFactor(data: TwoFactorLoginRequest): Promise<ApiResponse<JwtResponse>> {
+    return request.post('/auth/login/2fa', data)
   },
 
   /**

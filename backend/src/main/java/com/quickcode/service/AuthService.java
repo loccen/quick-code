@@ -2,7 +2,9 @@ package com.quickcode.service;
 
 import com.quickcode.dto.auth.JwtResponse;
 import com.quickcode.dto.auth.LoginRequest;
+import com.quickcode.dto.auth.LoginResponse;
 import com.quickcode.dto.auth.RegisterRequest;
+import com.quickcode.dto.auth.TwoFactorLoginRequest;
 
 /**
  * 认证服务接口
@@ -19,9 +21,16 @@ public interface AuthService {
     JwtResponse register(RegisterRequest request);
 
     /**
-     * 用户登录
+     * 用户登录（第一步：用户名密码验证）
+     * 如果用户启用了2FA，返回需要2FA验证的响应
+     * 如果用户未启用2FA，直接返回JWT令牌
      */
-    JwtResponse login(LoginRequest request);
+    LoginResponse login(LoginRequest request);
+
+    /**
+     * 双因素认证登录（第二步：TOTP验证码验证）
+     */
+    JwtResponse loginWithTwoFactor(TwoFactorLoginRequest request);
 
     /**
      * 刷新令牌

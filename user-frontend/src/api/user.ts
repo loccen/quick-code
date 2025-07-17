@@ -3,9 +3,7 @@
  */
 import type { ApiResponse, PageRequest, PageResponse } from '@/types/api'
 import type {
-    BackupCodesResponse,
     ChangePasswordRequest,
-    TwoFactorSetupRequest,
     TwoFactorSetupResponse,
     TwoFactorStatusResponse,
     TwoFactorVerifyRequest,
@@ -150,42 +148,35 @@ class UserApiService extends BaseApiService {
    * 获取2FA状态
    */
   getTwoFactorStatus(): Promise<ApiResponse<TwoFactorStatusResponse>> {
-    return this.get('/me/2fa/status')
+    return this.get('/2fa/status')
   }
 
   /**
-   * 设置2FA（启用/禁用）
+   * 获取2FA设置信息（生成密钥和QR码）
    */
-  setupTwoFactor(data: TwoFactorSetupRequest): Promise<ApiResponse<TwoFactorSetupResponse>> {
-    return this.post('/me/2fa/setup', data)
+  getTwoFactorSetup(): Promise<ApiResponse<TwoFactorSetupResponse>> {
+    return this.get('/2fa/setup')
+  }
+
+  /**
+   * 启用2FA（需要验证TOTP代码）
+   */
+  enableTwoFactor(data: TwoFactorVerifyRequest): Promise<ApiResponse<void>> {
+    return this.put('/2fa/enable', data)
   }
 
   /**
    * 验证2FA代码
    */
   verifyTwoFactor(data: TwoFactorVerifyRequest): Promise<ApiResponse<void>> {
-    return this.post('/me/2fa/verify', data)
+    return this.put('/2fa/verify', data)
   }
 
   /**
-   * 禁用2FA
+   * 禁用2FA（需要验证TOTP代码）
    */
   disableTwoFactor(data: TwoFactorVerifyRequest): Promise<ApiResponse<void>> {
-    return this.post('/me/2fa/disable', data)
-  }
-
-  /**
-   * 生成新的备用恢复码
-   */
-  generateBackupCodes(): Promise<ApiResponse<BackupCodesResponse>> {
-    return this.post('/me/2fa/backup-codes')
-  }
-
-  /**
-   * 获取2FA设置信息（用于初始化）
-   */
-  getTwoFactorSetup(): Promise<ApiResponse<TwoFactorSetupResponse>> {
-    return this.get('/me/2fa/setup')
+    return this.put('/2fa/disable', data)
   }
 }
 

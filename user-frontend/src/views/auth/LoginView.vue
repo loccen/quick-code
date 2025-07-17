@@ -23,6 +23,7 @@
 
         <!-- 登录表单 -->
         <el-form
+          v-if="!showTwoFactorForm"
           ref="loginFormRef"
           :model="loginForm"
           :rules="loginRules"
@@ -86,6 +87,57 @@
           </el-form-item>
         </el-form>
 
+        <!-- 双因素认证表单 -->
+        <div v-if="showTwoFactorForm" class="two-factor-form">
+          <div class="two-factor-header">
+            <h3>双因素认证</h3>
+            <p>请输入您的身份验证器应用中显示的6位验证码</p>
+          </div>
+
+          <el-form
+            ref="twoFactorFormRef"
+            :model="twoFactorForm"
+            :rules="twoFactorRules"
+            class="totp-form"
+            @submit.prevent="handleTwoFactorLogin"
+          >
+            <el-form-item prop="totpCode">
+              <el-input
+                v-model="twoFactorForm.totpCode"
+                data-testid="totp-code-input"
+                placeholder="请输入6位验证码"
+                size="large"
+                maxlength="6"
+                clearable
+                :prefix-icon="Key"
+                @keyup.enter="handleTwoFactorLogin"
+              />
+            </el-form-item>
+
+            <el-form-item>
+              <div class="two-factor-actions">
+                <ModernButton
+                  type="default"
+                  size="large"
+                  @click="backToLogin"
+                  data-testid="back-to-login-button"
+                >
+                  返回登录
+                </ModernButton>
+                <ModernButton
+                  type="primary"
+                  size="large"
+                  :loading="loading"
+                  @click="handleTwoFactorLogin"
+                  data-testid="verify-totp-button"
+                >
+                  {{ loading ? '验证中...' : '验证' }}
+                </ModernButton>
+              </div>
+            </el-form-item>
+          </el-form>
+        </div>
+
         <!-- 底部链接 -->
         <div class="login-footer">
           <span>还没有账户？</span>
@@ -126,9 +178,9 @@ import ModernButton from '@/components/ui/ModernButton.vue'
 import ModernCard from '@/components/ui/ModernCard.vue'
 import { useAppStore } from '@/stores/app'
 import { useUserStore } from '@/stores/user'
-import type { LoginRequest } from '@/types/user'
+import type { LoginRequest, TwoFactorLoginRequest, TwoFactorRequiredResponse } from '@/types/user'
 import { performSmartRedirect } from '@/utils/redirect'
-import { Loading, Lock, User, WarningFilled } from '@element-plus/icons-vue'
+import { Key, Loading, Lock, User, WarningFilled } from '@element-plus/icons-vue'
 import { ElForm } from 'element-plus'
 import { onMounted, reactive, ref } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
@@ -140,6 +192,7 @@ const appStore = useAppStore()
 
 // 表单引用
 const loginFormRef = ref<InstanceType<typeof ElForm>>()
+const twoFactorFormRef = ref<InstanceType<typeof ElForm>>()
 
 // 表单数据
 const loginForm = reactive<LoginRequest>({
@@ -160,6 +213,24 @@ const loginRules = {
   ]
 }
 
+// 2FA相关状态
+const showTwoFactorForm = ref(false)
+const twoFactorData = ref<TwoFactorRequiredResponse | null>(null)
+
+// 2FA表单数据
+const twoFactorForm = reactive({
+  totpCode: ''
+})
+
+// 2FA表单验证规则
+const twoFactorRules = {
+  totpCode: [
+    { required: true, message: '请输入验证码', trigger: 'blur' },
+    { len: 6, message: '验证码必须是6位数字', trigger: 'blur' },
+    { pattern: /^\d{6}$/, message: '验证码只能包含数字', trigger: 'blur' }
+  ]
+}
+
 // 状态
 const loading = ref(false)
 const errorMessage = ref('')
@@ -176,17 +247,23 @@ const handleLogin = async () => {
     errorMessage.value = ''
 
     // 执行登录
-    const success = await userStore.login(loginForm)
+    const result = await userStore.login(loginForm)
 
-    if (success) {
-      // 执行智能重定向
+    if (result === true) {
+      // 登录成功（无需2FA）
       performSmartRedirect(
         router,
         route.query.redirect as string,
         '/user/profile'
       )
-    } else {
+    } else if (result === false) {
+      // 登录失败
       errorMessage.value = '用户名或密码错误'
+    } else {
+      // 需要2FA验证
+      twoFactorData.value = result as TwoFactorRequiredResponse
+      showTwoFactorForm.value = true
+      errorMessage.value = ''
     }
   } catch (error: any) {
     console.error('登录失败:', error)
@@ -194,6 +271,51 @@ const handleLogin = async () => {
   } finally {
     loading.value = false
   }
+}
+
+// 处理2FA验证
+const handleTwoFactorLogin = async () => {
+  if (!twoFactorFormRef.value || !twoFactorData.value) return
+
+  try {
+    // 验证表单
+    await twoFactorFormRef.value.validate()
+
+    loading.value = true
+    errorMessage.value = ''
+
+    // 执行2FA登录
+    const twoFactorRequest: TwoFactorLoginRequest = {
+      userId: twoFactorData.value.userId,
+      totpCode: twoFactorForm.totpCode
+    }
+
+    const success = await userStore.loginWithTwoFactor(twoFactorRequest)
+
+    if (success) {
+      // 登录成功，执行智能重定向
+      performSmartRedirect(
+        router,
+        route.query.redirect as string,
+        '/user/profile'
+      )
+    } else {
+      errorMessage.value = '验证码错误，请重试'
+    }
+  } catch (error: any) {
+    console.error('2FA验证失败:', error)
+    errorMessage.value = error.message || '验证失败，请重试'
+  } finally {
+    loading.value = false
+  }
+}
+
+// 返回登录页面
+const backToLogin = () => {
+  showTwoFactorForm.value = false
+  twoFactorData.value = null
+  twoFactorForm.totpCode = ''
+  errorMessage.value = ''
 }
 
 // 页面初始化
@@ -470,6 +592,86 @@ onMounted(() => {
           display: none !important;
         }
       }
+    }
+  }
+}
+
+// 双因素认证表单样式
+.two-factor-form {
+  .two-factor-header {
+    text-align: center;
+    margin-bottom: $spacing-xl;
+
+    h3 {
+      color: #ffffff;
+      font-size: $font-size-xl;
+      font-weight: $font-weight-bold;
+      margin: 0 0 $spacing-sm 0;
+      text-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
+    }
+
+    p {
+      color: rgba(255, 255, 255, 0.8);
+      font-size: $font-size-sm;
+      margin: 0;
+      line-height: 1.5;
+    }
+  }
+
+  .totp-form {
+    :deep(.el-form-item) {
+      margin-bottom: $spacing-lg;
+
+      .el-input {
+        .el-input__wrapper {
+          @include glass-effect();
+          border: 1px solid rgba(255, 255, 255, 0.3);
+          border-radius: $radius-lg;
+          transition: all var(--transition-base);
+          padding: $spacing-sm $spacing-md;
+          min-height: 48px;
+          text-align: center;
+
+          &:hover {
+            border-color: rgba(255, 255, 255, 0.5);
+            transform: translateY(-1px);
+            @include shadow-colored(rgba(255, 255, 255, 0.2), 0.1);
+          }
+
+          &.is-focus {
+            border-color: rgba(255, 255, 255, 0.7);
+            @include shadow-colored(rgba(255, 255, 255, 0.3), 0.25);
+            transform: translateY(-2px);
+          }
+
+          .el-input__inner {
+            color: #ffffff;
+            font-weight: $font-weight-bold;
+            font-size: $font-size-lg;
+            text-align: center;
+            letter-spacing: 0.2em;
+
+            &::placeholder {
+              color: rgba(255, 255, 255, 0.6);
+              font-weight: $font-weight-medium;
+            }
+          }
+
+          .el-input__prefix {
+            color: rgba(255, 255, 255, 0.8);
+          }
+        }
+      }
+    }
+  }
+
+  .two-factor-actions {
+    display: flex;
+    gap: $spacing-md;
+    width: 100%;
+
+    .modern-button {
+      flex: 1;
     }
   }
 }

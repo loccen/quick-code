@@ -353,4 +353,161 @@ class UserControllerTest {
       verify(userService, never()).findUsers(anyString(), anyInt(), any(Pageable.class));
     }
   }
+
+  @Nested
+  @DisplayName("双因素认证相关测试")
+  class TwoFactorAuthTests {
+
+    @Test
+    @DisplayName("应该成功获取2FA状态")
+    void shouldGetTwoFactorStatusSuccessfully() throws Exception {
+      // Arrange
+      UserPrincipal userPrincipal = TestSecurityConfig.createTestUserPrincipal();
+      testUser.setTwoFactorEnabled(true);
+      when(userService.getById(1L)).thenReturn(testUser);
+
+      // Act & Assert
+      mockMvc
+          .perform(get("/api/users/2fa/status").with(SecurityMockMvcRequestPostProcessors
+              .authentication(new UsernamePasswordAuthenticationToken(userPrincipal, null,
+                  userPrincipal.getAuthorities()))))
+          .andExpect(status().isOk())
+          .andExpect(jsonPath("$.success").value(true))
+          .andExpect(jsonPath("$.message").value("获取2FA状态成功"))
+          .andExpect(jsonPath("$.data.enabled").value(true));
+
+      verify(userService).getById(1L);
+    }
+
+    @Test
+    @DisplayName("应该成功启用2FA")
+    void shouldEnableTwoFactorSuccessfully() throws Exception {
+      // Arrange
+      UserPrincipal userPrincipal = TestSecurityConfig.createTestUserPrincipal();
+      String secret = "JBSWY3DPEHPK3PXP";
+      String qrCodeUrl = "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAA...";
+
+      when(userService.enableTwoFactor(1L)).thenReturn(secret);
+      // 这里需要mock QR码生成，暂时简化
+
+      // Act & Assert
+      mockMvc
+          .perform(put("/api/users/2fa/enable").with(SecurityMockMvcRequestPostProcessors
+              .authentication(new UsernamePasswordAuthenticationToken(userPrincipal, null,
+                  userPrincipal.getAuthorities())))
+              .with(SecurityMockMvcRequestPostProcessors.csrf())
+              .contentType(MediaType.APPLICATION_JSON))
+          .andExpect(status().isOk())
+          .andExpect(jsonPath("$.success").value(true))
+          .andExpect(jsonPath("$.message").value("2FA启用成功"))
+          .andExpect(jsonPath("$.data.secret").value(secret));
+
+      verify(userService).enableTwoFactor(1L);
+    }
+
+    @Test
+    @DisplayName("应该成功禁用2FA")
+    void shouldDisableTwoFactorSuccessfully() throws Exception {
+      // Arrange
+      UserPrincipal userPrincipal = TestSecurityConfig.createTestUserPrincipal();
+      String totpCode = "123456";
+      doNothing().when(userService).disableTwoFactor(1L, totpCode);
+
+      // Act & Assert
+      mockMvc
+          .perform(put("/api/users/2fa/disable").with(SecurityMockMvcRequestPostProcessors
+              .authentication(new UsernamePasswordAuthenticationToken(userPrincipal, null,
+                  userPrincipal.getAuthorities())))
+              .with(SecurityMockMvcRequestPostProcessors.csrf())
+              .contentType(MediaType.APPLICATION_JSON)
+              .content("{\"totpCode\":\"" + totpCode + "\"}"))
+          .andExpect(status().isOk())
+          .andExpect(jsonPath("$.success").value(true))
+          .andExpect(jsonPath("$.message").value("2FA禁用成功"));
+
+      verify(userService).disableTwoFactor(1L, totpCode);
+    }
+
+    @Test
+    @DisplayName("应该成功验证2FA代码")
+    void shouldVerifyTwoFactorCodeSuccessfully() throws Exception {
+      // Arrange
+      UserPrincipal userPrincipal = TestSecurityConfig.createTestUserPrincipal();
+      String totpCode = "123456";
+      when(userService.verifyTwoFactorCode(1L, totpCode)).thenReturn(true);
+
+      String requestBody = "{\"totpCode\":\"" + totpCode + "\"}";
+
+      // Act & Assert
+      mockMvc
+          .perform(put("/api/users/2fa/verify").with(SecurityMockMvcRequestPostProcessors
+              .authentication(new UsernamePasswordAuthenticationToken(userPrincipal, null,
+                  userPrincipal.getAuthorities())))
+              .with(SecurityMockMvcRequestPostProcessors.csrf())
+              .contentType(MediaType.APPLICATION_JSON)
+              .content(requestBody))
+          .andExpect(status().isOk())
+          .andExpect(jsonPath("$.success").value(true))
+          .andExpect(jsonPath("$.message").value("2FA验证成功"));
+
+      verify(userService).verifyTwoFactorCode(1L, totpCode);
+    }
+
+    @Test
+    @DisplayName("应该在验证码错误时返回400")
+    void shouldReturn400WhenTotpCodeInvalid() throws Exception {
+      // Arrange
+      UserPrincipal userPrincipal = TestSecurityConfig.createTestUserPrincipal();
+      String totpCode = "000000";
+      when(userService.verifyTwoFactorCode(1L, totpCode)).thenReturn(false);
+
+      String requestBody = "{\"totpCode\":\"" + totpCode + "\"}";
+
+      // Act & Assert
+      mockMvc
+          .perform(put("/api/users/2fa/verify").with(SecurityMockMvcRequestPostProcessors
+              .authentication(new UsernamePasswordAuthenticationToken(userPrincipal, null,
+                  userPrincipal.getAuthorities())))
+              .with(SecurityMockMvcRequestPostProcessors.csrf())
+              .contentType(MediaType.APPLICATION_JSON)
+              .content(requestBody))
+          .andExpect(status().isBadRequest())
+          .andExpect(jsonPath("$.success").value(false))
+          .andExpect(jsonPath("$.message").value("验证码错误"));
+
+      verify(userService).verifyTwoFactorCode(1L, totpCode);
+    }
+
+    @Test
+    @DisplayName("应该在验证码格式错误时返回400")
+    void shouldReturn400WhenTotpCodeFormatInvalid() throws Exception {
+      // Arrange
+      UserPrincipal userPrincipal = TestSecurityConfig.createTestUserPrincipal();
+      String invalidCode = "12345"; // 只有5位
+
+      String requestBody = "{\"totpCode\":\"" + invalidCode + "\"}";
+
+      // Act & Assert
+      mockMvc
+          .perform(put("/api/users/2fa/verify").with(SecurityMockMvcRequestPostProcessors
+              .authentication(new UsernamePasswordAuthenticationToken(userPrincipal, null,
+                  userPrincipal.getAuthorities())))
+              .with(SecurityMockMvcRequestPostProcessors.csrf())
+              .contentType(MediaType.APPLICATION_JSON)
+              .content(requestBody))
+          .andExpect(status().isBadRequest());
+
+      verify(userService, never()).verifyTwoFactorCode(anyLong(), anyString());
+    }
+
+    @Test
+    @DisplayName("应该在未认证时返回401")
+    void shouldReturn401WhenNotAuthenticatedForTwoFactor() throws Exception {
+      // Act & Assert
+      mockMvc.perform(get("/api/users/2fa/status"))
+          .andExpect(status().isUnauthorized());
+
+      verify(userService, never()).getById(anyLong());
+    }
+  }
 }

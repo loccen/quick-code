@@ -5,6 +5,9 @@ import com.quickcode.common.response.PageResponse;
 import com.quickcode.dto.user.UserInfoRequest;
 import com.quickcode.dto.user.UserProfileResponse;
 import com.quickcode.dto.user.ChangePasswordRequest;
+import com.quickcode.dto.user.TwoFactorStatusResponse;
+import com.quickcode.dto.user.TwoFactorSetupResponse;
+import com.quickcode.dto.user.TwoFactorVerifyRequest;
 import com.quickcode.entity.User;
 import com.quickcode.service.UserService;
 import jakarta.validation.Valid;
@@ -365,5 +368,95 @@ public class UserController extends BaseController {
             return "";
         }
         return filename.substring(lastDotIndex);
+    }
+
+    // ==================== 双因素认证相关API ====================
+
+    /**
+     * 获取2FA状态
+     */
+    @GetMapping("/2fa/status")
+    @PreAuthorize("isAuthenticated()")
+    public ApiResponse<TwoFactorStatusResponse> getTwoFactorStatus() {
+        Long userId = getCurrentUserId();
+        log.info("获取2FA状态: userId={}", userId);
+
+        User user = userService.getById(userId);
+        TwoFactorStatusResponse response = TwoFactorStatusResponse.builder()
+                .enabled(user.getTwoFactorEnabled())
+                .build();
+
+        return success(response, "获取2FA状态成功");
+    }
+
+    /**
+     * 生成2FA设置信息
+     */
+    @GetMapping("/2fa/setup")
+    @PreAuthorize("isAuthenticated()")
+    public ApiResponse<TwoFactorSetupResponse> getTwoFactorSetup() {
+        Long userId = getCurrentUserId();
+        log.info("生成2FA设置信息: userId={}", userId);
+
+        String secret = userService.generateTwoFactorSecret(userId);
+
+        // 生成QR码URL (简化实现，实际项目中可能需要更复杂的QR码生成)
+        String issuer = "QuickCode";
+        User user = userService.getById(userId);
+        String qrCodeUrl = String.format("otpauth://totp/%s:%s?secret=%s&issuer=%s",
+                issuer, user.getEmail(), secret, issuer);
+
+        TwoFactorSetupResponse response = TwoFactorSetupResponse.builder()
+                .secret(secret)
+                .qrCodeUrl(qrCodeUrl)
+                .build();
+
+        return success(response, "2FA设置信息生成成功");
+    }
+
+    /**
+     * 启用2FA（需要验证TOTP代码）
+     */
+    @PutMapping("/2fa/enable")
+    @PreAuthorize("isAuthenticated()")
+    public ApiResponse<Void> enableTwoFactor(@Valid @RequestBody TwoFactorVerifyRequest request) {
+        Long userId = getCurrentUserId();
+        log.info("启用2FA: userId={}", userId);
+
+        userService.enableTwoFactor(userId, request.getTotpCode());
+
+        return success(null, "2FA启用成功");
+    }
+
+    /**
+     * 禁用2FA（需要验证TOTP代码）
+     */
+    @PutMapping("/2fa/disable")
+    @PreAuthorize("isAuthenticated()")
+    public ApiResponse<Void> disableTwoFactor(@Valid @RequestBody TwoFactorVerifyRequest request) {
+        Long userId = getCurrentUserId();
+        log.info("禁用2FA: userId={}", userId);
+
+        userService.disableTwoFactor(userId, request.getTotpCode());
+
+        return success(null, "2FA禁用成功");
+    }
+
+    /**
+     * 验证2FA代码
+     */
+    @PutMapping("/2fa/verify")
+    @PreAuthorize("isAuthenticated()")
+    public ApiResponse<Void> verifyTwoFactor(@Valid @RequestBody TwoFactorVerifyRequest request) {
+        Long userId = getCurrentUserId();
+        log.info("验证2FA代码: userId={}", userId);
+
+        boolean isValid = userService.verifyTwoFactorCode(userId, request.getTotpCode());
+
+        if (isValid) {
+            return success(null, "2FA验证成功");
+        } else {
+            return error(400, "验证码错误");
+        }
     }
 }

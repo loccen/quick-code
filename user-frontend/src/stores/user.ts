@@ -4,7 +4,14 @@
 import { authApi } from '@/api/modules/auth'
 import { userApi } from '@/api/user'
 import { envConfig } from '@/config/env'
-import type { LoginRequest, RegisterRequest, UpdateUserRequest, User } from '@/types/user'
+import type {
+  LoginRequest,
+  RegisterRequest,
+  TwoFactorLoginRequest,
+  TwoFactorRequiredResponse,
+  UpdateUserRequest,
+  User
+} from '@/types/user'
 import { ElMessage } from 'element-plus'
 import { defineStore } from 'pinia'
 import { computed, ref } from 'vue'
@@ -80,28 +87,68 @@ export const useUserStore = defineStore('user', () => {
   }
 
   /**
-   * 用户登录
+   * 用户登录（第一步：用户名密码验证）
+   * 返回值：
+   * - true: 登录成功（无需2FA）
+   * - false: 登录失败
+   * - TwoFactorRequiredResponse: 需要2FA验证
    */
-  const login = async (loginData: LoginRequest): Promise<boolean> => {
+  const login = async (loginData: LoginRequest): Promise<boolean | TwoFactorRequiredResponse> => {
     try {
       const response = await authApi.login(loginData)
 
       // 检查响应中的业务错误码
       if (response.code !== 200) {
-        ElMessage.error(response.message || '登录失败')
+        return false
+      }
+
+      const loginResponse = response.data
+
+      // 检查是否需要2FA验证
+      if (loginResponse.requiresTwoFactor && loginResponse.twoFactorResponse) {
+        return loginResponse.twoFactorResponse
+      }
+
+      // 直接登录成功（无需2FA）
+      if (loginResponse.jwtResponse) {
+        const { accessToken, refreshToken: refreshTokenValue, user: userInfo } = loginResponse.jwtResponse
+        setTokens(accessToken, refreshTokenValue)
+        setUser(userInfo)
+        ElMessage.success('登录成功')
+        return true
+      }
+
+      ElMessage.error('登录响应格式错误')
+      return false
+    } catch (error) {
+      console.error('登录失败:', error)
+      ElMessage.error('网络错误，请稍后重试')
+      return false
+    }
+  }
+
+  /**
+   * 双因素认证登录（第二步：TOTP验证码验证）
+   */
+  const loginWithTwoFactor = async (twoFactorData: TwoFactorLoginRequest): Promise<boolean> => {
+    try {
+      const response = await authApi.loginWithTwoFactor(twoFactorData)
+
+      // 检查响应中的业务错误码
+      if (response.code !== 200) {
+        ElMessage.error(response.message || '验证码错误')
         return false
       }
 
       const { accessToken, refreshToken: refreshTokenValue, user: userInfo } = response.data
-
       setTokens(accessToken, refreshTokenValue)
       setUser(userInfo)
 
       ElMessage.success('登录成功')
       return true
     } catch (error) {
-      console.error('登录失败:', error)
-      ElMessage.error('网络错误，请稍后重试')
+      console.error('2FA登录失败:', error)
+      ElMessage.error('验证码错误，请重试')
       return false
     }
   }
@@ -264,6 +311,7 @@ export const useUserStore = defineStore('user', () => {
 
     // 方法
     login,
+    loginWithTwoFactor,
     register,
     logout,
     refreshAccessToken,

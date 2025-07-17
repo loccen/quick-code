@@ -13,6 +13,14 @@ import com.quickcode.entity.User;
 import com.quickcode.repository.RoleRepository;
 import com.quickcode.repository.UserRepository;
 import com.quickcode.service.UserService;
+import dev.samstevens.totp.code.CodeGenerator;
+import dev.samstevens.totp.code.CodeVerifier;
+import dev.samstevens.totp.code.DefaultCodeGenerator;
+import dev.samstevens.totp.code.DefaultCodeVerifier;
+import dev.samstevens.totp.secret.DefaultSecretGenerator;
+import dev.samstevens.totp.secret.SecretGenerator;
+import dev.samstevens.totp.time.SystemTimeProvider;
+import dev.samstevens.totp.time.TimeProvider;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
@@ -31,6 +39,12 @@ public class UserServiceImpl implements UserService {
   private final UserRepository userRepository;
   private final RoleRepository roleRepository;
   private final PasswordEncoder passwordEncoder;
+
+  // TOTP相关组件
+  private final SecretGenerator secretGenerator = new DefaultSecretGenerator();
+  private final TimeProvider timeProvider = new SystemTimeProvider();
+  private final CodeGenerator codeGenerator = new DefaultCodeGenerator();
+  private final CodeVerifier codeVerifier = new DefaultCodeVerifier(codeGenerator, timeProvider);
 
   @Override
   public User register(String username, String email, String password) {
@@ -63,13 +77,12 @@ public class UserServiceImpl implements UserService {
 
     // 查找用户
     User user = userRepository.findByUsernameOrEmail(usernameOrEmail)
-        .orElseThrow(() -> new com.quickcode.common.exception.ResourceNotFoundException(
-            "用户不存在: " + usernameOrEmail));
+        .orElseThrow(com.quickcode.common.exception.AuthenticationFailedException::invalidCredentials);
 
     // 验证密码
     if (!passwordEncoder.matches(password, user.getPassword())) {
       throw com.quickcode.common.exception.AuthenticationFailedException
-          .invalidCredentials("密码错误");
+          .invalidCredentials();
     }
 
     // 检查用户状态
@@ -202,24 +215,114 @@ public class UserServiceImpl implements UserService {
   }
 
   @Override
-  public String enableTwoFactor(Long userId) {
-    // TODO: 实现启用双因素认证逻辑
-    throw com.quickcode.common.exception.InvalidStateException
-        .withCode(5005, "启用双因素认证功能尚未实现");
+  public String generateTwoFactorSecret(Long userId) {
+    log.debug("生成双因素认证密钥: userId={}", userId);
+
+    User user = userRepository.findById(userId)
+        .orElseThrow(() -> com.quickcode.common.exception.ResourceNotFoundException.user(userId));
+
+    // 检查是否已启用2FA
+    if (Boolean.TRUE.equals(user.getTwoFactorEnabled())) {
+      throw com.quickcode.common.exception.InvalidStateException
+          .withCode(5006, "双因素认证已启用");
+    }
+
+    // 生成新的密钥（但不立即启用2FA）
+    String secret = secretGenerator.generate();
+
+    // 临时保存密钥，但不启用2FA
+    user.setTwoFactorSecret(secret);
+    userRepository.save(user);
+
+    log.info("双因素认证密钥生成成功: userId={}", userId);
+    return secret;
   }
 
   @Override
-  public void disableTwoFactor(Long userId) {
-    // TODO: 实现禁用双因素认证逻辑
-    throw com.quickcode.common.exception.InvalidStateException
-        .withCode(5005, "禁用双因素认证功能尚未实现");
+  public void enableTwoFactor(Long userId, String totpCode) {
+    log.debug("启用双因素认证: userId={}", userId);
+
+    User user = userRepository.findById(userId)
+        .orElseThrow(() -> com.quickcode.common.exception.ResourceNotFoundException.user(userId));
+
+    // 检查是否已启用2FA
+    if (Boolean.TRUE.equals(user.getTwoFactorEnabled())) {
+      throw com.quickcode.common.exception.InvalidStateException
+          .withCode(5006, "双因素认证已启用");
+    }
+
+    // 检查是否有密钥
+    if (user.getTwoFactorSecret() == null || user.getTwoFactorSecret().isEmpty()) {
+      throw com.quickcode.common.exception.InvalidStateException
+          .withCode(5010, "请先生成双因素认证密钥");
+    }
+
+    // 验证TOTP代码
+    boolean isValid = codeVerifier.isValidCode(user.getTwoFactorSecret(), totpCode);
+    if (!isValid) {
+      throw com.quickcode.common.exception.InvalidStateException
+          .withCode(5011, "验证码错误");
+    }
+
+    // 启用2FA
+    user.setTwoFactorEnabled(true);
+    userRepository.save(user);
+
+    log.info("双因素认证启用成功: userId={}", userId);
+  }
+
+  @Override
+  public void disableTwoFactor(Long userId, String totpCode) {
+    log.debug("禁用双因素认证: userId={}", userId);
+
+    User user = userRepository.findById(userId)
+        .orElseThrow(() -> com.quickcode.common.exception.ResourceNotFoundException.user(userId));
+
+    // 检查是否已启用2FA
+    if (!Boolean.TRUE.equals(user.getTwoFactorEnabled())) {
+      throw com.quickcode.common.exception.InvalidStateException
+          .withCode(5007, "双因素认证未启用");
+    }
+
+    // 验证TOTP代码
+    boolean isValid = codeVerifier.isValidCode(user.getTwoFactorSecret(), totpCode);
+    if (!isValid) {
+      throw com.quickcode.common.exception.InvalidStateException
+          .withCode(5011, "验证码错误");
+    }
+
+    // 禁用2FA并清除密钥
+    user.setTwoFactorEnabled(false);
+    user.setTwoFactorSecret(null);
+    userRepository.save(user);
+
+    log.info("双因素认证禁用成功: userId={}", userId);
   }
 
   @Override
   public boolean verifyTwoFactorCode(Long userId, String code) {
-    // TODO: 实现验证双因素认证码逻辑
-    throw com.quickcode.common.exception.InvalidStateException
-        .withCode(5005, "验证双因素认证码功能尚未实现");
+    log.debug("验证双因素认证码: userId={}", userId);
+
+    User user = userRepository.findById(userId)
+        .orElseThrow(() -> com.quickcode.common.exception.ResourceNotFoundException.user(userId));
+
+    // 检查是否已启用2FA
+    if (!Boolean.TRUE.equals(user.getTwoFactorEnabled())) {
+      throw com.quickcode.common.exception.InvalidStateException
+          .withCode(5008, "双因素认证未启用");
+    }
+
+    // 检查密钥是否存在
+    if (user.getTwoFactorSecret() == null || user.getTwoFactorSecret().isEmpty()) {
+      throw com.quickcode.common.exception.InvalidStateException
+          .withCode(5009, "双因素认证密钥不存在");
+    }
+
+    // 验证TOTP码
+    boolean isValid = codeVerifier.isValidCode(user.getTwoFactorSecret(), code);
+
+    log.debug("双因素认证码验证结果: userId={}, isValid={}", userId, isValid);
+    return isValid;
   }
 
   @Override

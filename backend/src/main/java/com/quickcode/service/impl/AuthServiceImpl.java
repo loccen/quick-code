@@ -10,7 +10,10 @@ import org.springframework.stereotype.Service;
 import com.quickcode.config.EmailProperties;
 import com.quickcode.dto.auth.JwtResponse;
 import com.quickcode.dto.auth.LoginRequest;
+import com.quickcode.dto.auth.LoginResponse;
 import com.quickcode.dto.auth.RegisterRequest;
+import com.quickcode.dto.auth.TwoFactorLoginRequest;
+import com.quickcode.dto.auth.TwoFactorRequiredResponse;
 import com.quickcode.entity.User;
 import com.quickcode.security.jwt.JwtUtils;
 import com.quickcode.security.jwt.UserPrincipal;
@@ -73,11 +76,24 @@ public class AuthServiceImpl implements AuthService {
   }
 
   @Override
-  public JwtResponse login(LoginRequest request) {
+  public LoginResponse login(LoginRequest request) {
     log.debug("用户登录尝试: {}", request.getUsernameOrEmail());
 
     // 调用UserService进行登录验证
     User user = userService.login(request.getUsernameOrEmail(), request.getPassword());
+
+    // 检查是否启用了2FA
+    if (Boolean.TRUE.equals(user.getTwoFactorEnabled())) {
+      log.info("用户启用了2FA，需要进行二次验证: userId={}", user.getId());
+
+      TwoFactorRequiredResponse twoFactorResponse = TwoFactorRequiredResponse.builder()
+          .userId(user.getId())
+          .message("请输入双因素认证验证码")
+          .requiresTwoFactor(true)
+          .build();
+
+      return LoginResponse.twoFactor(twoFactorResponse);
+    }
 
     // 创建认证对象
     Authentication authentication = createAuthentication(user);
@@ -90,6 +106,45 @@ public class AuthServiceImpl implements AuthService {
     JwtResponse.UserInfo userInfo = buildUserInfo(user);
 
     log.info("用户登录成功: username={}, id={}", user.getUsername(), user.getId());
+
+    JwtResponse jwtResponse = JwtResponse.builder().accessToken(accessToken).refreshToken(refreshToken)
+        .expiresIn(24 * 3600L) // 24小时过期
+        .user(userInfo).build();
+
+    return LoginResponse.jwt(jwtResponse);
+  }
+
+  @Override
+  public JwtResponse loginWithTwoFactor(TwoFactorLoginRequest request) {
+    log.debug("双因素认证登录验证: userId={}", request.getUserId());
+
+    // 获取用户信息
+    User user = userService.getById(request.getUserId());
+
+    // 验证用户是否启用了2FA
+    if (!Boolean.TRUE.equals(user.getTwoFactorEnabled())) {
+      throw com.quickcode.common.exception.InvalidStateException
+          .withCode(5008, "双因素认证未启用");
+    }
+
+    // 验证TOTP代码
+    boolean isValid = userService.verifyTwoFactorCode(request.getUserId(), request.getTotpCode());
+    if (!isValid) {
+      throw com.quickcode.common.exception.AuthenticationFailedException
+          .invalidCredentials("验证码错误");
+    }
+
+    // 创建认证对象
+    Authentication authentication = createAuthentication(user);
+
+    // 生成JWT令牌
+    String accessToken = jwtUtils.generateAccessToken(authentication);
+    String refreshToken = jwtUtils.generateRefreshToken(authentication);
+
+    // 构建用户信息
+    JwtResponse.UserInfo userInfo = buildUserInfo(user);
+
+    log.info("双因素认证登录成功: username={}, id={}", user.getUsername(), user.getId());
 
     return JwtResponse.builder().accessToken(accessToken).refreshToken(refreshToken)
         .expiresIn(24 * 3600L) // 24小时过期

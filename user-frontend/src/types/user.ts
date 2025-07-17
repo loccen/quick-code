@@ -93,9 +93,9 @@ export interface LoginRequest {
 }
 
 /**
- * 登录响应
+ * JWT响应
  */
-export interface LoginResponse {
+export interface JwtResponse {
   /** 访问令牌 */
   accessToken: string
   /** 刷新令牌 */
@@ -106,10 +106,40 @@ export interface LoginResponse {
   expiresIn: number
   /** 用户信息 */
   user: User
+}
+
+/**
+ * 需要双因素认证响应
+ */
+export interface TwoFactorRequiredResponse {
+  /** 用户ID */
+  userId: number
+  /** 提示信息 */
+  message: string
   /** 是否需要2FA验证 */
-  requiresTwoFactor?: boolean
-  /** 临时令牌（用于2FA验证） */
-  tempToken?: string
+  requiresTwoFactor: boolean
+}
+
+/**
+ * 登录响应（联合类型）
+ */
+export interface LoginResponse {
+  /** 是否需要2FA验证 */
+  requiresTwoFactor: boolean
+  /** JWT响应（当不需要2FA时） */
+  jwtResponse?: JwtResponse
+  /** 2FA验证响应（当需要2FA时） */
+  twoFactorResponse?: TwoFactorRequiredResponse
+}
+
+/**
+ * 双因素认证登录请求
+ */
+export interface TwoFactorLoginRequest {
+  /** 用户ID */
+  userId: number
+  /** TOTP验证码 */
+  totpCode: string
 }
 
 /**
@@ -203,16 +233,6 @@ export interface UserQueryParams {
 }
 
 /**
- * 双因素认证设置请求
- */
-export interface TwoFactorSetupRequest {
-  /** 是否启用2FA */
-  enabled: boolean
-  /** TOTP验证码（启用时必填） */
-  totpCode?: string
-}
-
-/**
  * 双因素认证设置响应
  */
 export interface TwoFactorSetupResponse {
@@ -220,8 +240,6 @@ export interface TwoFactorSetupResponse {
   secret: string
   /** QR码数据URL */
   qrCodeUrl: string
-  /** 备用恢复码 */
-  backupCodes: string[]
 }
 
 /**
@@ -239,13 +257,5 @@ export interface TwoFactorStatusResponse {
   /** 是否已启用2FA */
   enabled: boolean
   /** 备用恢复码数量 */
-  backupCodesCount: number
-}
-
-/**
- * 生成备用恢复码响应
- */
-export interface BackupCodesResponse {
-  /** 新的备用恢复码 */
-  backupCodes: string[]
+  backupCodesCount?: number
 }

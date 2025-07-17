@@ -239,6 +239,7 @@
       title="双因素认证设置"
       width="600px"
       :before-close="handle2FADialogClose"
+      class="two-factor-dialog"
     >
       <TwoFactorSetup @setup-complete="handle2FASetupComplete" />
     </el-dialog>
@@ -1048,6 +1049,16 @@ onMounted(() => {
   .security-items {
     .security-item {
       border-bottom-color: #434343;
+    }
+  }
+}
+
+// 双因素认证对话框样式
+:deep(.two-factor-dialog) {
+  .el-dialog__header {
+    .el-dialog__title {
+      color: #409eff !important;
+      font-weight: $font-weight-semibold;
     }
   }
 }

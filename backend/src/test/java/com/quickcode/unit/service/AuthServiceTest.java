@@ -3,6 +3,7 @@ package com.quickcode.unit.service;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
@@ -22,6 +23,7 @@ import org.springframework.security.core.Authentication;
 import com.quickcode.config.EmailProperties;
 import com.quickcode.dto.auth.JwtResponse;
 import com.quickcode.dto.auth.LoginRequest;
+import com.quickcode.dto.auth.LoginResponse;
 import com.quickcode.dto.auth.RegisterRequest;
 import com.quickcode.entity.User;
 import com.quickcode.security.jwt.JwtUtils;
@@ -148,25 +150,55 @@ class AuthServiceTest {
       when(userService.getUserPermissions(testUser.getId())).thenReturn(permissions);
 
       // Act
-      JwtResponse result = authService.login(loginRequest);
+      LoginResponse result = authService.login(loginRequest);
 
       // Assert
       assertThat(result).isNotNull();
-      assertThat(result.getAccessToken()).isEqualTo(accessToken);
-      assertThat(result.getRefreshToken()).isEqualTo(refreshToken);
-      assertThat(result.getTokenType()).isEqualTo("Bearer");
-      assertThat(result.getExpiresIn()).isEqualTo(24 * 3600L);
+      assertThat(result.isRequiresTwoFactor()).isFalse();
+      assertThat(result.getJwtResponse()).isNotNull();
 
-      assertThat(result.getUser()).isNotNull();
-      assertThat(result.getUser().getId()).isEqualTo(testUser.getId());
-      assertThat(result.getUser().getUsername()).isEqualTo(testUser.getUsername());
-      assertThat(result.getUser().getEmail()).isEqualTo(testUser.getEmail());
-      assertThat(result.getUser().getPermissions()).isEqualTo(permissions);
+      JwtResponse jwtResponse = result.getJwtResponse();
+      assertThat(jwtResponse.getAccessToken()).isEqualTo(accessToken);
+      assertThat(jwtResponse.getRefreshToken()).isEqualTo(refreshToken);
+      assertThat(jwtResponse.getTokenType()).isEqualTo("Bearer");
+      assertThat(jwtResponse.getExpiresIn()).isEqualTo(24 * 3600L);
+
+      assertThat(jwtResponse.getUser()).isNotNull();
+      assertThat(jwtResponse.getUser().getId()).isEqualTo(testUser.getId());
+      assertThat(jwtResponse.getUser().getUsername()).isEqualTo(testUser.getUsername());
+      assertThat(jwtResponse.getUser().getEmail()).isEqualTo(testUser.getEmail());
+      assertThat(jwtResponse.getUser().getPermissions()).isEqualTo(permissions);
 
       verify(userService).login(loginRequest.getUsernameOrEmail(), loginRequest.getPassword());
       verify(jwtUtils).generateAccessToken(any(Authentication.class));
       verify(jwtUtils).generateRefreshToken(any(Authentication.class));
       verify(userService, times(2)).getUserPermissions(testUser.getId()); // 调用两次：createAuthentication和buildUserInfo
+    }
+
+    @Test
+    @DisplayName("应该在用户启用2FA时返回需要2FA验证的响应")
+    void shouldReturnTwoFactorRequiredWhenUserHas2FAEnabled() {
+      // Arrange
+      testUser.setTwoFactorEnabled(true);
+
+      when(userService.login(loginRequest.getUsernameOrEmail(), loginRequest.getPassword()))
+          .thenReturn(testUser);
+
+      // Act
+      LoginResponse result = authService.login(loginRequest);
+
+      // Assert
+      assertThat(result).isNotNull();
+      assertThat(result.isRequiresTwoFactor()).isTrue();
+      assertThat(result.getTwoFactorResponse()).isNotNull();
+      assertThat(result.getTwoFactorResponse().getUserId()).isEqualTo(testUser.getId());
+      assertThat(result.getTwoFactorResponse().getMessage()).isEqualTo("请输入双因素认证验证码");
+      assertThat(result.getTwoFactorResponse().isRequiresTwoFactor()).isTrue();
+
+      verify(userService).login(loginRequest.getUsernameOrEmail(), loginRequest.getPassword());
+      // 不应该生成JWT令牌
+      verify(jwtUtils, never()).generateAccessToken(any(Authentication.class));
+      verify(jwtUtils, never()).generateRefreshToken(any(Authentication.class));
     }
   }
 
