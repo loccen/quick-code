@@ -1,5 +1,8 @@
 <template>
   <div class="main-layout" :class="{ 'main-layout--mobile': appStore.isMobile }">
+    <!-- 页面背景 -->
+    <PageBackground />
+
     <!-- 侧边栏 -->
     <aside
       class="main-layout__sidebar"
@@ -206,6 +209,7 @@
 </template>
 
 <script setup lang="ts">
+import PageBackground from '@/components/common/PageBackground.vue'
 import { useAppStore } from '@/stores/app'
 import { useTabsStore } from '@/stores/tabs'
 import { useUserStore } from '@/stores/user'

@@ -89,7 +89,7 @@ public class SecurityConfig {
             .requestMatchers("/actuator/**").hasRole("ADMIN")
 
             // API文档
-            .requestMatchers("/swagger-ui/**", "/api-docs/**").permitAll()
+            .requestMatchers("/swagger-ui.html", "/swagger-ui/**", "/v3/api-docs/**", "/api-docs/**").permitAll()
 
             // 静态资源
             .requestMatchers("/favicon.ico", "/error").permitAll()

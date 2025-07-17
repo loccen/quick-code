@@ -128,42 +128,13 @@
           </a>
         </div>
         <div class="projects-grid">
-          <div v-for="project in featuredProjects" :key="project.id" class="project-card">
-            <div class="project-image">
-              <div class="project-placeholder">
-                <i :class="project.icon"></i>
-              </div>
-              <div class="project-badges">
-                <span class="badge badge-docker">
-                  <i class="fab fa-docker"></i>
-                  Docker
-                </span>
-                <span v-if="project.isHot" class="badge badge-hot">热门</span>
-              </div>
-            </div>
-            <div class="project-content">
-              <h3 class="project-title">{{ project.title }}</h3>
-              <p class="project-description">{{ project.description }}</p>
-              <div class="project-tags">
-                <span v-for="tag in project.tags" :key="tag" class="tag">{{ tag }}</span>
-              </div>
-              <div class="project-footer">
-                <div class="project-price">
-                  <i class="fas fa-coins"></i>
-                  <span>{{ project.price }} 积分</span>
-                </div>
-                <div class="project-actions">
-                  <button class="btn btn-sm btn-outline" @click="handleDemo(project)">
-                    <i class="fas fa-play"></i>
-                    演示
-                  </button>
-                  <button class="btn btn-sm btn-primary" @click="handlePurchase(project)">
-                    购买
-                  </button>
-                </div>
-              </div>
-            </div>
-          </div>
+          <ProjectCard
+            v-for="project in featuredProjects"
+            :key="project.id"
+            :project="project"
+            @demo="handleDemo"
+            @purchase="handlePurchase"
+          />
         </div>
       </div>
     </section>
@@ -195,6 +166,7 @@
 </template>
 
 <script setup lang="ts">
+import ProjectCard from '@/components/common/ProjectCard.vue'
 import { useUserStore } from '@/stores/user'
 import { onMounted, ref } from 'vue'
 import { useRouter } from 'vue-router'
@@ -205,10 +177,15 @@ interface Project {
   id: number
   title: string
   description: string
-  icon: string
-  tags: string[]
+  icon?: string
+  tags?: string[]
   price: number
   isHot?: boolean
+  hasDocker?: boolean
+  author?: string
+  rating?: number
+  downloads?: number
+  category?: string
 }
 
 // 定义统计数据类型
@@ -231,7 +208,8 @@ const featuredProjects = ref<Project[]>([
     icon: 'fab fa-vue',
     tags: ['Vue3', 'TypeScript', 'Element Plus'],
     price: 299,
-    isHot: false
+    isHot: false,
+    hasDocker: true
   },
   {
     id: 2,
@@ -240,7 +218,8 @@ const featuredProjects = ref<Project[]>([
     icon: 'fab fa-react',
     tags: ['React', 'Node.js', 'MongoDB'],
     price: 599,
-    isHot: true
+    isHot: true,
+    hasDocker: true
   },
   {
     id: 3,
@@ -249,7 +228,8 @@ const featuredProjects = ref<Project[]>([
     icon: 'fab fa-java',
     tags: ['Spring Boot', '微服务', 'Redis'],
     price: 899,
-    isHot: false
+    isHot: false,
+    hasDocker: true
   }
 ])
 
@@ -403,7 +383,7 @@ onMounted(() => {
 
 .home-view {
   min-height: 100vh;
-  background: $bg-primary;
+  // 移除背景色，让页面背景系统生效
 
   .container {
     max-width: 1200px;
@@ -619,7 +599,9 @@ onMounted(() => {
   // 特色功能区
   .features {
     padding: $spacing-4xl 0;
-    background: $bg-secondary;
+    // 使用半透明背景，与页面背景系统协调
+    background: rgba(248, 250, 252, 0.6);
+    backdrop-filter: blur(10px);
 
     .section-header {
       text-align: center;
@@ -713,7 +695,6 @@ onMounted(() => {
   // 热门项目展示
   .projects {
     padding: $spacing-4xl 0;
-    background: $bg-primary;
 
     .section-header {
       text-align: center;
@@ -762,193 +743,8 @@ onMounted(() => {
       grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
       gap: $spacing-xl;
 
-      .project-card {
-        background: $gradient-card;
-        border-radius: $radius-xl;
-        overflow: hidden;
-        border: 1px solid rgba(255, 255, 255, 0.2);
-        backdrop-filter: $glass-blur-sm;
-        box-shadow: $shadow-layered-sm;
-        transition: all $transition-base;
-        position: relative;
+      // 项目卡片样式现在由 ProjectCard 组件提供
 
-        &::before {
-          content: '';
-          position: absolute;
-          top: 0;
-          left: 0;
-          right: 0;
-          height: 1px;
-          background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.8), transparent);
-          z-index: 1;
-        }
-
-        &:hover {
-          box-shadow: $shadow-layered-lg;
-          transform: translateY(-8px) scale(1.02);
-          border-color: rgba(24, 144, 255, 0.3);
-        }
-
-        .project-image {
-          position: relative;
-          height: 200px;
-          background: $gradient-card;
-          display: flex;
-          align-items: center;
-          justify-content: center;
-
-          .project-placeholder {
-            width: 80px;
-            height: 80px;
-            background: $gradient-primary;
-            border-radius: 50%;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            box-shadow: $shadow-primary;
-
-            i {
-              font-size: 2rem;
-              color: white;
-            }
-          }
-
-          .project-badges {
-            position: absolute;
-            top: $spacing-md;
-            right: $spacing-md;
-            display: flex;
-            flex-direction: column;
-            gap: $spacing-xs;
-
-            .badge {
-              padding: $spacing-xs $spacing-sm;
-              border-radius: $radius-md;
-              font-size: $font-size-xs;
-              font-weight: 600;
-              display: flex;
-              align-items: center;
-              gap: $spacing-xs;
-              backdrop-filter: $glass-blur-sm;
-              border: 1px solid rgba(255, 255, 255, 0.2);
-
-              &.badge-docker {
-                background: rgba(0, 123, 255, 0.9);
-                color: white;
-              }
-
-              &.badge-hot {
-                background: rgba(255, 77, 79, 0.9);
-                color: white;
-              }
-            }
-          }
-        }
-
-        .project-content {
-          padding: $spacing-lg;
-
-          .project-title {
-            font-size: $font-size-lg;
-            font-weight: 600;
-            color: $text-primary;
-            margin-bottom: $spacing-sm;
-            line-height: 1.3;
-          }
-
-          .project-description {
-            color: $text-secondary;
-            line-height: 1.6;
-            margin-bottom: $spacing-md;
-            font-size: $font-size-sm;
-            display: -webkit-box;
-            -webkit-line-clamp: 2;
-            line-clamp: 2;
-            -webkit-box-orient: vertical;
-            overflow: hidden;
-          }
-
-          .project-tags {
-            display: flex;
-            flex-wrap: wrap;
-            gap: $spacing-xs;
-            margin-bottom: $spacing-lg;
-
-            .tag {
-              padding: $spacing-xs $spacing-sm;
-              background: $primary-light;
-              color: $primary-color;
-              border-radius: $radius-sm;
-              font-size: $font-size-xs;
-              font-weight: 500;
-            }
-          }
-
-          .project-footer {
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-
-            .project-price {
-              display: flex;
-              align-items: center;
-              gap: $spacing-xs;
-              color: $primary-color;
-              font-weight: 600;
-
-              i {
-                color: $warning-color;
-              }
-            }
-
-            .project-actions {
-              display: flex;
-              gap: $spacing-sm;
-
-              .btn {
-                padding: $spacing-xs $spacing-md;
-                border-radius: $radius-md;
-                font-size: $font-size-sm;
-                font-weight: 500;
-                border: none;
-                cursor: pointer;
-                transition: all 0.3s ease;
-                display: flex;
-                align-items: center;
-                gap: $spacing-xs;
-
-                &.btn-sm {
-                  padding: $spacing-xs $spacing-sm;
-                }
-
-                &.btn-outline {
-                  background: transparent;
-                  color: $primary-color;
-                  border: 1px solid $primary-color;
-
-                  &:hover {
-                    background: $primary-color;
-                    color: white;
-                    transform: translateY(-1px);
-                  }
-                }
-
-                &.btn-primary {
-                  background: $primary-color;
-                  color: white;
-                  box-shadow: $shadow-primary;
-
-                  &:hover {
-                    background: $primary-hover;
-                    transform: translateY(-1px);
-                    box-shadow: $shadow-primary-hover;
-                  }
-                }
-              }
-            }
-          }
-        }
-      }
     }
   }
 

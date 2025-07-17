@@ -1,5 +1,8 @@
 <template>
   <div class="public-layout">
+    <!-- 页面背景 -->
+    <PageBackground />
+
     <!-- 顶部导航栏 -->
     <header class="header">
       <nav class="navbar">
@@ -95,6 +98,7 @@
 
 <script setup lang="ts">
 import Footer from '@/components/Footer.vue'
+import PageBackground from '@/components/common/PageBackground.vue'
 import { useUserStore } from '@/stores/user'
 import { generateLoginUrl, generateRegisterUrl } from '@/utils/redirect'
 import { ArrowDown, FolderOpened, ShoppingCart, SwitchButton, Upload, User } from '@element-plus/icons-vue'
@@ -191,7 +195,8 @@ const handleLogout = async () => {
   min-height: 100vh;
   display: flex;
   flex-direction: column;
-  background: $bg-primary;
+  position: relative;
+  // 背景现在由 PageBackground 组件提供
 }
 
 // 顶部导航栏

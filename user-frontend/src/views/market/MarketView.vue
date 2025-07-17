@@ -9,20 +9,26 @@
         <!-- 搜索和筛选 -->
         <div class="search-section">
           <div class="search-bar">
-            <el-input
-              v-model="searchKeyword"
-              placeholder="搜索项目名称、描述、标签..."
-              size="large"
-              clearable
-              @keyup.enter="handleSearch"
-            >
-              <template #prefix>
-                <el-icon><Search /></el-icon>
-              </template>
-              <template #append>
-                <el-button @click="handleSearch">搜索</el-button>
-              </template>
-            </el-input>
+            <div class="search-input-wrapper">
+              <el-input
+                v-model="searchKeyword"
+                placeholder="搜索项目名称、描述、标签..."
+                size="large"
+                clearable
+                @keyup.enter="handleSearch"
+              >
+                <template #prefix>
+                  <el-icon><Search /></el-icon>
+                </template>
+              </el-input>
+              <el-button
+                class="search-button"
+                type="primary"
+                @click="handleSearch"
+              >
+                搜索
+              </el-button>
+            </div>
           </div>
 
           <div class="filter-bar">
@@ -69,7 +75,6 @@
             v-for="project in projects"
             :key="project.id"
             :project="project"
-            @view-detail="handleViewDetail"
             @purchase="handlePurchase"
             @demo="handleDemo"
           />
@@ -99,7 +104,7 @@
 
 <script setup lang="ts">
 import { publicProjectApi } from '@/api/modules/public'
-import ProjectCard from '@/components/market/ProjectCard.vue'
+import ProjectCard from '@/components/common/ProjectCard.vue'
 import { useUserStore } from '@/stores/user'
 import { Search } from '@element-plus/icons-vue'
 import { ElMessage } from 'element-plus'
@@ -202,13 +207,6 @@ const handleSizeChange = (size: number) => {
 }
 
 /**
- * 查看项目详情
- */
-const handleViewDetail = (project: any) => {
-  router.push(`/market/project/${project.id}`)
-}
-
-/**
  * 处理项目购买
  */
 const handlePurchase = (project: any) => {
@@ -258,8 +256,7 @@ onMounted(() => {
 }
 
 .market-header {
-  background: linear-gradient(135deg, var(--primary-color) 0%, var(--primary-color-hover) 100%);
-  color: white;
+  color: $text-primary;
   padding: $spacing-3xl 0;
 
   .container {
@@ -271,15 +268,18 @@ onMounted(() => {
   .market-title {
     font-size: $font-size-4xl;
     font-weight: $font-weight-bold;
+    color: var(--text-primary);
     margin: 0 0 $spacing-md 0;
     text-align: center;
+    @include gradient-text();
   }
 
   .market-subtitle {
     font-size: $font-size-lg;
     text-align: center;
     margin: 0 0 $spacing-3xl 0;
-    opacity: 0.9;
+    color: $text-secondary;
+    opacity: 1; // 移除透明度，使用语义化颜色
   }
 
   .search-section {
@@ -289,10 +289,120 @@ onMounted(() => {
     .search-bar {
       margin-bottom: $spacing-lg;
 
+      .search-input-wrapper {
+        position: relative;
+        display: flex;
+        align-items: center;
+
+        .search-button {
+          position: absolute;
+          right: 8px;
+          top: 50%;
+          transform: translateY(-50%);
+          z-index: 10;
+          height: 32px;
+          padding: 0 $spacing-md;
+          font-size: $font-size-sm;
+          border-radius: $radius-md;
+          background: $gradient-primary;
+          border: none;
+          color: white;
+          cursor: pointer;
+          transition: all $transition-base;
+          box-shadow: $shadow-sm;
+
+          &:hover {
+            background: $gradient-primary;
+            filter: brightness(1.1);
+            box-shadow: $shadow-md;
+            transform: translateY(-50%) scale(1.02);
+          }
+
+          &:active {
+            transform: translateY(-50%) scale(0.98);
+          }
+        }
+
+        // 调整输入框样式以为按钮留出空间
+        :deep(.el-input__wrapper) {
+          padding-right: 80px; // 为搜索按钮留出空间
+        }
+      }
+
       :deep(.el-input) {
         .el-input__wrapper {
-          border-radius: $border-radius-lg;
-          box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+          background: rgba(255, 255, 255, 0.1);
+          backdrop-filter: blur(10px);
+          border: 1px solid rgba(255, 255, 255, 0.3);
+          border-radius: $radius-lg;
+          box-shadow:
+            0 8px 32px rgba(31, 38, 135, 0.15),
+            0 4px 16px rgba(31, 38, 135, 0.1),
+            inset 0 1px 0 rgba(255, 255, 255, 0.2);
+          transition: all 0.3s ease;
+
+          &:hover {
+            background: rgba(255, 255, 255, 0.15);
+            border-color: rgba(255, 255, 255, 0.4);
+            box-shadow:
+              0 12px 40px rgba(31, 38, 135, 0.2),
+              0 6px 20px rgba(31, 38, 135, 0.15),
+              inset 0 1px 0 rgba(255, 255, 255, 0.3);
+          }
+
+          &.is-focus {
+            background: rgba(255, 255, 255, 0.2);
+            border-color: $primary-color;
+            box-shadow:
+              0 0 0 2px rgba(24, 144, 255, 0.2),
+              0 12px 40px rgba(31, 38, 135, 0.2),
+              inset 0 1px 0 rgba(255, 255, 255, 0.3);
+          }
+        }
+
+        .el-input__inner {
+          background: transparent;
+          border: none;
+          color: $text-primary;
+
+          &::placeholder {
+            color: rgba(107, 114, 126, 0.8);
+          }
+        }
+
+        // 搜索按钮样式
+        .el-input-group__append {
+          background: transparent;
+          border: none;
+          padding: 0;
+
+          .el-button {
+            background: linear-gradient(135deg, $primary-color 0%, $primary-hover 100%);
+            border: none;
+            color: white;
+            padding: 12px 24px;
+            border-radius: 0 $radius-lg 0 0;
+            font-weight: $font-weight-medium;
+            transition: all 0.3s ease;
+            box-shadow:
+              0 4px 16px rgba(24, 144, 255, 0.3),
+              inset 0 1px 0 rgba(255, 255, 255, 0.2);
+
+            &:hover {
+              background: linear-gradient(135deg, $primary-hover 0%, darken($primary-hover, 10%) 100%);
+              transform: translateY(-1px);
+              box-shadow:
+                0 6px 20px rgba(24, 144, 255, 0.4),
+                inset 0 1px 0 rgba(255, 255, 255, 0.3);
+            }
+
+            &:active {
+              transform: translateY(0);
+              box-shadow:
+                0 2px 8px rgba(24, 144, 255, 0.3),
+                inset 0 1px 0 rgba(255, 255, 255, 0.2);
+            }
+          }
         }
       }
     }
@@ -304,7 +414,83 @@ onMounted(() => {
 
       .el-select {
         width: 150px;
+
+        :deep(.el-input) {
+          .el-input__wrapper {
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.3);
+            border-radius: $radius-lg;
+            box-shadow:
+              0 4px 16px rgba(31, 38, 135, 0.1),
+              inset 0 1px 0 rgba(255, 255, 255, 0.2);
+            transition: all 0.3s ease;
+
+            &:hover {
+              background: rgba(255, 255, 255, 0.15);
+              border-color: rgba(255, 255, 255, 0.4);
+              box-shadow:
+                0 6px 20px rgba(31, 38, 135, 0.15),
+                inset 0 1px 0 rgba(255, 255, 255, 0.3);
+            }
+
+            &.is-focus {
+              background: rgba(255, 255, 255, 0.2);
+              border-color: $primary-color;
+              box-shadow:
+                0 0 0 2px rgba(24, 144, 255, 0.2),
+                0 6px 20px rgba(31, 38, 135, 0.15),
+                inset 0 1px 0 rgba(255, 255, 255, 0.3);
+            }
+          }
+
+          .el-input__inner {
+            background: transparent;
+            border: none;
+            color: $text-primary;
+
+            &::placeholder {
+              color: rgba(107, 114, 126, 0.8);
+            }
+          }
+
+          .el-input__suffix {
+            .el-input__suffix-inner {
+              .el-select__caret {
+                color: $text-secondary;
+              }
+            }
+          }
+        }
       }
+    }
+  }
+}
+
+// 下拉框选项样式（全局）
+:deep(.el-select-dropdown) {
+  background: rgba(255, 255, 255, 0.95);
+  backdrop-filter: blur(20px);
+  border: 1px solid rgba(255, 255, 255, 0.3);
+  border-radius: $radius-lg;
+  box-shadow:
+    0 20px 40px rgba(31, 38, 135, 0.15),
+    0 8px 24px rgba(31, 38, 135, 0.1),
+    inset 0 1px 0 rgba(255, 255, 255, 0.4);
+
+  .el-select-dropdown__item {
+    color: $text-primary;
+    transition: all 0.2s ease;
+
+    &:hover {
+      background: rgba(24, 144, 255, 0.1);
+      color: $primary-color;
+    }
+
+    &.selected {
+      background: rgba(24, 144, 255, 0.15);
+      color: $primary-color;
+      font-weight: $font-weight-medium;
     }
   }
 }
