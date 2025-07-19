@@ -12,27 +12,33 @@
         <div class="project-header">
           <div class="project-main-info">
             <div class="project-thumbnail">
-              <img 
-                :src="project.thumbnail || '/images/default-project.jpg'" 
+              <img
+                v-if="!imageLoadFailed"
+                :src="project.thumbnail || '/images/default-project.jpg'"
                 :alt="project.title"
                 @error="handleImageError"
+                @load="handleImageLoad"
               />
+              <div v-else class="image-placeholder">
+                <el-icon class="placeholder-icon"><Picture /></el-icon>
+                <span class="placeholder-text">暂无图片</span>
+              </div>
             </div>
             <div class="project-info">
               <h1 class="project-title">{{ project.title }}</h1>
               <p class="project-description">{{ project.description }}</p>
-              
+
               <!-- 项目标签 -->
               <div class="project-tags">
-                <el-tag 
-                  v-for="tag in project.tags" 
-                  :key="tag" 
+                <el-tag
+                  v-for="tag in project.tags"
+                  :key="tag"
                   type="info"
                 >
                   {{ tag }}
                 </el-tag>
               </div>
-              
+
               <!-- 项目统计 -->
               <div class="project-stats">
                 <div class="stat-item">
@@ -54,7 +60,7 @@
               </div>
             </div>
           </div>
-          
+
           <!-- 购买区域 -->
           <div class="purchase-section">
             <div class="price-info">
@@ -63,20 +69,20 @@
                 <span class="unit">积分</span>
               </div>
             </div>
-            
+
             <div class="action-buttons">
-              <el-button 
-                type="primary" 
-                size="large" 
+              <el-button
+                type="primary"
+                size="large"
                 @click="handlePurchase"
                 :disabled="!userStore.isAuthenticated"
               >
                 <el-icon><ShoppingCart /></el-icon>
                 {{ userStore.isAuthenticated ? '立即购买' : '登录后购买' }}
               </el-button>
-              
-              <el-button 
-                size="large" 
+
+              <el-button
+                size="large"
                 @click="handleDemo"
                 :disabled="!userStore.isAuthenticated"
               >
@@ -84,7 +90,7 @@
                 {{ userStore.isAuthenticated ? '在线演示' : '登录后演示' }}
               </el-button>
             </div>
-            
+
             <div v-if="!userStore.isAuthenticated" class="login-tip">
               <p>
                 <router-link :to="{ path: '/login', query: { redirect: route.fullPath } }" class="login-link">登录</router-link>
@@ -93,7 +99,7 @@
             </div>
           </div>
         </div>
-        
+
         <!-- 项目详细信息 -->
         <div class="project-content">
           <!-- 功能特性 -->
@@ -106,13 +112,13 @@
               </li>
             </ul>
           </div>
-          
+
           <!-- 技术栈 -->
           <div class="content-section">
             <h2>技术栈</h2>
             <div class="tech-stack">
-              <el-tag 
-                v-for="tech in project.techStack" 
+              <el-tag
+                v-for="tech in project.techStack"
                 :key="tech"
                 type="success"
                 size="large"
@@ -121,7 +127,7 @@
               </el-tag>
             </div>
           </div>
-          
+
           <!-- 项目信息 -->
           <div class="content-section">
             <h2>项目信息</h2>
@@ -171,14 +177,15 @@
 import { ref, onMounted } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { ElMessage } from 'element-plus'
-import { 
-  Star, 
-  Download, 
-  User, 
+import {
+  Star,
+  Download,
+  User,
   Calendar,
-  ShoppingCart, 
+  ShoppingCart,
   VideoPlay,
-  Check
+  Check,
+  Picture
 } from '@element-plus/icons-vue'
 import { useUserStore } from '@/stores/user'
 import { publicProjectApi } from '@/api/modules/public'
@@ -190,6 +197,8 @@ const userStore = useUserStore()
 // 响应式数据
 const loading = ref(false)
 const project = ref<any>(null)
+const imageLoadFailed = ref(false)
+const hasTriedFallback = ref(false)
 
 /**
  * 获取项目详情
@@ -204,6 +213,9 @@ const fetchProjectDetail = async () => {
   try {
     const response = await publicProjectApi.getProjectDetail(Number(projectId))
     project.value = response.data
+    // 重置图片加载状态
+    imageLoadFailed.value = false
+    hasTriedFallback.value = false
   } catch (error) {
     console.error('获取项目详情失败:', error)
     ElMessage.error('获取项目详情失败')
@@ -217,7 +229,23 @@ const fetchProjectDetail = async () => {
  */
 const handleImageError = (event: Event) => {
   const img = event.target as HTMLImageElement
+
+  // 如果已经尝试过默认图片或者当前就是默认图片，则显示占位符
+  if (hasTriedFallback.value || img.src.includes('/images/default-project.jpg')) {
+    imageLoadFailed.value = true
+    return
+  }
+
+  // 第一次失败，尝试加载默认图片
+  hasTriedFallback.value = true
   img.src = '/images/default-project.jpg'
+}
+
+/**
+ * 处理图片加载成功
+ */
+const handleImageLoad = () => {
+  imageLoadFailed.value = false
 }
 
 /**
@@ -232,7 +260,7 @@ const handlePurchase = () => {
     })
     return
   }
-  
+
   ElMessage.info('购买功能开发中...')
 }
 
@@ -248,7 +276,7 @@ const handleDemo = () => {
     })
     return
   }
-  
+
   ElMessage.info('演示功能开发中...')
 }
 
@@ -297,6 +325,28 @@ onMounted(() => {
         object-fit: cover;
         border-radius: $border-radius-lg;
         box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+      }
+
+      .image-placeholder {
+        width: 100%;
+        height: 200px;
+        border-radius: $border-radius-lg;
+        background: var(--bg-secondary);
+        border: 2px dashed var(--border-color);
+        @include flex-center();
+        flex-direction: column;
+        gap: $spacing-sm;
+        color: var(--text-secondary);
+
+        .placeholder-icon {
+          font-size: 2rem;
+          opacity: 0.6;
+        }
+
+        .placeholder-text {
+          font-size: $font-size-sm;
+          opacity: 0.8;
+        }
       }
     }
 

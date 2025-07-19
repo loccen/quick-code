@@ -9,6 +9,11 @@ import ElementPlus from 'element-plus'
 import 'element-plus/dist/index.css'
 import '@/styles/main.scss'
 
+// 开发环境启用图片性能监控
+if (import.meta.env.DEV) {
+  import('@/utils/imagePerformanceMonitor')
+}
+
 console.log('🚀 启动速码网用户端前端应用...')
 
 try {
