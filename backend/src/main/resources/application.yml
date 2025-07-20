@@ -37,7 +37,7 @@ spring:
       ddl-auto: update
       naming:
         physical-strategy: org.hibernate.boot.model.naming.PhysicalNamingStrategyStandardImpl
-    show-sql: ${DEBUG_SQL:true}
+    show-sql: ${DEBUG_SQL:false}
     properties:
       hibernate:
         dialect: org.hibernate.dialect.MySQLDialect
