@@ -280,7 +280,7 @@ onMounted(() => {
 
 .market-header {
   color: $text-primary;
-  padding: $spacing-3xl 0;
+  padding: $spacing-md 0;
 
   .container {
     max-width: 1200px;
@@ -579,7 +579,7 @@ onMounted(() => {
 }
 
 .market-content {
-  padding: $spacing-3xl 0;
+  padding: $spacing-xs 0;
 
   .container {
     max-width: 1200px;
