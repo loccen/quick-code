@@ -30,6 +30,33 @@
         </span>
       </div>
 
+      <!-- 项目统计信息 -->
+      <div class="project-stats">
+        <!-- 评分 -->
+        <div class="stat-item" v-if="project.rating && project.rating > 0">
+          <i class="fas fa-star"></i>
+          <span>{{ formatRating(project.rating) }}</span>
+        </div>
+
+        <!-- 下载量 -->
+        <div class="stat-item" v-if="project.downloadCount && project.downloadCount > 0">
+          <i class="fas fa-download"></i>
+          <span>{{ formatDownloads(project.downloadCount) }}</span>
+        </div>
+
+        <!-- 发布时间 -->
+        <div class="stat-item" v-if="project.createdTime">
+          <i class="fas fa-clock"></i>
+          <span>{{ formatDate(project.createdTime) }}</span>
+        </div>
+
+        <!-- 作者 -->
+        <div class="stat-item" v-if="project.username">
+          <i class="fas fa-user"></i>
+          <span>{{ project.username }}</span>
+        </div>
+      </div>
+
       <!-- 项目底部信息 -->
       <div class="project-footer">
         <div class="project-price">
@@ -68,10 +95,16 @@ interface Project {
   tags?: string[]
   isHot?: boolean
   hasDocker?: boolean
-  author?: string
+  username?: string // 作者用户名
   rating?: number
-  downloads?: number
+  downloadCount?: number // 下载次数
   category?: string
+  createdTime?: string // 创建时间
+  updatedTime?: string
+  // 兼容旧字段名
+  author?: string
+  downloads?: number
+  createdAt?: string
 }
 
 interface Props {
@@ -86,6 +119,11 @@ interface Emits {
 const props = defineProps<Props>()
 const emit = defineEmits<Emits>()
 const router = useRouter()
+
+// 开发环境调试信息
+if (import.meta.env.DEV) {
+  console.log('ProjectCard props.project:', props.project)
+}
 
 /**
  * 处理卡片点击 - 跳转到项目详情页
@@ -106,6 +144,60 @@ const handleDemo = () => {
  */
 const handlePurchase = () => {
   emit('purchase', props.project)
+}
+
+/**
+ * 格式化评分显示
+ */
+const formatRating = (rating: number | string): string => {
+  const numRating = typeof rating === 'string' ? parseFloat(rating) : rating
+  return numRating.toFixed(1)
+}
+
+/**
+ * 格式化下载量显示
+ */
+const formatDownloads = (downloads: number): string => {
+  if (downloads >= 10000) {
+    return `${(downloads / 10000).toFixed(1)}万`
+  } else if (downloads >= 1000) {
+    return `${(downloads / 1000).toFixed(1)}k`
+  }
+  return downloads.toString()
+}
+
+/**
+ * 格式化日期显示
+ */
+const formatDate = (dateString: string): string => {
+  try {
+    // 处理后端返回的LocalDateTime格式，如 "2024-01-15T10:30:00"
+    const date = new Date(dateString)
+    if (isNaN(date.getTime())) {
+      return '未知'
+    }
+
+    const now = new Date()
+    const diffTime = Math.abs(now.getTime() - date.getTime())
+    const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24))
+
+    if (diffDays === 0) {
+      return '今天'
+    } else if (diffDays === 1) {
+      return '昨天'
+    } else if (diffDays <= 7) {
+      return `${diffDays}天前`
+    } else if (diffDays <= 30) {
+      return `${Math.ceil(diffDays / 7)}周前`
+    } else if (diffDays <= 365) {
+      return `${Math.ceil(diffDays / 30)}月前`
+    } else {
+      return `${Math.ceil(diffDays / 365)}年前`
+    }
+  } catch (error) {
+    console.warn('日期格式化失败:', dateString, error)
+    return '未知'
+  }
 }
 </script>
 
@@ -223,7 +315,7 @@ const handlePurchase = () => {
       display: flex;
       flex-wrap: wrap;
       gap: $spacing-xs;
-      margin-bottom: $spacing-lg;
+      margin-bottom: $spacing-md;
 
       .tag {
         padding: $spacing-xs $spacing-sm;
@@ -232,6 +324,59 @@ const handlePurchase = () => {
         border-radius: $radius-sm;
         font-size: $font-size-xs;
         font-weight: 500;
+      }
+    }
+
+    .project-stats {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: $spacing-xs;
+      margin-bottom: $spacing-lg;
+      padding: $spacing-sm;
+      background: rgba(255, 255, 255, 0.05);
+      border-radius: $radius-md;
+      border: 1px solid rgba(255, 255, 255, 0.1);
+
+      .stat-item {
+        display: flex;
+        align-items: center;
+        gap: $spacing-xs;
+        font-size: $font-size-xs;
+        color: $text-secondary;
+        padding: $spacing-xs;
+        border-radius: $radius-sm;
+        transition: all 0.2s ease;
+
+        &:hover {
+          background: rgba(255, 255, 255, 0.05);
+          color: $text-primary;
+        }
+
+        i {
+          width: 12px;
+          text-align: center;
+          opacity: 0.8;
+
+          &.fa-star {
+            color: $warning-color;
+          }
+          &.fa-download {
+            color: $success-color;
+          }
+          &.fa-clock {
+            color: $info-color;
+          }
+          &.fa-user {
+            color: $primary-color;
+          }
+        }
+
+        span {
+          font-weight: 500;
+          white-space: nowrap;
+          overflow: hidden;
+          text-overflow: ellipsis;
+        }
       }
     }
 
@@ -319,6 +464,16 @@ const handlePurchase = () => {
 
     .project-content {
       padding: $spacing-md;
+
+      .project-stats {
+        grid-template-columns: 1fr;
+        gap: $spacing-xs;
+
+        .stat-item {
+          font-size: $font-size-xs;
+          padding: $spacing-xs $spacing-sm;
+        }
+      }
 
       .project-footer {
         flex-direction: column;

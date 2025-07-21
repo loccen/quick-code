@@ -56,6 +56,19 @@
               <el-option label="评分" value="rating" />
               <el-option label="价格" value="price" />
             </el-select>
+
+            <el-button
+              class="sort-direction-btn"
+              :class="{ 'asc': sortDirection === 'asc' }"
+              @click="toggleSortDirection"
+              :title="sortDirection === 'desc' ? '点击切换为升序' : '点击切换为降序'"
+            >
+              <el-icon>
+                <ArrowDown v-if="sortDirection === 'desc'" />
+                <ArrowUp v-else />
+              </el-icon>
+              {{ sortDirection === 'desc' ? '降序' : '升序' }}
+            </el-button>
           </div>
         </div>
       </div>
@@ -106,7 +119,7 @@
 import { publicProjectApi } from '@/api/modules/public'
 import ProjectCard from '@/components/common/ProjectCard.vue'
 import { useUserStore } from '@/stores/user'
-import { Search } from '@element-plus/icons-vue'
+import { Search, ArrowDown, ArrowUp } from '@element-plus/icons-vue'
 import { ElMessage } from 'element-plus'
 import { computed, onMounted, ref } from 'vue'
 import { useRouter } from 'vue-router'
@@ -119,6 +132,7 @@ const loading = ref(false)
 const searchKeyword = ref('')
 const selectedCategory = ref('')
 const sortBy = ref('createdAt')
+const sortDirection = ref('desc')
 const currentPage = ref(1)
 const pageSize = ref(12)
 
@@ -151,7 +165,7 @@ const fetchProjects = async () => {
       category: selectedCategory.value,
       keyword: searchKeyword.value,
       sortBy: sortBy.value,
-      sortDir: 'desc'
+      sortDir: sortDirection.value
     }
 
     const response = await publicProjectApi.getProjects(params)
@@ -185,6 +199,15 @@ const handleCategoryChange = () => {
  * 处理排序变化
  */
 const handleSortChange = () => {
+  currentPage.value = 1
+  fetchProjects()
+}
+
+/**
+ * 切换排序方向
+ */
+const toggleSortDirection = () => {
+  sortDirection.value = sortDirection.value === 'desc' ? 'asc' : 'desc'
   currentPage.value = 1
   fetchProjects()
 }
@@ -416,7 +439,11 @@ onMounted(() => {
         width: 150px;
 
         :deep(.el-input) {
+          height: 32px; // 明确设置高度
+
           .el-input__wrapper {
+            height: 32px; // 确保wrapper高度一致
+            min-height: 32px;
             background: rgba(255, 255, 255, 0.1);
             backdrop-filter: blur(10px);
             border: 1px solid rgba(255, 255, 255, 0.3);
@@ -445,6 +472,8 @@ onMounted(() => {
           }
 
           .el-input__inner {
+            height: 30px; // 内部输入框高度，留出边框空间
+            line-height: 30px;
             background: transparent;
             border: none;
             color: $text-primary;
@@ -461,6 +490,60 @@ onMounted(() => {
               }
             }
           }
+        }
+      }
+
+      .sort-direction-btn {
+        height: 32px; // 与 el-select 默认高度保持一致
+        min-height: 32px;
+        padding: 0 $spacing-md;
+        background: rgba(255, 255, 255, 0.1);
+        backdrop-filter: blur(10px);
+        border: 1px solid rgba(255, 255, 255, 0.3);
+        border-radius: $radius-lg;
+        color: $text-primary;
+        font-size: $font-size-sm;
+        font-weight: $font-weight-medium;
+        line-height: 1;
+        cursor: pointer;
+        transition: all 0.3s ease;
+        box-shadow:
+          0 4px 16px rgba(31, 38, 135, 0.1),
+          inset 0 1px 0 rgba(255, 255, 255, 0.2);
+
+        @include flex-center();
+        gap: $spacing-xs;
+
+        &:hover {
+          background: rgba(255, 255, 255, 0.15);
+          border-color: rgba(255, 255, 255, 0.4);
+          box-shadow:
+            0 6px 20px rgba(31, 38, 135, 0.15),
+            inset 0 1px 0 rgba(255, 255, 255, 0.3);
+          transform: translateY(-1px);
+        }
+
+        &:active {
+          transform: translateY(0);
+          box-shadow:
+            0 2px 8px rgba(31, 38, 135, 0.1),
+            inset 0 1px 0 rgba(255, 255, 255, 0.2);
+        }
+
+        &.asc {
+          background: rgba(24, 144, 255, 0.15);
+          border-color: rgba(24, 144, 255, 0.3);
+          color: $primary-color;
+
+          &:hover {
+            background: rgba(24, 144, 255, 0.2);
+            border-color: rgba(24, 144, 255, 0.4);
+          }
+        }
+
+        .el-icon {
+          font-size: $font-size-base;
+          transition: transform 0.3s ease;
         }
       }
     }
@@ -544,6 +627,13 @@ onMounted(() => {
 
         .el-select {
           width: 100%;
+        }
+
+        .sort-direction-btn {
+          width: 100%;
+          height: 32px; // 确保移动端也保持一致的高度
+          min-height: 32px;
+          justify-content: center;
         }
       }
     }

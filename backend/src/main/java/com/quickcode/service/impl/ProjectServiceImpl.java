@@ -176,8 +176,8 @@ public class ProjectServiceImpl implements ProjectService {
 
         // 验证和标准化搜索参数
         request.setDefaults();
-        request.validate();
         request.normalize();
+        request.validate();
 
         // 构建分页参数
         Pageable pageable = request.toPageable();
