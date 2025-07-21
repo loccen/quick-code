@@ -30,6 +30,29 @@
         </span>
       </div>
 
+      <!-- 项目底部信息 -->
+      <div class="project-footer">
+        <div class="project-price">
+          <i class="fas fa-coins"></i>
+          <span>{{ project.price }} 积分</span>
+        </div>
+        <div class="project-actions">
+          <button 
+            class="btn btn-sm btn-outline" 
+            @click.stop="handleDemo"
+          >
+            <i class="fas fa-play"></i>
+            演示
+          </button>
+          <button 
+            class="btn btn-sm btn-primary" 
+            @click.stop="handlePurchase"
+          >
+            购买
+          </button>
+        </div>
+      </div>
+
       <!-- 项目统计信息 -->
       <div class="project-stats">
         <!-- 评分 -->
@@ -54,29 +77,6 @@
         <div class="stat-item" v-if="project.username">
           <i class="fas fa-user"></i>
           <span>{{ project.username }}</span>
-        </div>
-      </div>
-
-      <!-- 项目底部信息 -->
-      <div class="project-footer">
-        <div class="project-price">
-          <i class="fas fa-coins"></i>
-          <span>{{ project.price }} 积分</span>
-        </div>
-        <div class="project-actions">
-          <button 
-            class="btn btn-sm btn-outline" 
-            @click.stop="handleDemo"
-          >
-            <i class="fas fa-play"></i>
-            演示
-          </button>
-          <button 
-            class="btn btn-sm btn-primary" 
-            @click.stop="handlePurchase"
-          >
-            购买
-          </button>
         </div>
       </div>
     </div>
@@ -208,7 +208,7 @@ const formatDate = (dateString: string): string => {
 .project-card {
   background: $gradient-card;
   border-radius: $radius-xl;
-  overflow: hidden;
+  overflow: hidden; // 恢复hidden，但调整内部布局
   border: 1px solid rgba(255, 255, 255, 0.2);
   backdrop-filter: $glass-blur-sm;
   box-shadow: $shadow-layered-sm;
@@ -289,7 +289,7 @@ const formatDate = (dateString: string): string => {
   }
 
   .project-content {
-    padding: $spacing-lg;
+    padding: $spacing-lg $spacing-lg $spacing-md $spacing-lg; // 保持适当的底部padding
 
     .project-title {
       font-size: $font-size-lg;
@@ -328,14 +328,15 @@ const formatDate = (dateString: string): string => {
     }
 
     .project-stats {
-      display: grid;
-      grid-template-columns: 1fr 1fr;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
       gap: $spacing-xs;
-      margin-bottom: $spacing-lg;
-      padding: $spacing-sm;
-      background: rgba(255, 255, 255, 0.05);
-      border-radius: $radius-md;
-      border: 1px solid rgba(255, 255, 255, 0.1);
+      margin: $spacing-sm 0 0 0; // 只有顶部margin
+      padding: $spacing-sm $spacing-md $spacing-md $spacing-md; // 增加底部padding确保内容完全显示
+      background: rgba(255, 255, 255, 0.03);
+      border-radius: 0; // 移除圆角，让它与卡片边界对齐
+      border-top: 1px solid rgba(255, 255, 255, 0.1);
 
       .stat-item {
         display: flex;
@@ -343,6 +344,8 @@ const formatDate = (dateString: string): string => {
         gap: $spacing-xs;
         font-size: $font-size-xs;
         color: $text-secondary;
+        flex: 1;
+        justify-content: center;
         padding: $spacing-xs;
         border-radius: $radius-sm;
         transition: all 0.2s ease;
@@ -353,9 +356,10 @@ const formatDate = (dateString: string): string => {
         }
 
         i {
-          width: 12px;
+          width: 10px;
           text-align: center;
           opacity: 0.8;
+          font-size: 10px;
 
           &.fa-star {
             color: $warning-color;
@@ -376,6 +380,7 @@ const formatDate = (dateString: string): string => {
           white-space: nowrap;
           overflow: hidden;
           text-overflow: ellipsis;
+          font-size: $font-size-xs;
         }
       }
     }
@@ -463,15 +468,27 @@ const formatDate = (dateString: string): string => {
     }
 
     .project-content {
-      padding: $spacing-md;
+      padding: $spacing-md $spacing-md $spacing-sm $spacing-md; // 移动端保持适当的底部padding
 
       .project-stats {
-        grid-template-columns: 1fr;
+        flex-wrap: wrap;
         gap: $spacing-xs;
+        margin: $spacing-xs 0 0 0; // 只有顶部margin
+        padding: $spacing-xs $spacing-sm $spacing-sm $spacing-sm; // 增加底部padding
 
         .stat-item {
           font-size: $font-size-xs;
-          padding: $spacing-xs $spacing-sm;
+          padding: $spacing-xs;
+          flex: 1;
+          min-width: 0; // 允许flex项目收缩
+
+          span {
+            font-size: 10px;
+          }
+
+          i {
+            font-size: 8px;
+          }
         }
       }
 

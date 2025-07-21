@@ -18,26 +18,44 @@ export interface ProjectQueryParams {
 }
 
 /**
- * 项目数据类型
+ * 项目数据类型（匹配后端ProjectDTO）
  */
 export interface Project {
   id: number
   title: string
   description: string
-  category: string
+  categoryId?: number
+  categoryName?: string
+  userId?: number
+  username?: string // 作者用户名
+  userNickname?: string
+  userAvatar?: string
   price: number
-  thumbnail?: string
-  author: string
-  rating?: number
-  downloads?: number
+  coverImage?: string
+  demoUrl?: string
+  techStack?: string[]
   tags?: string[]
-  createdAt: string
+  downloadCount?: number // 下载次数
+  viewCount?: number
+  likeCount?: number
+  rating?: number
+  ratingCount?: number
+  status?: number
+  statusText?: string
+  isFeatured?: boolean
+  publishedTime?: string
+  createdTime?: string // 创建时间
+  updatedTime?: string
+  // 兼容旧字段名
+  category?: string
+  thumbnail?: string
+  author?: string
+  downloads?: number
+  createdAt?: string
   updatedAt?: string
   features?: string[]
-  techStack?: string[]
   sourceSize?: string
   license?: string
-  demoUrl?: string
 }
 
 /**
@@ -100,7 +118,7 @@ export const publicContentApi = {
    * 获取热门项目
    */
   getHotProjects(limit = 6): Promise<ApiResponse<Project[]>> {
-    return request.get('/public/projects/hot', {
+    return request.get('/public/projects/popular', {
       params: { limit }
     })
   },
@@ -115,7 +133,7 @@ export const publicContentApi = {
   },
 
   /**
-   * 获取推荐项目
+   * 获取精选项目
    */
   getFeaturedProjects(limit = 6): Promise<ApiResponse<Project[]>> {
     return request.get('/public/projects/featured', {

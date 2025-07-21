@@ -171,6 +171,7 @@ import { useUserStore } from '@/stores/user'
 import { onMounted, ref } from 'vue'
 import { useRouter } from 'vue-router'
 import { ElMessage } from 'element-plus'
+import { publicContentApi } from '@/api/modules/public'
 
 // 定义项目类型
 interface Project {
@@ -182,10 +183,16 @@ interface Project {
   price: number
   isHot?: boolean
   hasDocker?: boolean
-  author?: string
+  // 后端实际字段名
+  username?: string // 作者用户名
   rating?: number
-  downloads?: number
+  downloadCount?: number // 下载次数
+  createdTime?: string // 创建时间
   category?: string
+  // 兼容旧字段名
+  author?: string
+  downloads?: number
+  createdAt?: string
 }
 
 // 定义统计数据类型
@@ -209,7 +216,11 @@ const featuredProjects = ref<Project[]>([
     tags: ['Vue3', 'TypeScript', 'Element Plus'],
     price: 299,
     isHot: false,
-    hasDocker: true
+    hasDocker: true,
+    username: 'vue_master',
+    rating: 4.8,
+    downloadCount: 1250,
+    createdTime: '2024-01-15T10:30:00'
   },
   {
     id: 2,
@@ -219,7 +230,11 @@ const featuredProjects = ref<Project[]>([
     tags: ['React', 'Node.js', 'MongoDB'],
     price: 599,
     isHot: true,
-    hasDocker: true
+    hasDocker: true,
+    username: 'react_dev',
+    rating: 4.9,
+    downloadCount: 2100,
+    createdTime: '2024-01-10T14:20:00'
   },
   {
     id: 3,
@@ -229,7 +244,11 @@ const featuredProjects = ref<Project[]>([
     tags: ['Spring Boot', '微服务', 'Redis'],
     price: 899,
     isHot: false,
-    hasDocker: true
+    hasDocker: true,
+    username: 'java_expert',
+    rating: 4.7,
+    downloadCount: 890,
+    createdTime: '2024-01-05T09:15:00'
   }
 ])
 
@@ -274,6 +293,21 @@ const handleViewAllProjects = () => {
 const handleDemo = (project: Project) => {
   ElMessage.info(`正在启动 ${project.title} 的演示环境...`)
   // 这里可以添加演示逻辑
+}
+
+/**
+ * 获取热门项目数据
+ */
+const loadFeaturedProjects = async () => {
+  try {
+    const response = await publicContentApi.getFeaturedProjects(3)
+    if (response.success && response.data) {
+      featuredProjects.value = response.data
+    }
+  } catch (error) {
+    console.warn('获取热门项目失败，使用模拟数据:', error)
+    // 保持使用模拟数据作为fallback
+  }
 }
 
 /**
@@ -359,6 +393,9 @@ const addCardTiltEffect = () => {
 
 // 生命周期
 onMounted(() => {
+  // 加载热门项目数据
+  loadFeaturedProjects()
+
   // 初始化视差效果
   initParallaxEffects()
 

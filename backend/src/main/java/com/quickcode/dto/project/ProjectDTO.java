@@ -84,6 +84,11 @@ public class ProjectDTO {
     private String demoUrl;
 
     /**
+     * 是否容器化
+     */
+    private boolean hasDocker;
+
+    /**
      * 技术栈
      */
     private List<String> techStack;
@@ -165,6 +170,7 @@ public class ProjectDTO {
                 .price(project.getPrice())
                 .coverImage(project.getCoverImage())
                 .demoUrl(project.getDemoUrl())
+                .hasDocker(project.getDockerImage() != null && !project.getDockerImage().isEmpty())
                 .techStack(project.getTechStack())
                 .tags(project.getTags())
                 .downloadCount(project.getDownloadCount())
