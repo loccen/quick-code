@@ -7,9 +7,13 @@ import com.quickcode.dto.project.ProjectDTO;
 import com.quickcode.dto.project.ProjectDetailDTO;
 import com.quickcode.dto.project.ProjectSearchRequest;
 import com.quickcode.dto.project.ProjectUpdateRequest;
+import com.quickcode.dto.ProjectFileUploadResponse;
+import com.quickcode.entity.ProjectFile;
 import com.quickcode.service.ProjectService;
+import com.quickcode.service.ProjectFileService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
@@ -17,6 +21,8 @@ import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 import jakarta.validation.Valid;
+import java.util.List;
+import java.util.Map;
 import java.util.List;
 
 /**
@@ -34,6 +40,7 @@ import java.util.List;
 public class ProjectController extends BaseController {
 
     private final ProjectService projectService;
+    private final ProjectFileService projectFileService;
 
     /**
      * 创建项目
@@ -46,7 +53,6 @@ public class ProjectController extends BaseController {
         log.info("创建项目: title={}", request.getTitle());
 
         try {
-            // TODO: 从认证上下文获取用户ID
             Long userId = getCurrentUserId();
             
             ProjectDTO project = projectService.createProject(request, userId);
@@ -72,7 +78,7 @@ public class ProjectController extends BaseController {
         log.info("更新项目: id={}, title={}", id, request.getTitle());
 
         try {
-            // TODO: 从认证上下文获取用户ID
+
             Long userId = getCurrentUserId();
             
             request.setId(id);
@@ -96,7 +102,7 @@ public class ProjectController extends BaseController {
         log.info("获取项目详情: id={}", id);
 
         try {
-            // TODO: 从认证上下文获取用户ID
+
             Long userId = getCurrentUserId();
             
             ProjectDetailDTO project = projectService.getProjectDetail(id, userId);
@@ -119,7 +125,7 @@ public class ProjectController extends BaseController {
         log.info("删除项目: id={}", id);
 
         try {
-            // TODO: 从认证上下文获取用户ID
+
             Long userId = getCurrentUserId();
             
             // 检查权限
@@ -151,7 +157,7 @@ public class ProjectController extends BaseController {
         log.info("获取用户项目列表: page={}, size={}, status={}", page, size, status);
 
         try {
-            // TODO: 从认证上下文获取用户ID
+
             Long userId = getCurrentUserId();
             
             Pageable pageable = PageRequest.of(page, size, Sort.by(Sort.Direction.DESC, "createdTime"));
@@ -221,7 +227,7 @@ public class ProjectController extends BaseController {
         log.info("发布项目: id={}", id);
 
         try {
-            // TODO: 从认证上下文获取用户ID
+
             Long userId = getCurrentUserId();
             
             projectService.publishProject(id, userId);
@@ -244,7 +250,7 @@ public class ProjectController extends BaseController {
         log.info("下架项目: id={}", id);
 
         try {
-            // TODO: 从认证上下文获取用户ID
+
             Long userId = getCurrentUserId();
             
             projectService.takeOfflineProject(id, userId);
@@ -267,7 +273,7 @@ public class ProjectController extends BaseController {
         log.info("点赞项目: id={}", id);
 
         try {
-            // TODO: 从认证上下文获取用户ID
+
             Long userId = getCurrentUserId();
             
             projectService.incrementLikeCount(id, userId);
@@ -290,7 +296,7 @@ public class ProjectController extends BaseController {
         log.info("取消点赞项目: id={}", id);
 
         try {
-            // TODO: 从认证上下文获取用户ID
+
             Long userId = getCurrentUserId();
             
             projectService.decrementLikeCount(id, userId);
@@ -348,7 +354,7 @@ public class ProjectController extends BaseController {
         log.info("审核通过项目: id={}", id);
 
         try {
-            // TODO: 从认证上下文获取管理员用户ID
+
             Long adminUserId = getCurrentUserId();
 
             projectService.approveProject(id, adminUserId);
@@ -374,7 +380,7 @@ public class ProjectController extends BaseController {
         log.info("审核拒绝项目: id={}, reason={}", id, reason);
 
         try {
-            // TODO: 从认证上下文获取管理员用户ID
+
             Long adminUserId = getCurrentUserId();
 
             projectService.rejectProject(id, adminUserId, reason);
@@ -397,7 +403,7 @@ public class ProjectController extends BaseController {
         log.info("设置为精选项目: id={}", id);
 
         try {
-            // TODO: 从认证上下文获取管理员用户ID
+
             Long adminUserId = getCurrentUserId();
 
             projectService.setAsFeatured(id, adminUserId);
@@ -420,7 +426,7 @@ public class ProjectController extends BaseController {
         log.info("取消精选项目: id={}", id);
 
         try {
-            // TODO: 从认证上下文获取管理员用户ID
+
             Long adminUserId = getCurrentUserId();
 
             projectService.unsetFeatured(id, adminUserId);
@@ -446,7 +452,7 @@ public class ProjectController extends BaseController {
         log.info("批量更新项目状态: projectIds={}, status={}", projectIds, status);
 
         try {
-            // TODO: 从认证上下文获取管理员用户ID
+
             Long adminUserId = getCurrentUserId();
 
             projectService.batchUpdateProjectStatus(projectIds, status, adminUserId);
@@ -469,7 +475,7 @@ public class ProjectController extends BaseController {
         log.info("批量删除项目: projectIds={}", projectIds);
 
         try {
-            // TODO: 从认证上下文获取管理员用户ID
+
             Long adminUserId = getCurrentUserId();
 
             projectService.batchDeleteProjects(projectIds, adminUserId);
@@ -500,12 +506,135 @@ public class ProjectController extends BaseController {
         }
     }
 
+    // ==================== 项目文件管理API ====================
+
     /**
-     * 临时方法：获取当前用户ID
-     * TODO: 实现真正的用户认证和授权
+     * 获取项目文件列表
      */
-    protected Long getCurrentUserId() {
-        // 临时返回固定用户ID，实际应该从Spring Security上下文获取
-        return 1L;
+    @GetMapping("/{projectId}/files")
+    @PreAuthorize("hasRole('USER')")
+    public ApiResponse<Page<ProjectFileUploadResponse>> getProjectFiles(
+            @PathVariable Long projectId,
+            @RequestParam(value = "fileType", required = false) String fileType,
+            @RequestParam(value = "page", defaultValue = "0") int page,
+            @RequestParam(value = "size", defaultValue = "20") int size) {
+
+        Long userId = getCurrentUserId();
+        log.info("获取项目文件列表: projectId={}, userId={}, fileType={}", projectId, userId, fileType);
+
+        try {
+            Pageable pageable = PageRequest.of(page, size, Sort.by(Sort.Direction.DESC, "uploadTime"));
+            Page<ProjectFile> files = projectFileService.getProjectFiles(projectId, fileType, pageable);
+            Page<ProjectFileUploadResponse> response = files.map(ProjectFileUploadResponse::fromProjectFile);
+
+            return success(response, "获取项目文件列表成功");
+
+        } catch (Exception e) {
+            log.error("获取项目文件列表失败: projectId={}, userId={}", projectId, userId, e);
+            return error("获取项目文件列表失败");
+        }
     }
+
+    /**
+     * 设置主文件
+     */
+    @PostMapping("/{projectId}/files/{fileId}/primary")
+    @PreAuthorize("hasRole('USER')")
+    public ApiResponse<Void> setPrimaryFile(
+            @PathVariable Long projectId,
+            @PathVariable Long fileId) {
+
+        Long userId = getCurrentUserId();
+        log.info("设置主文件: projectId={}, fileId={}, userId={}", projectId, fileId, userId);
+
+        try {
+            boolean success = projectFileService.setPrimaryFile(fileId, userId);
+            if (success) {
+                return success(null, "设置主文件成功");
+            } else {
+                return error("设置主文件失败");
+            }
+
+        } catch (Exception e) {
+            log.error("设置主文件失败: projectId={}, fileId={}, userId={}", projectId, fileId, userId, e);
+            return error("设置主文件失败");
+        }
+    }
+
+    /**
+     * 删除项目文件
+     */
+    @DeleteMapping("/{projectId}/files/{fileId}")
+    @PreAuthorize("hasRole('USER')")
+    public ApiResponse<Void> deleteProjectFile(
+            @PathVariable Long projectId,
+            @PathVariable Long fileId) {
+
+        Long userId = getCurrentUserId();
+        log.info("删除项目文件: projectId={}, fileId={}, userId={}", projectId, fileId, userId);
+
+        try {
+            boolean success = projectFileService.deleteProjectFile(fileId, userId);
+            if (success) {
+                return success(null, "删除文件成功");
+            } else {
+                return error("删除文件失败");
+            }
+
+        } catch (Exception e) {
+            log.error("删除项目文件失败: projectId={}, fileId={}, userId={}", projectId, fileId, userId, e);
+            return error("删除文件失败");
+        }
+    }
+
+    /**
+     * 批量删除项目文件
+     */
+    @DeleteMapping("/{projectId}/files/batch")
+    @PreAuthorize("hasRole('USER')")
+    public ApiResponse<Map<String, Object>> deleteProjectFilesBatch(
+            @PathVariable Long projectId,
+            @RequestBody List<Long> fileIds) {
+
+        Long userId = getCurrentUserId();
+        log.info("批量删除项目文件: projectId={}, fileIds={}, userId={}", projectId, fileIds, userId);
+
+        try {
+            int deletedCount = projectFileService.deleteProjectFiles(fileIds, userId);
+
+            Map<String, Object> result = Map.of(
+                    "totalFiles", fileIds.size(),
+                    "deletedCount", deletedCount,
+                    "failedCount", fileIds.size() - deletedCount
+            );
+
+            return success(result, String.format("批量删除完成：成功删除 %d 个文件", deletedCount));
+
+        } catch (Exception e) {
+            log.error("批量删除项目文件失败: projectId={}, userId={}", projectId, userId, e);
+            return error("批量删除文件失败");
+        }
+    }
+
+    /**
+     * 获取项目文件统计
+     */
+    @GetMapping("/{projectId}/files/statistics")
+    @PreAuthorize("hasRole('USER')")
+    public ApiResponse<ProjectFileService.FileStatistics> getProjectFileStatistics(
+            @PathVariable Long projectId) {
+
+        Long userId = getCurrentUserId();
+        log.info("获取项目文件统计: projectId={}, userId={}", projectId, userId);
+
+        try {
+            ProjectFileService.FileStatistics statistics = projectFileService.getFileStatistics(projectId);
+            return success(statistics, "获取文件统计成功");
+
+        } catch (Exception e) {
+            log.error("获取项目文件统计失败: projectId={}, userId={}", projectId, userId, e);
+            return error("获取文件统计失败");
+        }
+    }
+
 }

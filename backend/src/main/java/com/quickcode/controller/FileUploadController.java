@@ -1,21 +1,27 @@
 package com.quickcode.controller;
 
 import com.quickcode.common.response.ApiResponse;
+import com.quickcode.dto.ProjectFileBatchUploadResponse;
+import com.quickcode.dto.ProjectFileUploadRequest;
+import com.quickcode.dto.ProjectFileUploadResponse;
+import com.quickcode.service.ProjectFileService;
+import com.quickcode.service.ProjectFileService.FileUploadResult;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
+import jakarta.validation.Valid;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.nio.file.StandardCopyOption;
-import java.util.HashMap;
-import java.util.Map;
-import java.util.UUID;
+import java.util.*;
+import java.util.stream.Collectors;
 
 /**
  * 文件上传控制器
@@ -28,7 +34,10 @@ import java.util.UUID;
 @RestController
 @RequestMapping("/api/upload")
 @RequiredArgsConstructor
+@Validated
 public class FileUploadController extends BaseController {
+
+    private final ProjectFileService projectFileService;
 
     @Value("${app.file.upload-path:/uploads}")
     private String uploadPath;
@@ -133,6 +142,133 @@ public class FileUploadController extends BaseController {
         } catch (IllegalArgumentException e) {
             log.warn("项目文件上传验证失败: userId={}, error={}", getCurrentUserId(), e.getMessage());
             return error(e.getMessage());
+        }
+    }
+
+    /**
+     * 上传项目文件（增强版）
+     * 支持指定项目ID、文件类型、描述等参数
+     */
+    @PostMapping("/project/{projectId}")
+    @PreAuthorize("isAuthenticated()")
+    public ApiResponse<ProjectFileUploadResponse> uploadProjectFileEnhanced(
+            @PathVariable Long projectId,
+            @RequestParam("file") MultipartFile file,
+            @RequestParam(value = "fileType", defaultValue = "SOURCE") String fileType,
+            @RequestParam(value = "description", required = false) String description,
+            @RequestParam(value = "isPrimary", defaultValue = "false") Boolean isPrimary) {
+
+        Long userId = getCurrentUserId();
+        log.info("上传项目文件（增强版）: projectId={}, userId={}, fileType={}, fileName={}, fileSize={}",
+                projectId, userId, fileType, file.getOriginalFilename(), file.getSize());
+
+        try {
+            FileUploadResult result = projectFileService.uploadProjectFile(
+                    projectId, file, fileType, description, userId);
+
+            if (!result.isSuccess()) {
+                return error(result.getMessage());
+            }
+
+            // 如果需要设为主文件
+            if (isPrimary && result.getProjectFile() != null) {
+                projectFileService.setPrimaryFile(result.getProjectFile().getId(), userId);
+            }
+
+            ProjectFileUploadResponse response = ProjectFileUploadResponse.fromProjectFile(result.getProjectFile());
+            return success(response, "文件上传成功");
+
+        } catch (IOException e) {
+            log.error("项目文件上传失败: projectId={}, userId={}, error={}", projectId, userId, e.getMessage(), e);
+            return error("文件上传失败: " + e.getMessage());
+        } catch (Exception e) {
+            log.error("项目文件上传异常: projectId={}, userId={}", projectId, userId, e);
+            return error("文件上传失败");
+        }
+    }
+
+    /**
+     * 批量上传项目文件
+     */
+    @PostMapping("/project/{projectId}/batch")
+    @PreAuthorize("isAuthenticated()")
+    public ApiResponse<ProjectFileBatchUploadResponse> uploadProjectFilesBatch(
+            @PathVariable Long projectId,
+            @RequestParam("files") List<MultipartFile> files,
+            @RequestParam(value = "fileType", defaultValue = "SOURCE") String fileType) {
+
+        Long userId = getCurrentUserId();
+        log.info("批量上传项目文件: projectId={}, userId={}, fileType={}, fileCount={}",
+                projectId, userId, fileType, files.size());
+
+        try {
+            List<FileUploadResult> results = projectFileService.uploadProjectFiles(
+                    projectId, files, fileType, userId);
+
+            List<ProjectFileUploadResponse> successFiles = new ArrayList<>();
+            List<ProjectFileBatchUploadResponse.FailedFileInfo> failedFiles = new ArrayList<>();
+
+            for (int i = 0; i < results.size(); i++) {
+                FileUploadResult result = results.get(i);
+                MultipartFile file = files.get(i);
+
+                if (result.isSuccess()) {
+                    successFiles.add(ProjectFileUploadResponse.fromProjectFile(result.getProjectFile()));
+                } else {
+                    failedFiles.add(ProjectFileBatchUploadResponse.FailedFileInfo.builder()
+                            .originalName(file.getOriginalFilename())
+                            .reason(result.getMessage())
+                            .errorCode("UPLOAD_FAILED")
+                            .build());
+                }
+            }
+
+            ProjectFileBatchUploadResponse response = ProjectFileBatchUploadResponse.builder()
+                    .totalFiles(files.size())
+                    .successCount(successFiles.size())
+                    .failureCount(failedFiles.size())
+                    .successFiles(successFiles)
+                    .failedFiles(failedFiles)
+                    .build();
+
+            return success(response, String.format("批量上传完成：成功 %d 个，失败 %d 个",
+                    successFiles.size(), failedFiles.size()));
+
+        } catch (Exception e) {
+            log.error("批量上传项目文件异常: projectId={}, userId={}", projectId, userId, e);
+            return error("批量上传失败");
+        }
+    }
+
+    /**
+     * 替换项目文件
+     */
+    @PutMapping("/project/file/{fileId}")
+    @PreAuthorize("isAuthenticated()")
+    public ApiResponse<ProjectFileUploadResponse> replaceProjectFile(
+            @PathVariable Long fileId,
+            @RequestParam("file") MultipartFile file) {
+
+        Long userId = getCurrentUserId();
+        log.info("替换项目文件: fileId={}, userId={}, fileName={}, fileSize={}",
+                fileId, userId, file.getOriginalFilename(), file.getSize());
+
+        try {
+            FileUploadResult result = projectFileService.replaceProjectFile(fileId, file, userId);
+
+            if (!result.isSuccess()) {
+                return error(result.getMessage());
+            }
+
+            ProjectFileUploadResponse response = ProjectFileUploadResponse.fromProjectFile(result.getProjectFile());
+            return success(response, "文件替换成功");
+
+        } catch (IOException e) {
+            log.error("替换项目文件失败: fileId={}, userId={}, error={}", fileId, userId, e.getMessage(), e);
+            return error("文件替换失败: " + e.getMessage());
+        } catch (Exception e) {
+            log.error("替换项目文件异常: fileId={}, userId={}", fileId, userId, e);
+            return error("文件替换失败");
         }
     }
 
