@@ -146,6 +146,36 @@ export const userRoutes: RouteRecordRaw[] = [
         }
       },
       {
+        path: 'project/upload',
+        name: 'ProjectUpload',
+        component: () => import('@/views/project/ProjectUploadView.vue'),
+        meta: {
+          title: '上传项目',
+          icon: 'Upload',
+          requiresAuth: true
+        }
+      },
+      {
+        path: 'project/edit/:id',
+        name: 'ProjectEdit',
+        component: () => import('@/views/project/ProjectEditView.vue'),
+        meta: {
+          title: '编辑项目',
+          hidden: true,
+          requiresAuth: true
+        }
+      },
+      {
+        path: 'project/:id',
+        name: 'ProjectDetail',
+        component: () => import('@/views/project/ProjectDetailView.vue'),
+        meta: {
+          title: '项目详情',
+          hidden: true,
+          requiresAuth: true
+        }
+      },
+      {
         path: 'my-orders',
         name: 'MyOrders',
         component: () => import('@/views/order/MyOrdersView.vue'),

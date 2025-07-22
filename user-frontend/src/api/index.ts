@@ -11,6 +11,12 @@ export { default as authApi } from './modules/auth'
 // 导出用户服务
 export { default as userApi } from './user'
 
+// 导出项目服务
+export { default as projectApi } from './modules/project'
+
+// 导出公开服务
+export { publicProjectApi, publicContentApi } from './modules/public'
+
 // 导出HTTP客户端
 export { default as http } from '@/utils/http'
 
@@ -21,10 +27,17 @@ export type * from '@/types/user'
 // 统一API实例
 import authApi from './modules/auth'
 import userApi from './user'
+import projectApi from './modules/project'
+import { publicProjectApi, publicContentApi } from './modules/public'
 
 export const api = {
   auth: authApi,
-  user: userApi
+  user: userApi,
+  project: projectApi,
+  public: {
+    project: publicProjectApi,
+    content: publicContentApi
+  }
 }
 
 export default api

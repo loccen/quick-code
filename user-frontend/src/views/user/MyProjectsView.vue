@@ -1,402 +1,568 @@
 <template>
   <div class="my-projects-view">
-    <!-- 页面容器 -->
-    <div class="container">
-      <div class="page-header">
-        <h1 class="page-title">我的项目</h1>
-        <p class="page-subtitle">管理您上传、购买和收藏的项目</p>
+    <!-- 页面头部 -->
+    <div class="page-header">
+      <div class="header-content">
+        <h1 class="page-title">
+          <el-icon><FolderOpened /></el-icon>
+          我的项目
+        </h1>
+        <p class="page-description">管理您上传、购买和收藏的项目</p>
       </div>
 
-      <!-- 项目管理 -->
-      <ModernCard title="项目管理" class="projects-card">
-        <el-tabs v-model="activeProjectTab" class="project-tabs">
-          <el-tab-pane label="上传的项目" name="uploaded">
-            <div class="project-list">
-              <div v-if="uploadedProjects.length === 0" class="empty-state">
-                <el-empty description="暂无上传的项目">
-                  <ModernButton type="primary" @click="$router.push('/upload')">
-                    上传项目
-                  </ModernButton>
-                </el-empty>
-              </div>
-              <div v-else class="project-grid">
-                <div v-for="project in uploadedProjects" :key="project.id" class="project-card">
-                  <div class="project-image">
-                    <img :src="project.thumbnail" :alt="project.name" />
-                    <div class="project-status" :class="project.status">
-                      {{ getStatusText(project.status) }}
-                    </div>
-                  </div>
-                  <div class="project-info">
-                    <h4 class="project-name">{{ project.name }}</h4>
-                    <p class="project-desc">{{ project.description }}</p>
-                    <div class="project-meta">
-                      <span class="project-price">{{ project.price }} 积分</span>
-                      <span class="project-sales">销量: {{ project.sales }}</span>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            </div>
-          </el-tab-pane>
-          
-          <el-tab-pane label="购买的项目" name="purchased">
-            <div class="project-list">
-              <div v-if="purchasedProjects.length === 0" class="empty-state">
-                <el-empty description="暂无购买的项目">
-                  <ModernButton type="primary" @click="$router.push('/market')">
-                    浏览项目市场
-                  </ModernButton>
-                </el-empty>
-              </div>
-              <div v-else class="project-grid">
-                <div v-for="project in purchasedProjects" :key="project.id" class="project-card">
-                  <div class="project-image">
-                    <img :src="project.thumbnail" :alt="project.name" />
-                  </div>
-                  <div class="project-info">
-                    <h4 class="project-name">{{ project.name }}</h4>
-                    <p class="project-desc">{{ project.description }}</p>
-                    <div class="project-actions">
-                      <ModernButton size="small" type="primary">下载</ModernButton>
-                      <ModernButton size="small">演示</ModernButton>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            </div>
-          </el-tab-pane>
-          
-          <el-tab-pane label="收藏的项目" name="favorites">
-            <div class="project-list">
-              <div v-if="favoriteProjects.length === 0" class="empty-state">
-                <el-empty description="暂无收藏的项目">
-                  <ModernButton type="primary" @click="$router.push('/market')">
-                    浏览项目市场
-                  </ModernButton>
-                </el-empty>
-              </div>
-              <div v-else class="project-grid">
-                <div v-for="project in favoriteProjects" :key="project.id" class="project-card">
-                  <div class="project-image">
-                    <img :src="project.thumbnail" :alt="project.name" />
-                  </div>
-                  <div class="project-info">
-                    <h4 class="project-name">{{ project.name }}</h4>
-                    <p class="project-desc">{{ project.description }}</p>
-                    <div class="project-actions">
-                      <ModernButton size="small" type="primary">购买</ModernButton>
-                      <ModernButton size="small">演示</ModernButton>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            </div>
-          </el-tab-pane>
-        </el-tabs>
-      </ModernCard>
+      <div class="header-actions">
+        <el-button type="primary" @click="$router.push('/user/project/upload')">
+          <el-icon><Plus /></el-icon>
+          上传项目
+        </el-button>
+      </div>
+    </div>
+
+    <!-- 项目统计卡片 -->
+    <div class="stats-cards">
+      <div class="stat-card">
+        <div class="stat-icon uploaded">
+          <el-icon><Upload /></el-icon>
+        </div>
+        <div class="stat-content">
+          <div class="stat-number">{{ uploadedCount }}</div>
+          <div class="stat-label">上传的项目</div>
+        </div>
+      </div>
+
+      <div class="stat-card">
+        <div class="stat-icon purchased">
+          <el-icon><ShoppingCart /></el-icon>
+        </div>
+        <div class="stat-content">
+          <div class="stat-number">{{ purchasedCount }}</div>
+          <div class="stat-label">购买的项目</div>
+        </div>
+      </div>
+
+      <div class="stat-card">
+        <div class="stat-icon favorites">
+          <el-icon><Star /></el-icon>
+        </div>
+        <div class="stat-content">
+          <div class="stat-number">{{ favoritesCount }}</div>
+          <div class="stat-label">收藏的项目</div>
+        </div>
+      </div>
+
+      <div class="stat-card">
+        <div class="stat-icon earnings">
+          <el-icon><Coin /></el-icon>
+        </div>
+        <div class="stat-content">
+          <div class="stat-number">{{ totalEarnings }}</div>
+          <div class="stat-label">总收益（积分）</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 项目管理标签页 -->
+    <div class="projects-container">
+      <el-tabs v-model="activeTab" class="project-tabs">
+        <el-tab-pane label="我上传的项目" name="uploaded">
+          <div class="tab-header">
+            <h3>我上传的项目</h3>
+            <el-button type="primary" @click="$router.push('/user/project/upload')">
+              <el-icon><Plus /></el-icon>
+              上传新项目
+            </el-button>
+          </div>
+
+          <ProjectList
+            :projects="uploadedProjects"
+            :loading="uploadedLoading"
+            :total="uploadedTotal"
+            @refresh="loadUploadedProjects"
+            @search="handleUploadedSearch"
+            @filter="handleUploadedFilter"
+            @sort="handleUploadedSort"
+            @page-change="handleUploadedPageChange"
+            @project-click="handleProjectClick"
+            @project-edit="handleProjectEdit"
+            @project-delete="handleProjectDelete"
+            @project-publish="handleProjectPublish"
+            @project-unpublish="handleProjectUnpublish"
+          />
+        </el-tab-pane>
+
+        <el-tab-pane label="购买的项目" name="purchased">
+          <div class="tab-header">
+            <h3>购买的项目</h3>
+            <el-button @click="$router.push('/market')">
+              <el-icon><ShoppingCart /></el-icon>
+              浏览项目市场
+            </el-button>
+          </div>
+
+          <ProjectList
+            :projects="purchasedProjects"
+            :loading="purchasedLoading"
+            :total="purchasedTotal"
+            :show-actions="false"
+            @refresh="loadPurchasedProjects"
+            @search="handlePurchasedSearch"
+            @filter="handlePurchasedFilter"
+            @sort="handlePurchasedSort"
+            @page-change="handlePurchasedPageChange"
+            @project-click="handleProjectClick"
+          />
+        </el-tab-pane>
+
+        <el-tab-pane label="收藏的项目" name="favorites">
+          <div class="tab-header">
+            <h3>收藏的项目</h3>
+            <el-button @click="$router.push('/market')">
+              <el-icon><Star /></el-icon>
+              发现更多项目
+            </el-button>
+          </div>
+
+          <ProjectList
+            :projects="favoriteProjects"
+            :loading="favoritesLoading"
+            :total="favoritesTotal"
+            :show-actions="false"
+            @refresh="loadFavoriteProjects"
+            @search="handleFavoritesSearch"
+            @filter="handleFavoritesFilter"
+            @sort="handleFavoritesSort"
+            @page-change="handleFavoritesPageChange"
+            @project-click="handleProjectClick"
+          />
+        </el-tab-pane>
+      </el-tabs>
     </div>
   </div>
 </template>
 
 <script setup lang="ts">
-import { onMounted, reactive, ref } from 'vue'
-import { useAppStore } from '@/stores/app'
-import ModernCard from '@/components/ui/ModernCard.vue'
-import ModernButton from '@/components/ui/ModernButton.vue'
+import { ref, onMounted } from 'vue'
+import { useRouter } from 'vue-router'
+import { ElMessage, ElMessageBox } from 'element-plus'
+import {
+  FolderOpened,
+  Plus,
+  Upload,
+  ShoppingCart,
+  Star,
+  Coin
+} from '@element-plus/icons-vue'
+import ProjectList from '@/components/project/ProjectList.vue'
+import { projectApi } from '@/api/modules/project'
+import type { ProjectManagement } from '@/types/project'
 
-// Store
-const appStore = useAppStore()
+// 路由
+const router = useRouter()
 
-// 状态
-const activeProjectTab = ref('uploaded')
+// 响应式数据
+const activeTab = ref('uploaded')
 
-// 项目数据
-const uploadedProjects = ref([
-  {
-    id: 1,
-    name: 'Vue3 管理后台',
-    description: '基于Vue3+TypeScript的现代化管理后台',
-    thumbnail: '/api/placeholder/300/200',
-    price: 299,
-    sales: 45,
-    status: 'published'
+// 统计数据
+const uploadedCount = ref(0)
+const purchasedCount = ref(0)
+const favoritesCount = ref(0)
+const totalEarnings = ref(0)
+
+// 上传的项目
+const uploadedProjects = ref<ProjectManagement[]>([])
+const uploadedLoading = ref(false)
+const uploadedTotal = ref(0)
+const uploadedParams = ref({
+  page: 1,
+  size: 20,
+  keyword: '',
+  status: undefined,
+  sortBy: 'createdTime',
+  sortDir: 'DESC'
+})
+
+// 购买的项目
+const purchasedProjects = ref<ProjectManagement[]>([])
+const purchasedLoading = ref(false)
+const purchasedTotal = ref(0)
+const purchasedParams = ref({
+  page: 1,
+  size: 20,
+  keyword: '',
+  sortBy: 'createdTime',
+  sortDir: 'DESC'
+})
+
+// 收藏的项目
+const favoriteProjects = ref<ProjectManagement[]>([])
+const favoritesLoading = ref(false)
+const favoritesTotal = ref(0)
+const favoritesParams = ref({
+  page: 1,
+  size: 20,
+  keyword: '',
+  sortBy: 'createdTime',
+  sortDir: 'DESC'
+})
+
+// 加载上传的项目
+const loadUploadedProjects = async () => {
+  uploadedLoading.value = true
+  try {
+    // 模拟API调用
+    await new Promise(resolve => setTimeout(resolve, 1000))
+
+    // 模拟数据
+    const mockData: ProjectManagement[] = Array.from({ length: 5 }, (_, index) => ({
+      id: index + 1,
+      title: `项目 ${index + 1}`,
+      description: `这是第 ${index + 1} 个项目的描述`,
+      categoryId: 1,
+      categoryName: '前端框架',
+      userId: 1,
+      username: '当前用户',
+      price: 299 + index * 100,
+      isFree: index % 3 === 0,
+      coverImage: `/images/project-${index + 1}.jpg`,
+      status: index % 4,
+      statusDesc: ['草稿', '待审核', '已发布', '已拒绝'][index % 4],
+      isFeatured: index === 0,
+      viewCount: Math.floor(Math.random() * 1000),
+      downloadCount: Math.floor(Math.random() * 100),
+      likeCount: Math.floor(Math.random() * 50),
+      rating: Math.random() * 5,
+      ratingCount: Math.floor(Math.random() * 20),
+      publishedTime: `2024-01-${String(index + 1).padStart(2, '0')}`,
+      createdTime: `2024-01-${String(index + 1).padStart(2, '0')}`,
+      updatedTime: `2024-01-${String(index + 1).padStart(2, '0')}`,
+      tags: ['Vue3', 'TypeScript'],
+      techStack: ['Vue.js', 'TypeScript', 'Element Plus']
+    }))
+
+    uploadedProjects.value = mockData
+    uploadedTotal.value = mockData.length
+    uploadedCount.value = mockData.length
+  } catch (error) {
+    console.error('加载上传项目失败:', error)
+  } finally {
+    uploadedLoading.value = false
   }
-])
+}
 
-const purchasedProjects = ref([
-  {
-    id: 2,
-    name: 'React 电商系统',
-    description: '完整的电商解决方案',
-    thumbnail: '/api/placeholder/300/200'
-  }
-])
+// 加载购买的项目
+const loadPurchasedProjects = async () => {
+  purchasedLoading.value = true
+  try {
+    // 模拟API调用
+    await new Promise(resolve => setTimeout(resolve, 1000))
 
-const favoriteProjects = ref([
-  {
-    id: 3,
-    name: 'Spring Boot 微服务',
-    description: '企业级微服务架构',
-    thumbnail: '/api/placeholder/300/200'
+    // 模拟数据
+    const mockData: ProjectManagement[] = []
+    purchasedProjects.value = mockData
+    purchasedTotal.value = mockData.length
+    purchasedCount.value = mockData.length
+  } catch (error) {
+    console.error('加载购买项目失败:', error)
+  } finally {
+    purchasedLoading.value = false
   }
-])
+}
 
-// 获取项目状态文本
-const getStatusText = (status: string) => {
-  const statusMap: Record<string, string> = {
-    draft: '草稿',
-    pending: '审核中',
-    published: '已发布',
-    rejected: '已驳回'
+// 加载收藏的项目
+const loadFavoriteProjects = async () => {
+  favoritesLoading.value = true
+  try {
+    // 模拟API调用
+    await new Promise(resolve => setTimeout(resolve, 1000))
+
+    // 模拟数据
+    const mockData: ProjectManagement[] = []
+    favoriteProjects.value = mockData
+    favoritesTotal.value = mockData.length
+    favoritesCount.value = mockData.length
+  } catch (error) {
+    console.error('加载收藏项目失败:', error)
+  } finally {
+    favoritesLoading.value = false
   }
-  return statusMap[status] || '未知'
+}
+
+// 上传项目事件处理
+const handleUploadedSearch = (keyword: string) => {
+  uploadedParams.value.keyword = keyword
+  uploadedParams.value.page = 1
+  loadUploadedProjects()
+}
+
+const handleUploadedFilter = (filters: any) => {
+  uploadedParams.value.status = filters.status
+  uploadedParams.value.page = 1
+  loadUploadedProjects()
+}
+
+const handleUploadedSort = (sortBy: string, sortDir: string) => {
+  uploadedParams.value.sortBy = sortBy
+  uploadedParams.value.sortDir = sortDir
+  loadUploadedProjects()
+}
+
+const handleUploadedPageChange = (page: number, size: number) => {
+  uploadedParams.value.page = page
+  uploadedParams.value.size = size
+  loadUploadedProjects()
+}
+
+// 购买项目事件处理
+const handlePurchasedSearch = (keyword: string) => {
+  purchasedParams.value.keyword = keyword
+  purchasedParams.value.page = 1
+  loadPurchasedProjects()
+}
+
+const handlePurchasedFilter = (filters: any) => {
+  purchasedParams.value.page = 1
+  loadPurchasedProjects()
+}
+
+const handlePurchasedSort = (sortBy: string, sortDir: string) => {
+  purchasedParams.value.sortBy = sortBy
+  purchasedParams.value.sortDir = sortDir
+  loadPurchasedProjects()
+}
+
+const handlePurchasedPageChange = (page: number, size: number) => {
+  purchasedParams.value.page = page
+  purchasedParams.value.size = size
+  loadPurchasedProjects()
+}
+
+// 收藏项目事件处理
+const handleFavoritesSearch = (keyword: string) => {
+  favoritesParams.value.keyword = keyword
+  favoritesParams.value.page = 1
+  loadFavoriteProjects()
+}
+
+const handleFavoritesFilter = (filters: any) => {
+  favoritesParams.value.page = 1
+  loadFavoriteProjects()
+}
+
+const handleFavoritesSort = (sortBy: string, sortDir: string) => {
+  favoritesParams.value.sortBy = sortBy
+  favoritesParams.value.sortDir = sortDir
+  loadFavoriteProjects()
+}
+
+const handleFavoritesPageChange = (page: number, size: number) => {
+  favoritesParams.value.page = page
+  favoritesParams.value.size = size
+  loadFavoriteProjects()
+}
+
+// 项目操作事件处理
+const handleProjectClick = (project: ProjectManagement) => {
+  router.push(`/user/project/${project.id}`)
+}
+
+const handleProjectEdit = (project: ProjectManagement) => {
+  router.push(`/user/project/edit/${project.id}`)
+}
+
+const handleProjectDelete = async (project: ProjectManagement) => {
+  try {
+    await ElMessageBox.confirm(
+      `确定要删除项目"${project.title}"吗？此操作不可恢复。`,
+      '确认删除',
+      {
+        type: 'warning',
+        confirmButtonText: '确定删除',
+        cancelButtonText: '取消'
+      }
+    )
+
+    // TODO: 调用删除API
+    // await projectApi.deleteProject(project.id)
+
+    ElMessage.success('项目删除成功')
+    loadUploadedProjects()
+  } catch (error) {
+    // 用户取消删除
+    console.log('删除操作取消:', error)
+  }
+}
+
+const handleProjectPublish = async (project: ProjectManagement) => {
+  try {
+    // TODO: 调用发布API
+    // await projectApi.publishProject(project.id)
+
+    ElMessage.success('项目发布成功')
+    loadUploadedProjects()
+  } catch (error: any) {
+    ElMessage.error(error.response?.data?.message || '发布失败')
+  }
+}
+
+const handleProjectUnpublish = async (project: ProjectManagement) => {
+  try {
+    await ElMessageBox.confirm(
+      `确定要下架项目"${project.title}"吗？`,
+      '确认下架',
+      {
+        type: 'warning',
+        confirmButtonText: '确定下架',
+        cancelButtonText: '取消'
+      }
+    )
+
+    // TODO: 调用下架API
+    // await projectApi.unpublishProject(project.id)
+
+    ElMessage.success('项目下架成功')
+    loadUploadedProjects()
+  } catch (error) {
+    // 用户取消下架
+    console.log('下架操作取消:', error)
+  }
 }
 
 // 页面初始化
 onMounted(() => {
-  appStore.setPageTitle('我的项目')
+  loadUploadedProjects()
+  loadPurchasedProjects()
+  loadFavoriteProjects()
 })
 </script>
 
-<style lang="scss" scoped>
-@use '@/styles/variables' as *;
-@use '@/styles/mixins' as *;
-
+<style scoped>
 .my-projects-view {
-  min-height: calc(100vh - 200px);
-  padding: $spacing-xl 0;
-
-  .container {
-    max-width: 1200px;
-    margin: 0 auto;
-    padding: 0 $spacing-lg;
-
-    @include respond-below('lg') {
-      padding: 0 $spacing-md;
-    }
-
-    @include respond-below('md') {
-      padding: 0 $spacing-sm;
-    }
-  }
-
-  .page-header {
-    margin-bottom: $spacing-xl;
-
-    .page-title {
-      font-size: $font-size-3xl;
-      font-weight: $font-weight-bold;
-      color: var(--text-primary);
-      margin: 0 0 $spacing-xs 0;
-      @include gradient-text();
-    }
-
-    .page-subtitle {
-      color: var(--text-secondary);
-      font-size: $font-size-lg;
-      margin: 0;
-    }
-  }
-
-  .projects-card {
-    background: var(--gradient-glass);
-    backdrop-filter: var(--glass-blur-sm);
-    border: 1px solid var(--glass-border);
-    box-shadow: var(--shadow-layered-md);
-
-    .project-tabs {
-      :deep(.el-tabs__header) {
-        margin-bottom: $spacing-lg;
-        
-        .el-tabs__nav-wrap {
-          &::after {
-            background: var(--border-light);
-          }
-        }
-
-        .el-tabs__item {
-          font-weight: 500;
-          transition: all 0.3s ease;
-
-          &.is-active {
-            color: var(--primary-color);
-          }
-
-          &:hover {
-            color: var(--primary-hover);
-          }
-        }
-
-        .el-tabs__active-bar {
-          background: var(--gradient-primary);
-          height: 3px;
-          border-radius: 2px;
-        }
-      }
-
-      .project-list {
-        .empty-state {
-          text-align: center;
-          padding: $spacing-3xl 0;
-        }
-
-        .project-grid {
-          display: grid;
-          grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
-          gap: $spacing-lg;
-
-          .project-card {
-            background: var(--gradient-card);
-            border-radius: $radius-xl;
-            overflow: hidden;
-            box-shadow: var(--shadow-layered-sm);
-            transition: all 0.3s ease;
-            border: 1px solid var(--glass-border);
-
-            &:hover {
-              transform: translateY(-4px);
-              box-shadow: var(--shadow-layered-lg);
-            }
-
-            .project-image {
-              position: relative;
-              height: 200px;
-              overflow: hidden;
-
-              img {
-                width: 100%;
-                height: 100%;
-                object-fit: cover;
-                transition: transform 0.3s ease;
-              }
-
-              .project-status {
-                position: absolute;
-                top: $spacing-sm;
-                right: $spacing-sm;
-                padding: $spacing-xs $spacing-sm;
-                border-radius: $radius-md;
-                font-size: $font-size-xs;
-                font-weight: 500;
-                backdrop-filter: blur(10px);
-
-                &.draft {
-                  background: rgba(140, 140, 140, 0.9);
-                  color: white;
-                }
-
-                &.pending {
-                  background: rgba(250, 173, 20, 0.9);
-                  color: white;
-                }
-
-                &.published {
-                  background: rgba(82, 196, 26, 0.9);
-                  color: white;
-                }
-
-                &.rejected {
-                  background: rgba(255, 77, 79, 0.9);
-                  color: white;
-                }
-              }
-
-              &:hover img {
-                transform: scale(1.05);
-              }
-            }
-
-            .project-info {
-              padding: $spacing-lg;
-
-              .project-name {
-                font-size: $font-size-lg;
-                font-weight: 600;
-                color: var(--text-primary);
-                margin: 0 0 $spacing-xs 0;
-                line-height: $line-height-tight;
-              }
-
-              .project-desc {
-                color: var(--text-secondary);
-                font-size: $font-size-sm;
-                margin: 0 0 $spacing-md 0;
-                line-height: $line-height-base;
-                display: -webkit-box;
-                -webkit-line-clamp: 2;
-                -webkit-box-orient: vertical;
-                overflow: hidden;
-              }
-
-              .project-meta {
-                @include flex-between();
-                font-size: $font-size-sm;
-
-                .project-price {
-                  color: var(--primary-color);
-                  font-weight: 600;
-                }
-
-                .project-sales {
-                  color: var(--text-tertiary);
-                }
-              }
-
-              .project-actions {
-                display: flex;
-                gap: $spacing-sm;
-                margin-top: $spacing-md;
-              }
-            }
-          }
-        }
-      }
-    }
-  }
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 20px;
 }
 
-// 响应式设计
-@include respond-below('lg') {
-  .my-projects-view {
-    .projects-card {
-      .project-tabs {
-        .project-list {
-          .project-grid {
-            grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
-          }
-        }
-      }
-    }
-  }
+.page-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 32px;
+  padding: 32px;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  border-radius: 12px;
+  color: white;
 }
 
-@include respond-below('md') {
-  .my-projects-view {
-    .projects-card {
-      .project-tabs {
-        .project-list {
-          .project-grid {
-            grid-template-columns: 1fr;
-            gap: $spacing-md;
+.header-content {
+  flex: 1;
+}
 
-            .project-card {
-              .project-image {
-                height: 160px;
-              }
+.page-title {
+  font-size: 28px;
+  margin: 0 0 8px 0;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
 
-              .project-info {
-                padding: $spacing-md;
+.page-description {
+  font-size: 16px;
+  margin: 0;
+  opacity: 0.9;
+}
 
-                .project-name {
-                  font-size: $font-size-base;
-                }
-              }
-            }
-          }
-        }
-      }
-    }
-  }
+.header-actions {
+  flex-shrink: 0;
+}
+
+.stats-cards {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 20px;
+  margin-bottom: 32px;
+}
+
+.stat-card {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  padding: 24px;
+  background: white;
+  border-radius: 12px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+  transition: all 0.3s ease;
+}
+
+.stat-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.15);
+}
+
+.stat-icon {
+  width: 48px;
+  height: 48px;
+  border-radius: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 24px;
+  color: white;
+}
+
+.stat-icon.uploaded {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+}
+
+.stat-icon.purchased {
+  background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+}
+
+.stat-icon.favorites {
+  background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
+}
+
+.stat-icon.earnings {
+  background: linear-gradient(135deg, #43e97b 0%, #38f9d7 100%);
+}
+
+.stat-content {
+  flex: 1;
+}
+
+.stat-number {
+  font-size: 24px;
+  font-weight: 600;
+  color: #303133;
+  margin-bottom: 4px;
+}
+
+.stat-label {
+  font-size: 14px;
+  color: #909399;
+}
+
+.projects-container {
+  background: white;
+  border-radius: 12px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+  overflow: hidden;
+}
+
+.project-tabs {
+  padding: 0 24px;
+}
+
+.tab-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 24px;
+  padding: 24px 24px 0 24px;
+}
+
+.tab-header h3 {
+  margin: 0;
+  font-size: 18px;
+  color: #303133;
 }
 </style>

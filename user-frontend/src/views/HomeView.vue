@@ -276,8 +276,7 @@ const handleUploadProject = () => {
     router.push('/login')
     return
   }
-  // 这里可以添加上传项目的逻辑
-  ElMessage.info('上传项目功能开发中...')
+  router.push('/user/project/upload')
 }
 
 /**

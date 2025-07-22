@@ -145,7 +145,7 @@ const handleUserCommand = (command: string) => {
       router.push('/user/my-projects')
       break
     case 'upload-project':
-      router.push('/upload')
+      router.push('/user/project/upload')
       break
     case 'my-orders':
       router.push('/user/my-orders')
