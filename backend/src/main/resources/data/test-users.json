@@ -1,0 +1,38 @@
+[
+  {
+    "username": "admin",
+    "email": "admin@quickcode.com",
+    "password": "admin123",
+    "nickname": "系统管理员",
+    "status": 1,
+    "emailVerified": true,
+    "isAdmin": true
+  },
+  {
+    "username": "testuser1",
+    "email": "user1@test.com",
+    "password": "user123",
+    "nickname": "测试用户1",
+    "status": 1,
+    "emailVerified": true,
+    "isAdmin": false
+  },
+  {
+    "username": "testuser2",
+    "email": "user2@test.com",
+    "password": "user123",
+    "nickname": "测试用户2",
+    "status": 1,
+    "emailVerified": true,
+    "isAdmin": false
+  },
+  {
+    "username": "reviewer",
+    "email": "reviewer@quickcode.com",
+    "password": "reviewer123",
+    "nickname": "审核员",
+    "status": 1,
+    "emailVerified": true,
+    "isAdmin": true
+  }
+]

@@ -1,0 +1,138 @@
+[
+  {
+    "name": "前端项目",
+    "code": "FRONTEND",
+    "description": "前端相关项目",
+    "parentCode": null,
+    "sortOrder": 1,
+    "status": 1
+  },
+  {
+    "name": "后端项目",
+    "code": "BACKEND",
+    "description": "后端相关项目",
+    "parentCode": null,
+    "sortOrder": 2,
+    "status": 1
+  },
+  {
+    "name": "全栈项目",
+    "code": "FULLSTACK",
+    "description": "全栈项目",
+    "parentCode": null,
+    "sortOrder": 3,
+    "status": 1
+  },
+  {
+    "name": "移动应用",
+    "code": "MOBILE",
+    "description": "移动应用项目",
+    "parentCode": null,
+    "sortOrder": 4,
+    "status": 1
+  },
+  {
+    "name": "工具脚本",
+    "code": "TOOLS",
+    "description": "工具和脚本",
+    "parentCode": null,
+    "sortOrder": 5,
+    "status": 1
+  },
+  {
+    "name": "Vue.js项目",
+    "code": "VUE",
+    "description": "Vue.js相关项目",
+    "parentCode": "FRONTEND",
+    "sortOrder": 1,
+    "status": 1
+  },
+  {
+    "name": "React项目",
+    "code": "REACT",
+    "description": "React相关项目",
+    "parentCode": "FRONTEND",
+    "sortOrder": 2,
+    "status": 1
+  },
+  {
+    "name": "Angular项目",
+    "code": "ANGULAR",
+    "description": "Angular相关项目",
+    "parentCode": "FRONTEND",
+    "sortOrder": 3,
+    "status": 1
+  },
+  {
+    "name": "小程序",
+    "code": "MINIPROGRAM",
+    "description": "微信小程序等",
+    "parentCode": "FRONTEND",
+    "sortOrder": 4,
+    "status": 1
+  },
+  {
+    "name": "Spring Boot",
+    "code": "SPRINGBOOT",
+    "description": "Spring Boot项目",
+    "parentCode": "BACKEND",
+    "sortOrder": 1,
+    "status": 1
+  },
+  {
+    "name": "Node.js",
+    "code": "NODEJS",
+    "description": "Node.js项目",
+    "parentCode": "BACKEND",
+    "sortOrder": 2,
+    "status": 1
+  },
+  {
+    "name": "Python",
+    "code": "PYTHON",
+    "description": "Python项目",
+    "parentCode": "BACKEND",
+    "sortOrder": 3,
+    "status": 1
+  },
+  {
+    "name": "Go语言",
+    "code": "GOLANG",
+    "description": "Go语言项目",
+    "parentCode": "BACKEND",
+    "sortOrder": 4,
+    "status": 1
+  },
+  {
+    "name": "Android",
+    "code": "ANDROID",
+    "description": "Android应用",
+    "parentCode": "MOBILE",
+    "sortOrder": 1,
+    "status": 1
+  },
+  {
+    "name": "iOS",
+    "code": "IOS",
+    "description": "iOS应用",
+    "parentCode": "MOBILE",
+    "sortOrder": 2,
+    "status": 1
+  },
+  {
+    "name": "Flutter",
+    "code": "FLUTTER",
+    "description": "Flutter应用",
+    "parentCode": "MOBILE",
+    "sortOrder": 3,
+    "status": 1
+  },
+  {
+    "name": "React Native",
+    "code": "REACTNATIVE",
+    "description": "React Native应用",
+    "parentCode": "MOBILE",
+    "sortOrder": 4,
+    "status": 1
+  }
+]
