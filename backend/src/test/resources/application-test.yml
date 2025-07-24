@@ -1,0 +1,63 @@
+# 测试环境配置
+spring:
+  # 测试环境数据源配置（使用H2内存数据库）
+  datasource:
+    driver-class-name: org.h2.Driver
+    url: jdbc:h2:mem:testdb;DB_CLOSE_DELAY=-1;DB_CLOSE_ON_EXIT=FALSE;MODE=MySQL
+    username: sa
+    password: 
+    hikari:
+      maximum-pool-size: 5
+      minimum-idle: 1
+
+  # 测试环境JPA配置
+  jpa:
+    hibernate:
+      ddl-auto: create-drop
+    show-sql: false
+    properties:
+      hibernate:
+        dialect: org.hibernate.dialect.H2Dialect
+        format_sql: false
+    # 测试环境延迟数据源初始化
+    defer-datasource-initialization: true
+
+  # 测试环境SQL初始化配置
+  sql:
+    init:
+      # 测试环境启用SQL脚本初始化
+      mode: always
+      # 数据初始化脚本路径
+      data-locations: classpath:test-data.sql
+      # 编码设置
+      encoding: utf-8
+      # 遇到错误时继续执行
+      continue-on-error: true
+
+  # 测试环境Redis配置（使用嵌入式Redis）
+  data:
+    redis:
+      host: localhost
+      port: 6370  # 使用不同端口避免冲突
+      database: 15
+      timeout: 2000ms
+
+# 测试环境日志配置
+logging:
+  level:
+    com.quickcode: DEBUG
+    org.springframework.security: WARN
+    org.hibernate.SQL: WARN
+    org.hibernate.type.descriptor.sql.BasicBinder: WARN
+
+# 测试环境应用配置
+app:
+  jwt:
+    secret: test-jwt-secret-key
+    access-token-expiration: 3600000  # 1小时
+    refresh-token-expiration: 86400000 # 24小时
+  
+  file:
+    upload-dir: /tmp/quickcode-test/uploads
+    max-file-size: 10MB
+    max-request-size: 20MB

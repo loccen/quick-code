@@ -15,6 +15,20 @@ spring:
       hibernate:
         format_sql: true
         use_sql_comments: true
+    # 开发环境延迟数据源初始化
+    defer-datasource-initialization: true
+
+  # 开发环境SQL初始化配置
+  sql:
+    init:
+      # 开发环境启用SQL脚本初始化
+      mode: always
+      # 数据初始化脚本路径
+      data-locations: classpath:data.sql
+      # 编码设置
+      encoding: utf-8
+      # 遇到错误时继续执行
+      continue-on-error: true
 
   # 开发环境Redis配置
   data:

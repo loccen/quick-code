@@ -85,6 +85,11 @@ public interface UserRepository extends BaseRepository<User, Long> {
   List<User> findByIsAdmin(Boolean isAdmin);
 
   /**
+   * 统计管理员用户数量
+   */
+  long countByIsAdmin(Boolean isAdmin);
+
+  /**
    * 根据创建时间范围查找用户
    */
   @Query("SELECT u FROM User u WHERE u.createdTime BETWEEN :startTime AND :endTime")

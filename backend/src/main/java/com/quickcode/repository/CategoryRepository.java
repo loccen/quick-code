@@ -120,6 +120,16 @@ public interface CategoryRepository extends BaseRepository<Category, Long> {
     List<Category> findActiveChildrenByParentIdOrderBySortOrder(@Param("parentId") Long parentId);
 
     /**
+     * 统计主分类数量（父分类为空）
+     */
+    long countByParentIdIsNull();
+
+    /**
+     * 统计子分类数量（父分类不为空）
+     */
+    long countByParentIdIsNotNull();
+
+    /**
      * 查找分类层级结构（递归查询所有子分类）
      */
     @Query(value = "WITH RECURSIVE category_tree AS (" +

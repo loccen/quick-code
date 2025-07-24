@@ -47,6 +47,20 @@ spring:
           batch_size: 20
         order_inserts: true
         order_updates: true
+    # 延迟数据源初始化，确保在JPA创建表后再执行SQL脚本
+    defer-datasource-initialization: true
+
+  # SQL初始化配置
+  sql:
+    init:
+      # 开发环境启用SQL脚本初始化
+      mode: always
+      # 数据初始化脚本路径
+      data-locations: classpath:data.sql
+      # 编码设置
+      encoding: utf-8
+      # 遇到错误时继续执行
+      continue-on-error: true
 
   # Redis配置
   data:
