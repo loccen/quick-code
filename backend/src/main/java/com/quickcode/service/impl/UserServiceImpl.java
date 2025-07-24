@@ -8,9 +8,7 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-import com.quickcode.entity.Role;
 import com.quickcode.entity.User;
-import com.quickcode.repository.RoleRepository;
 import com.quickcode.repository.UserRepository;
 import com.quickcode.service.UserService;
 import dev.samstevens.totp.code.CodeGenerator;
@@ -37,7 +35,6 @@ import lombok.extern.slf4j.Slf4j;
 public class UserServiceImpl implements UserService {
 
   private final UserRepository userRepository;
-  private final RoleRepository roleRepository;
   private final PasswordEncoder passwordEncoder;
 
   // TOTP相关组件
@@ -401,76 +398,34 @@ public class UserServiceImpl implements UserService {
   }
 
   @Override
-  public void assignRole(Long userId, String roleCode) {
-    log.debug("为用户分配角色: userId={}, roleCode={}", userId, roleCode);
+  public void setAdminStatus(Long userId, boolean isAdmin) {
+    log.debug("设置用户管理员状态: userId={}, isAdmin={}", userId, isAdmin);
 
     User user = userRepository.findById(userId)
         .orElseThrow(() -> com.quickcode.common.exception.ResourceNotFoundException.user(userId));
 
-    Role role = roleRepository.findByRoleCode(roleCode)
-        .orElseThrow(() -> com.quickcode.common.exception.ResourceNotFoundException.roleByCode(roleCode));
-
-    user.addRole(role);
+    user.setAdminStatus(isAdmin);
     userRepository.save(user);
 
-    log.info("用户角色分配成功: userId={}, roleCode={}", userId, roleCode);
-  }
-
-  @Override
-  public void removeRole(Long userId, String roleCode) {
-    log.debug("移除用户角色: userId={}, roleCode={}", userId, roleCode);
-
-    User user = userRepository.findById(userId)
-        .orElseThrow(() -> com.quickcode.common.exception.ResourceNotFoundException.user(userId));
-
-    Role role = roleRepository.findByRoleCode(roleCode)
-        .orElseThrow(() -> com.quickcode.common.exception.ResourceNotFoundException.roleByCode(roleCode));
-
-    user.removeRole(role);
-    userRepository.save(user);
-
-    log.info("用户角色移除成功: userId={}, roleCode={}", userId, roleCode);
+    log.info("用户管理员状态设置成功: userId={}, isAdmin={}", userId, isAdmin);
   }
 
   @Override
   @Transactional(readOnly = true)
-  public boolean hasRole(Long userId, String roleCode) {
-    log.debug("检查用户角色: userId={}, roleCode={}", userId, roleCode);
+  public boolean isAdmin(Long userId) {
+    log.debug("检查用户是否为管理员: userId={}", userId);
 
     User user = userRepository.findById(userId)
         .orElseThrow(() -> com.quickcode.common.exception.ResourceNotFoundException.user(userId));
 
-    return user.hasRole(roleCode);
+    return user.isAdmin();
   }
 
   @Override
   @Transactional(readOnly = true)
-  public boolean hasPermission(Long userId, String permissionCode) {
-    log.debug("检查用户权限: userId={}, permissionCode={}", userId, permissionCode);
-
-    User user = userRepository.findById(userId)
-        .orElseThrow(() -> com.quickcode.common.exception.ResourceNotFoundException.user(userId));
-
-    return user.getRoles().stream().anyMatch(role -> role.hasPermission(permissionCode));
-  }
-
-  @Override
-  @Transactional(readOnly = true)
-  public List<String> getUserPermissions(Long userId) {
-    log.debug("获取用户权限: userId={}", userId);
-
-    User user = userRepository.findById(userId)
-        .orElseThrow(() -> com.quickcode.common.exception.ResourceNotFoundException.user(userId));
-
-    return user.getRoles().stream().flatMap(role -> role.getPermissionCodes().stream()).distinct()
-        .sorted().toList();
-  }
-
-  @Override
-  @Transactional(readOnly = true)
-  public List<User> findByRole(String roleCode) {
-    log.debug("根据角色查找用户: roleCode={}", roleCode);
-    return userRepository.findByRoleCode(roleCode);
+  public List<User> findByAdminStatus(boolean isAdmin) {
+    log.debug("根据管理员状态查找用户: isAdmin={}", isAdmin);
+    return userRepository.findByIsAdmin(isAdmin);
   }
 
   @Override

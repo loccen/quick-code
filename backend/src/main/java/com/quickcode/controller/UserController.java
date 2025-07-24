@@ -288,18 +288,18 @@ public class UserController extends BaseController {
     }
 
     /**
-     * 根据角色查找用户（管理员权限）
+     * 根据管理员状态查找用户（管理员权限）
      */
-    @GetMapping("/by-role/{roleCode}")
+    @GetMapping("/by-admin-status/{isAdmin}")
     @PreAuthorize("hasRole('ADMIN')")
-    public ApiResponse<List<UserProfileResponse>> getUsersByRole(@PathVariable String roleCode) {
-        log.info("根据角色查找用户: roleCode={}", roleCode);
-        
-        List<User> users = userService.findByRole(roleCode);
+    public ApiResponse<List<UserProfileResponse>> getUsersByAdminStatus(@PathVariable boolean isAdmin) {
+        log.info("根据管理员状态查找用户: isAdmin={}", isAdmin);
+
+        List<User> users = userService.findByAdminStatus(isAdmin);
         List<UserProfileResponse> response = users.stream()
                 .map(UserProfileResponse::fromUser)
                 .toList();
-        
+
         return success(response, "查询成功");
     }
 

@@ -1,7 +1,5 @@
 package com.quickcode.security.jwt;
 
-import com.quickcode.entity.Permission;
-import com.quickcode.entity.Role;
 import com.quickcode.entity.User;
 import lombok.AllArgsConstructor;
 import lombok.Data;
@@ -12,10 +10,7 @@ import org.springframework.security.core.userdetails.UserDetails;
 
 import java.time.LocalDateTime;
 import java.util.Collection;
-import java.util.HashSet;
 import java.util.List;
-import java.util.Set;
-import java.util.stream.Collectors;
 
 /**
  * 用户主体类
@@ -30,6 +25,8 @@ import java.util.stream.Collectors;
 public class UserPrincipal implements UserDetails {
 
     private static final String ROLE_PREFIX = "ROLE_";
+    private static final String ADMIN_ROLE = "ADMIN";
+    private static final String USER_ROLE = "USER";
 
     private Long id;
     private String username;
@@ -49,31 +46,10 @@ public class UserPrincipal implements UserDetails {
             throw new IllegalArgumentException("用户对象不能为空");
         }
 
-        // 获取用户角色，如果为空则使用空集合
-        Set<Role> roles = user.getRoles() != null ? user.getRoles() : new HashSet<>();
-
-        List<GrantedAuthority> authorities = roles.stream()
-                .filter(role -> role != null && role.isActive()) // 过滤空角色和非激活角色
-                .flatMap(role -> {
-                    // 添加角色权限
-                    Set<Permission> permissions = role.getPermissions() != null ? role.getPermissions() : new HashSet<>();
-                    List<GrantedAuthority> roleAuthorities = permissions.stream()
-                            .filter(permission -> permission != null && permission.isActive())
-                            .map(permission -> new SimpleGrantedAuthority(permission.getPermissionCode()))
-                            .collect(Collectors.toList());
-
-                    // 添加角色本身作为权限（以ROLE_前缀）
-                    roleAuthorities.add(new SimpleGrantedAuthority(ROLE_PREFIX + role.getRoleCode()));
-
-                    return roleAuthorities.stream();
-                })
-                .distinct()
-                .collect(Collectors.toList());
-
-        // 如果用户没有任何角色，至少给一个默认的USER角色
-        if (authorities.isEmpty()) {
-            authorities.add(new SimpleGrantedAuthority(ROLE_PREFIX + "USER"));
-        }
+        // 根据用户的isAdmin字段设置权限
+        List<GrantedAuthority> authorities = List.of(
+            new SimpleGrantedAuthority(ROLE_PREFIX + (user.isAdmin() ? ADMIN_ROLE : USER_ROLE))
+        );
 
         return new UserPrincipal(
                 user.getId(),
@@ -144,10 +120,12 @@ public class UserPrincipal implements UserDetails {
      * 获取所有权限代码（不包括角色）
      */
     public List<String> getPermissions() {
-        return authorities.stream()
-                .map(GrantedAuthority::getAuthority)
-                .filter(auth -> !auth.startsWith(ROLE_PREFIX))
-                .toList();
+        // 简化版本：管理员拥有所有权限，普通用户只有基本权限
+        if (hasRole(ADMIN_ROLE)) {
+            return List.of("user:manage", "project:manage", "system:manage");
+        } else {
+            return List.of("project:create", "project:read");
+        }
     }
 
     /**
@@ -165,7 +143,7 @@ public class UserPrincipal implements UserDetails {
      * 检查是否为管理员
      */
     public boolean isAdmin() {
-        return hasRole("ADMIN");
+        return hasRole(ADMIN_ROLE);
     }
 
     /**

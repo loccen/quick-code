@@ -36,6 +36,7 @@ CREATE TABLE IF NOT EXISTS `users` (
     `email_verification_expires_at` datetime DEFAULT NULL COMMENT '邮箱验证令牌过期时间',
     `password_reset_token` varchar(64) DEFAULT NULL COMMENT '密码重置令牌',
     `password_reset_expires_at` datetime DEFAULT NULL COMMENT '密码重置令牌过期时间',
+    `is_admin` tinyint(1) NOT NULL DEFAULT '0' COMMENT '是否为管理员：0-否，1-是',
     `created_time` datetime DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
     `updated_time` datetime DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '更新时间',
     PRIMARY KEY (`id`),
@@ -44,66 +45,10 @@ CREATE TABLE IF NOT EXISTS `users` (
     KEY `idx_status` (`status`),
     KEY `idx_created_time` (`created_time`),
     KEY `idx_email_verification_token` (`email_verification_token`),
-    KEY `idx_password_reset_token` (`password_reset_token`)
+    KEY `idx_password_reset_token` (`password_reset_token`),
+    KEY `idx_is_admin` (`is_admin`)
 ) ENGINE = InnoDB DEFAULT CHARSET = utf8mb4 COLLATE = utf8mb4_unicode_ci COMMENT = '用户表';
 
--- 用户角色表
-CREATE TABLE IF NOT EXISTS `user_roles` (
-    `id` bigint NOT NULL AUTO_INCREMENT COMMENT '角色ID',
-    `role_name` varchar(50) NOT NULL COMMENT '角色名称',
-    `role_code` varchar(50) NOT NULL COMMENT '角色代码',
-    `description` varchar(255) DEFAULT NULL COMMENT '角色描述',
-    `status` tinyint DEFAULT '1' COMMENT '状态：0-禁用，1-正常',
-    `created_time` datetime DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
-    `updated_time` datetime DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '更新时间',
-    PRIMARY KEY (`id`),
-    UNIQUE KEY `uk_role_code` (`role_code`)
-) ENGINE = InnoDB DEFAULT CHARSET = utf8mb4 COLLATE = utf8mb4_unicode_ci COMMENT = '用户角色表';
-
--- 用户角色关联表
-CREATE TABLE IF NOT EXISTS `user_role_relations` (
-    `id` bigint NOT NULL AUTO_INCREMENT COMMENT '关联ID',
-    `user_id` bigint NOT NULL COMMENT '用户ID',
-    `role_id` bigint NOT NULL COMMENT '角色ID',
-    `created_time` datetime DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
-    PRIMARY KEY (`id`),
-    UNIQUE KEY `uk_user_role` (`user_id`, `role_id`),
-    KEY `fk_user_role_user` (`user_id`),
-    KEY `fk_user_role_role` (`role_id`),
-    CONSTRAINT `fk_user_role_user` FOREIGN KEY (`user_id`) REFERENCES `users` (`id`) ON DELETE CASCADE,
-    CONSTRAINT `fk_user_role_role` FOREIGN KEY (`role_id`) REFERENCES `user_roles` (`id`) ON DELETE CASCADE
-) ENGINE = InnoDB DEFAULT CHARSET = utf8mb4 COLLATE = utf8mb4_unicode_ci COMMENT = '用户角色关联表';
-
--- 权限表
-CREATE TABLE IF NOT EXISTS `permissions` (
-    `id` bigint NOT NULL AUTO_INCREMENT COMMENT '权限ID',
-    `permission_name` varchar(50) NOT NULL COMMENT '权限名称',
-    `permission_code` varchar(100) NOT NULL COMMENT '权限代码',
-    `description` varchar(255) DEFAULT NULL COMMENT '权限描述',
-    `resource_type` varchar(50) DEFAULT NULL COMMENT '资源类型',
-    `action_type` varchar(50) DEFAULT NULL COMMENT '操作类型',
-    `status` tinyint DEFAULT '1' COMMENT '状态：0-禁用，1-正常',
-    `created_time` datetime DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
-    `updated_time` datetime DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '更新时间',
-    PRIMARY KEY (`id`),
-    UNIQUE KEY `uk_permission_code` (`permission_code`),
-    KEY `idx_resource_type` (`resource_type`),
-    KEY `idx_status` (`status`)
-) ENGINE = InnoDB DEFAULT CHARSET = utf8mb4 COLLATE = utf8mb4_unicode_ci COMMENT = '权限表';
-
--- 角色权限关联表
-CREATE TABLE IF NOT EXISTS `role_permission_relations` (
-    `id` bigint NOT NULL AUTO_INCREMENT COMMENT '关联ID',
-    `role_id` bigint NOT NULL COMMENT '角色ID',
-    `permission_id` bigint NOT NULL COMMENT '权限ID',
-    `created_time` datetime DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
-    PRIMARY KEY (`id`),
-    UNIQUE KEY `uk_role_permission` (`role_id`, `permission_id`),
-    KEY `fk_role_permission_role` (`role_id`),
-    KEY `fk_role_permission_permission` (`permission_id`),
-    CONSTRAINT `fk_role_permission_role` FOREIGN KEY (`role_id`) REFERENCES `user_roles` (`id`) ON DELETE CASCADE,
-    CONSTRAINT `fk_role_permission_permission` FOREIGN KEY (`permission_id`) REFERENCES `permissions` (`id`) ON DELETE CASCADE
-) ENGINE = InnoDB DEFAULT CHARSET = utf8mb4 COLLATE = utf8mb4_unicode_ci COMMENT = '角色权限关联表';
 
 -- 项目分类表
 CREATE TABLE IF NOT EXISTS `project_categories` (

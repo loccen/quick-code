@@ -321,10 +321,10 @@ public class AuthServiceImpl implements AuthService {
   private Authentication createAuthentication(User user) {
     UserPrincipal userPrincipal = UserPrincipal.create(user);
 
-    // 获取用户权限
-    List<String> permissions = userService.getUserPermissions(user.getId());
-    List<SimpleGrantedAuthority> authorities =
-        permissions.stream().map(SimpleGrantedAuthority::new).collect(Collectors.toList());
+    // 使用UserPrincipal中的权限信息
+    List<SimpleGrantedAuthority> authorities = userPrincipal.getAuthorities().stream()
+        .map(auth -> new SimpleGrantedAuthority(auth.getAuthority()))
+        .collect(Collectors.toList());
 
     return new UsernamePasswordAuthenticationToken(userPrincipal, null, authorities);
   }
@@ -333,7 +333,8 @@ public class AuthServiceImpl implements AuthService {
    * 构建用户信息
    */
   private JwtResponse.UserInfo buildUserInfo(User user) {
-    List<String> permissions = userService.getUserPermissions(user.getId());
+    UserPrincipal userPrincipal = UserPrincipal.create(user);
+    List<String> permissions = userPrincipal.getPermissions();
 
     return JwtResponse.UserInfo.builder().id(user.getId()).username(user.getUsername())
         .email(user.getEmail()).nickname(user.getNickname()).avatarUrl(user.getAvatarUrl())

@@ -2,16 +2,9 @@ package com.quickcode.entity;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
-import java.util.HashSet;
-import java.util.Set;
-import jakarta.persistence.CascadeType;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
-import jakarta.persistence.FetchType;
 import jakarta.persistence.Index;
-import jakarta.persistence.JoinColumn;
-import jakarta.persistence.JoinTable;
-import jakarta.persistence.ManyToMany;
 import jakarta.persistence.Table;
 import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;
@@ -32,7 +25,7 @@ import lombok.NoArgsConstructor;
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
-@EqualsAndHashCode(callSuper = true, exclude = {"roles"})
+@EqualsAndHashCode(callSuper = true)
 @Entity
 @Table(name = "users",
     indexes = {@Index(name = "idx_username", columnList = "username"),
@@ -203,13 +196,11 @@ public class User extends BaseEntity {
   private LocalDateTime passwordResetExpiresAt;
 
   /**
-   * 用户角色关联
+   * 是否为管理员
    */
-  @ManyToMany(fetch = FetchType.LAZY, cascade = {CascadeType.PERSIST, CascadeType.MERGE})
-  @JoinTable(name = "user_role_relations", joinColumns = @JoinColumn(name = "user_id"),
-      inverseJoinColumns = @JoinColumn(name = "role_id"))
   @Builder.Default
-  private Set<Role> roles = new HashSet<>();
+  @Column(name = "is_admin", nullable = false)
+  private Boolean isAdmin = false;
 
   /**
    * 用户状态枚举
@@ -258,26 +249,17 @@ public class User extends BaseEntity {
   }
 
   /**
-   * 添加角色
+   * 检查是否为管理员
    */
-  public void addRole(Role role) {
-    this.roles.add(role);
-    role.getUsers().add(this);
+  public boolean isAdmin() {
+    return Boolean.TRUE.equals(this.isAdmin);
   }
 
   /**
-   * 移除角色
+   * 设置管理员状态
    */
-  public void removeRole(Role role) {
-    this.roles.remove(role);
-    role.getUsers().remove(this);
-  }
-
-  /**
-   * 检查是否拥有指定角色
-   */
-  public boolean hasRole(String roleCode) {
-    return roles.stream().anyMatch(role -> role.getRoleCode().equals(roleCode));
+  public void setAdminStatus(boolean isAdmin) {
+    this.isAdmin = isAdmin;
   }
 
   /**

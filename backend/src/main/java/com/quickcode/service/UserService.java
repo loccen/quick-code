@@ -132,34 +132,19 @@ public interface UserService extends BaseService<User, Long> {
   void recordLoginFailure(Long userId);
 
   /**
-   * 为用户分配角色
+   * 设置用户管理员状态
    */
-  void assignRole(Long userId, String roleCode);
+  void setAdminStatus(Long userId, boolean isAdmin);
 
   /**
-   * 移除用户角色
+   * 检查用户是否为管理员
    */
-  void removeRole(Long userId, String roleCode);
+  boolean isAdmin(Long userId);
 
   /**
-   * 检查用户是否拥有角色
+   * 根据管理员状态查找用户
    */
-  boolean hasRole(Long userId, String roleCode);
-
-  /**
-   * 检查用户是否拥有权限
-   */
-  boolean hasPermission(Long userId, String permissionCode);
-
-  /**
-   * 获取用户的所有权限
-   */
-  List<String> getUserPermissions(Long userId);
-
-  /**
-   * 根据角色查找用户
-   */
-  List<User> findByRole(String roleCode);
+  List<User> findByAdminStatus(boolean isAdmin);
 
   /**
    * 根据状态查找用户

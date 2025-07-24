@@ -80,16 +80,9 @@ public interface UserRepository extends BaseRepository<User, Long> {
   List<User> findByLoginFailureCountGreaterThan(Integer count);
 
   /**
-   * 根据角色代码查找用户
+   * 根据管理员状态查找用户
    */
-  @Query("SELECT u FROM User u JOIN u.roles r WHERE r.roleCode = :roleCode")
-  List<User> findByRoleCode(@Param("roleCode") String roleCode);
-
-  /**
-   * 查找拥有指定权限的用户
-   */
-  @Query("SELECT DISTINCT u FROM User u JOIN u.roles r JOIN r.permissions p WHERE p.permissionCode = :permissionCode")
-  List<User> findByPermissionCode(@Param("permissionCode") String permissionCode);
+  List<User> findByIsAdmin(Boolean isAdmin);
 
   /**
    * 根据创建时间范围查找用户

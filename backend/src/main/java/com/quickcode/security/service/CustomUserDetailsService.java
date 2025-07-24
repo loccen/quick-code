@@ -1,6 +1,5 @@
 package com.quickcode.security.service;
 
-import com.quickcode.entity.Role;
 import com.quickcode.entity.User;
 import com.quickcode.repository.UserRepository;
 import com.quickcode.service.UserService;
@@ -42,8 +41,8 @@ public class CustomUserDetailsService implements UserDetailsService {
                     return new UsernameNotFoundException("用户不存在: " + usernameOrEmail);
                 });
 
-        log.debug("成功加载用户详情: {} (ID: {}，roles: {})", user.getUsername(), user.getId(),
-                user.getRoles().stream().map(Role::getRoleCode).toList());
+        log.debug("成功加载用户详情: {} (ID: {}，isAdmin: {})", user.getUsername(), user.getId(),
+                user.isAdmin());
         return UserPrincipal.create(user);
     }
 
@@ -60,8 +59,8 @@ public class CustomUserDetailsService implements UserDetailsService {
                     return new UsernameNotFoundException("用户不存在: " + userId);
                 });
 
-        log.debug("成功根据ID加载用户详情: {} (ID: {}，roles: {})", user.getUsername(), user.getId(),
-                user.getRoles().stream().map(Role::getRoleCode).toList());
+        log.debug("成功根据ID加载用户详情: {} (ID: {}，isAdmin: {})", user.getUsername(), user.getId(),
+                user.isAdmin());
         return UserPrincipal.create(user);
     }
 }
