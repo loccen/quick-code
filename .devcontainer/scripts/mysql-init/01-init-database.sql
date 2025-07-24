@@ -74,6 +74,37 @@ CREATE TABLE IF NOT EXISTS `user_role_relations` (
     CONSTRAINT `fk_user_role_role` FOREIGN KEY (`role_id`) REFERENCES `user_roles` (`id`) ON DELETE CASCADE
 ) ENGINE = InnoDB DEFAULT CHARSET = utf8mb4 COLLATE = utf8mb4_unicode_ci COMMENT = '用户角色关联表';
 
+-- 权限表
+CREATE TABLE IF NOT EXISTS `permissions` (
+    `id` bigint NOT NULL AUTO_INCREMENT COMMENT '权限ID',
+    `permission_name` varchar(50) NOT NULL COMMENT '权限名称',
+    `permission_code` varchar(100) NOT NULL COMMENT '权限代码',
+    `description` varchar(255) DEFAULT NULL COMMENT '权限描述',
+    `resource_type` varchar(50) DEFAULT NULL COMMENT '资源类型',
+    `action_type` varchar(50) DEFAULT NULL COMMENT '操作类型',
+    `status` tinyint DEFAULT '1' COMMENT '状态：0-禁用，1-正常',
+    `created_time` datetime DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
+    `updated_time` datetime DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '更新时间',
+    PRIMARY KEY (`id`),
+    UNIQUE KEY `uk_permission_code` (`permission_code`),
+    KEY `idx_resource_type` (`resource_type`),
+    KEY `idx_status` (`status`)
+) ENGINE = InnoDB DEFAULT CHARSET = utf8mb4 COLLATE = utf8mb4_unicode_ci COMMENT = '权限表';
+
+-- 角色权限关联表
+CREATE TABLE IF NOT EXISTS `role_permission_relations` (
+    `id` bigint NOT NULL AUTO_INCREMENT COMMENT '关联ID',
+    `role_id` bigint NOT NULL COMMENT '角色ID',
+    `permission_id` bigint NOT NULL COMMENT '权限ID',
+    `created_time` datetime DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
+    PRIMARY KEY (`id`),
+    UNIQUE KEY `uk_role_permission` (`role_id`, `permission_id`),
+    KEY `fk_role_permission_role` (`role_id`),
+    KEY `fk_role_permission_permission` (`permission_id`),
+    CONSTRAINT `fk_role_permission_role` FOREIGN KEY (`role_id`) REFERENCES `user_roles` (`id`) ON DELETE CASCADE,
+    CONSTRAINT `fk_role_permission_permission` FOREIGN KEY (`permission_id`) REFERENCES `permissions` (`id`) ON DELETE CASCADE
+) ENGINE = InnoDB DEFAULT CHARSET = utf8mb4 COLLATE = utf8mb4_unicode_ci COMMENT = '角色权限关联表';
+
 -- 项目分类表
 CREATE TABLE IF NOT EXISTS `project_categories` (
     `id` bigint NOT NULL AUTO_INCREMENT COMMENT '分类ID',

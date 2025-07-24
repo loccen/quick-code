@@ -3,6 +3,7 @@ package com.quickcode.repository;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
+import org.springframework.data.jpa.repository.EntityGraph;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
@@ -18,20 +19,29 @@ import com.quickcode.entity.User;
 public interface UserRepository extends BaseRepository<User, Long> {
 
   /**
-   * 根据用户名查找用户
+   * 根据用户名查找用户（包含角色和权限信息）
    */
+  @EntityGraph(attributePaths = {"roles", "roles.permissions"})
   Optional<User> findByUsername(String username);
 
   /**
-   * 根据邮箱查找用户
+   * 根据邮箱查找用户（包含角色和权限信息）
    */
+  @EntityGraph(attributePaths = {"roles", "roles.permissions"})
   Optional<User> findByEmail(String email);
 
   /**
-   * 根据用户名或邮箱查找用户
+   * 根据用户名或邮箱查找用户（包含角色和权限信息）
    */
+  @EntityGraph(attributePaths = {"roles", "roles.permissions"})
   @Query("SELECT u FROM User u WHERE u.username = :usernameOrEmail OR u.email = :usernameOrEmail")
   Optional<User> findByUsernameOrEmail(@Param("usernameOrEmail") String usernameOrEmail);
+
+  /**
+   * 根据ID查找用户（包含角色和权限信息）
+   */
+  @EntityGraph(attributePaths = {"roles", "roles.permissions"})
+  Optional<User> findById(Long id);
 
   /**
    * 检查用户名是否存在

@@ -65,6 +65,26 @@ public class TestDataFactory {
   }
 
   /**
+   * 创建带有角色的测试用户
+   */
+  public static User createTestUserWithRoles() {
+    User user = createTestUser();
+    Role userRole = createTestRole();
+    user.addRole(userRole);
+    return user;
+  }
+
+  /**
+   * 创建带有管理员角色的用户
+   */
+  public static User createAdminUserWithRoles() {
+    User user = createAdminUser();
+    Role adminRole = createAdminRole();
+    user.addRole(adminRole);
+    return user;
+  }
+
+  /**
    * 创建未激活的用户
    */
   public static User createInactiveUser() {
@@ -166,6 +186,9 @@ public class TestDataFactory {
     if (role.getUsers() == null) {
       role.setUsers(new java.util.HashSet<>());
     }
+    // 添加基本权限
+    role.addPermission(createUserReadPermission());
+    role.addPermission(createProjectReadPermission());
     return role;
   }
 
@@ -173,7 +196,12 @@ public class TestDataFactory {
    * 创建管理员角色
    */
   public static Role createAdminRole() {
-    return Role.builder().roleName("管理员").roleCode("ADMIN").description("管理员").status(1).build();
+    Role role = Role.builder().roleName("管理员").roleCode("ADMIN").description("管理员").status(1).build();
+    // 添加管理员权限
+    role.addPermission(createUserManagePermission());
+    role.addPermission(createProjectManagePermission());
+    role.addPermission(createSystemConfigPermission());
+    return role;
   }
 
   /**
@@ -182,6 +210,46 @@ public class TestDataFactory {
   public static Permission createTestPermission() {
     return Permission.builder().permissionName("用户读取权限").permissionCode("USER_READ")
         .description("用户读取权限").resourceType("USER").actionType("READ").status(1).build();
+  }
+
+  /**
+   * 创建用户读取权限
+   */
+  public static Permission createUserReadPermission() {
+    return Permission.builder().permissionName("查看用户").permissionCode("user:read")
+        .description("查看用户信息").resourceType("USER").actionType("READ").status(1).build();
+  }
+
+  /**
+   * 创建项目读取权限
+   */
+  public static Permission createProjectReadPermission() {
+    return Permission.builder().permissionName("查看项目").permissionCode("project:read")
+        .description("查看项目信息").resourceType("PROJECT").actionType("READ").status(1).build();
+  }
+
+  /**
+   * 创建用户管理权限
+   */
+  public static Permission createUserManagePermission() {
+    return Permission.builder().permissionName("管理用户").permissionCode("user:manage")
+        .description("完整的用户管理权限").resourceType("USER").actionType("MANAGE").status(1).build();
+  }
+
+  /**
+   * 创建项目管理权限
+   */
+  public static Permission createProjectManagePermission() {
+    return Permission.builder().permissionName("管理项目").permissionCode("project:manage")
+        .description("完整的项目管理权限").resourceType("PROJECT").actionType("MANAGE").status(1).build();
+  }
+
+  /**
+   * 创建系统配置权限
+   */
+  public static Permission createSystemConfigPermission() {
+    return Permission.builder().permissionName("系统配置").permissionCode("system:config")
+        .description("系统配置管理").resourceType("SYSTEM").actionType("MANAGE").status(1).build();
   }
 
   /**

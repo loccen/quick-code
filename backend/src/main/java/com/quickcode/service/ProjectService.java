@@ -45,6 +45,11 @@ public interface ProjectService extends BaseService<Project, Long> {
     ProjectDetailDTO getProjectDetail(Long projectId, Long userId);
 
     /**
+     * 获取已发布项目的详情（仅用于公开访问）
+     */
+    ProjectDetailDTO getPublishedProjectDetail(Long projectId);
+
+    /**
      * 搜索项目
      */
     PageResponse<ProjectDTO> searchProjects(ProjectSearchRequest request);

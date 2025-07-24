@@ -147,7 +147,7 @@
               <h3>{{ projectData.title }}</h3>
               <div class="preview-meta">
                 <el-tag type="primary">{{ getCategoryName(projectData.categoryId) }}</el-tag>
-                <el-tag v-if="projectData.isFree" type="success">免费</el-tag>
+                <el-tag v-if="!projectData.price || projectData.price === 0" type="success">免费</el-tag>
                 <el-tag v-else type="warning">{{ projectData.price }} 积分</el-tag>
               </div>
             </div>
@@ -167,14 +167,7 @@
                 </el-tag>
               </div>
               
-              <div v-if="projectData.features?.length" class="preview-features">
-                <strong>主要特性：</strong>
-                <ul>
-                  <li v-for="feature in projectData.features" :key="feature">
-                    {{ feature }}
-                  </li>
-                </ul>
-              </div>
+              <!-- 移除特性显示，因为已简化 -->
             </div>
           </div>
 
@@ -203,7 +196,7 @@
             :loading="isPublishing"
           >
             <el-icon><Check /></el-icon>
-            {{ projectData.publishImmediately ? '立即发布' : '保存草稿' }}
+            保存项目
           </el-button>
         </div>
       </div>
@@ -258,23 +251,10 @@ const projectData = ref<ProjectUploadRequest>({
   description: '',
   categoryId: 0,
   tags: [],
-  price: undefined,
-  isFree: true,
+  price: 0,
   demoUrl: '',
-  documentUrl: '',
-  repositoryUrl: '',
   techStack: [],
-  features: [],
-  installInstructions: '',
-  usageInstructions: '',
-  systemRequirements: '',
-  version: '',
-  isOpenSource: false,
-  isCommercialUse: false,
-  licenseType: '',
-  contactInfo: '',
-  publishImmediately: false,
-  remarks: ''
+  coverImage: ''
 })
 
 const createdProjectId = ref<number>()
@@ -329,12 +309,20 @@ const getFileCountByType = (fileType: string) => {
 
 // 步骤控制
 const nextStep = async () => {
-  if (currentStep.value === 0) {
-    // 创建项目
-    await createProject()
-  }
-  if (currentStep.value < 2) {
-    currentStep.value++
+  try {
+    if (currentStep.value === 0) {
+      // 创建项目
+      await createProject()
+    }
+
+    // 只有在没有错误的情况下才进入下一步
+    if (currentStep.value < 2) {
+      currentStep.value++
+    }
+  } catch (error) {
+    // 如果创建项目失败，不进入下一步
+    console.error('进入下一步失败:', error)
+    // 错误信息已经在createProject中显示，这里不需要重复显示
   }
 }
 
@@ -358,6 +346,7 @@ const createProject = async () => {
 
 // 处理项目表单提交
 const handleProjectSubmit = (data: ProjectUploadRequest) => {
+  console.log('处理项目表单提交:', data)
   projectData.value = data
   nextStep()
 }
@@ -400,12 +389,7 @@ const handlePublish = async () => {
   try {
     isPublishing.value = true
     
-    if (projectData.value.publishImmediately && createdProjectId.value) {
-      await projectApi.publishProject(createdProjectId.value)
-      ElMessage.success('项目发布成功')
-    } else {
-      ElMessage.success('项目保存成功')
-    }
+    ElMessage.success('项目保存成功，等待管理员审核')
     
     // 跳转到我的项目页面
     router.push('/user/my-projects')

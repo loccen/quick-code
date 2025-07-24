@@ -300,7 +300,7 @@ const handleDemo = (project: Project) => {
 const loadFeaturedProjects = async () => {
   try {
     const response = await publicContentApi.getFeaturedProjects(3)
-    if (response.success && response.data) {
+    if (response.code === 200 && response.data) {
       featuredProjects.value = response.data
     }
   } catch (error) {

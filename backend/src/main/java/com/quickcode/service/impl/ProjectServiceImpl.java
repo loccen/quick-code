@@ -9,10 +9,13 @@ import com.quickcode.dto.common.PageResponse;
 import com.quickcode.entity.Project;
 import com.quickcode.entity.User;
 import com.quickcode.entity.Category;
+import com.quickcode.entity.ProjectReview;
 import com.quickcode.repository.ProjectRepository;
 import com.quickcode.repository.UserRepository;
 import com.quickcode.repository.CategoryRepository;
+import com.quickcode.repository.ProjectReviewRepository;
 import com.quickcode.service.ProjectService;
+import com.quickcode.service.RedisService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
@@ -41,6 +44,8 @@ public class ProjectServiceImpl implements ProjectService {
     private final ProjectRepository projectRepository;
     private final UserRepository userRepository;
     private final CategoryRepository categoryRepository;
+    private final ProjectReviewRepository projectReviewRepository;
+    private final RedisService redisService;
 
     @Override
     public ProjectDTO createProject(ProjectCreateRequest request, Long userId) {
@@ -275,14 +280,14 @@ public class ProjectServiceImpl implements ProjectService {
 
     /**
      * 异步增加浏览次数
+     * 使用Redis计数器实现，避免在只读事务中进行数据库写操作
      */
     private void incrementViewCountAsync(Long projectId) {
-        // TODO: 使用异步方式增加浏览次数，避免影响查询性能
-        // 可以使用Redis计数器或消息队列来实现
         try {
-            projectRepository.incrementViewCount(projectId);
+            redisService.incrementProjectViewCount(projectId);
+            log.debug("异步增加浏览次数成功: projectId={}", projectId);
         } catch (Exception e) {
-            log.warn("增加浏览次数失败: projectId={}", projectId, e);
+            log.warn("异步增加浏览次数失败: projectId={}", projectId, e);
         }
     }
 
@@ -450,46 +455,157 @@ public class ProjectServiceImpl implements ProjectService {
         log.debug("下架项目: projectId={}, userId={}", projectId, userId);
 
         Project project = getById(projectId);
+        Integer previousStatus = project.getStatus();
 
         // 检查权限
         if (!canEditProject(projectId, userId)) {
             throw new RuntimeException("无权限下架此项目");
         }
 
+        // 检查项目状态，只有已发布的项目才能下架
+        if (previousStatus != 1) {
+            throw new RuntimeException("只有已发布的项目才能下架");
+        }
+
         project.takeOffline();
         projectRepository.save(project);
+
+        // 记录审核历史
+        ProjectReview reviewRecord = ProjectReview.createReviewRecord(
+                projectId, userId, previousStatus, 2,
+                ProjectReview.ReviewAction.OFFLINE, "项目下架"
+        );
+        projectReviewRepository.save(reviewRecord);
 
         log.info("项目下架成功: projectId={}, userId={}", projectId, userId);
     }
 
     @Override
+    @Transactional
     public void approveProject(Long projectId, Long adminUserId) {
         log.debug("审核通过项目: projectId={}, adminUserId={}", projectId, adminUserId);
 
-        Project project = getById(projectId);
+        // 使用悲观锁防止并发审核
+        Project project = projectRepository.findByIdForUpdate(projectId)
+            .orElseThrow(() -> new RuntimeException("项目不存在: " + projectId));
 
-        // TODO: 检查管理员权限
+        Integer previousStatus = project.getStatus();
 
-        project.publish();
-        projectRepository.save(project);
+        // 检查项目状态，只有待审核的项目才能审核通过
+        if (previousStatus != 0) {
+            throw new RuntimeException("只有待审核的项目才能审核通过，当前状态: " +
+                getStatusDescription(previousStatus));
+        }
 
-        log.info("项目审核通过: projectId={}, adminUserId={}", projectId, adminUserId);
+        // 验证管理员权限（这里简化处理，实际应该检查用户角色）
+        if (adminUserId == null || adminUserId <= 0) {
+            throw new RuntimeException("无效的管理员用户ID");
+        }
+
+        try {
+            // 审核通过，设置为已发布状态
+            project.publish();
+            projectRepository.save(project);
+
+            // 记录审核历史
+            ProjectReview reviewRecord = ProjectReview.createReviewRecord(
+                    projectId, adminUserId, previousStatus, 1,
+                    ProjectReview.ReviewAction.APPROVE, "管理员审核通过"
+            );
+            projectReviewRepository.save(reviewRecord);
+
+            log.info("项目审核通过: projectId={}, adminUserId={}", projectId, adminUserId);
+        } catch (Exception e) {
+            log.error("审核通过项目失败: projectId={}, adminUserId={}", projectId, adminUserId, e);
+            throw new RuntimeException("审核操作失败: " + e.getMessage());
+        }
+    }
+
+    /**
+     * 获取状态描述
+     */
+    private String getStatusDescription(Integer status) {
+        if (status == null) return "未知状态";
+
+        return switch (status) {
+            case 0 -> "待审核";
+            case 1 -> "已发布";
+            case 2 -> "已下架";
+            case 3 -> "审核拒绝";
+            default -> "未知状态";
+        };
     }
 
     @Override
+    @Transactional(readOnly = true)
+    public ProjectDetailDTO getPublishedProjectDetail(Long projectId) {
+        log.debug("获取已发布项目详情: projectId={}", projectId);
+
+        try {
+            // 直接查询已发布状态的项目
+            Project project = projectRepository.findByIdAndStatus(projectId, 1)
+                .orElse(null);
+
+            if (project == null) {
+                log.debug("项目不存在或未发布: projectId={}", projectId);
+                return null;
+            }
+
+            // 转换为DTO
+            ProjectDetailDTO dto = ProjectDetailDTO.fromProject(project);
+
+            // 异步增加浏览次数（不影响查询性能）
+            incrementViewCountAsync(projectId);
+
+            return dto;
+        } catch (Exception e) {
+            log.error("获取已发布项目详情失败: projectId={}", projectId, e);
+            return null;
+        }
+    }
+
+    @Override
+    @Transactional
     public void rejectProject(Long projectId, Long adminUserId, String reason) {
         log.debug("审核拒绝项目: projectId={}, adminUserId={}, reason={}", projectId, adminUserId, reason);
 
-        Project project = getById(projectId);
+        // 使用悲观锁防止并发审核
+        Project project = projectRepository.findByIdForUpdate(projectId)
+            .orElseThrow(() -> new RuntimeException("项目不存在: " + projectId));
 
-        // TODO: 检查管理员权限
+        Integer previousStatus = project.getStatus();
 
-        project.reject();
-        projectRepository.save(project);
+        // 检查项目状态，只有待审核的项目才能审核拒绝
+        if (previousStatus != 0) {
+            throw new RuntimeException("只有待审核的项目才能审核拒绝，当前状态: " +
+                getStatusDescription(previousStatus));
+        }
 
-        // TODO: 发送拒绝通知给项目作者
+        // 验证管理员权限和拒绝理由
+        if (adminUserId == null || adminUserId <= 0) {
+            throw new RuntimeException("无效的管理员用户ID");
+        }
+        if (reason == null || reason.trim().isEmpty()) {
+            throw new RuntimeException("拒绝理由不能为空");
+        }
 
-        log.info("项目审核拒绝: projectId={}, adminUserId={}, reason={}", projectId, adminUserId, reason);
+        try {
+            // 审核拒绝
+            project.reject();
+            projectRepository.save(project);
+
+            // 记录审核历史
+            ProjectReview reviewRecord = ProjectReview.createReviewRecord(
+                    projectId, adminUserId, previousStatus, 3,
+                    ProjectReview.ReviewAction.REJECT, reason
+            );
+            projectReviewRepository.save(reviewRecord);
+
+            log.info("项目审核拒绝: projectId={}, adminUserId={}, reason={}", projectId, adminUserId, reason);
+        } catch (Exception e) {
+            log.error("审核拒绝项目失败: projectId={}, adminUserId={}", projectId, adminUserId, e);
+            throw new RuntimeException("审核操作失败: " + e.getMessage());
+        }
     }
 
     @Override
@@ -498,10 +614,24 @@ public class ProjectServiceImpl implements ProjectService {
 
         Project project = getById(projectId);
 
-        // TODO: 检查管理员权限
+        // 检查项目状态，只有已发布的项目才能设为精选
+        if (project.getStatus() != 1) {
+            throw new RuntimeException("只有已发布的项目才能设为精选");
+        }
+
+        if (project.getIsFeatured()) {
+            throw new RuntimeException("项目已经是精选项目");
+        }
 
         project.setAsFeatured();
         projectRepository.save(project);
+
+        // 记录审核历史
+        ProjectReview reviewRecord = ProjectReview.createReviewRecord(
+                projectId, adminUserId, 1, 1,
+                ProjectReview.ReviewAction.FEATURE, "管理员设置为精选项目"
+        );
+        projectReviewRepository.save(reviewRecord);
 
         log.info("设置精选项目成功: projectId={}, adminUserId={}", projectId, adminUserId);
     }
@@ -512,10 +642,19 @@ public class ProjectServiceImpl implements ProjectService {
 
         Project project = getById(projectId);
 
-        // TODO: 检查管理员权限
+        if (!project.getIsFeatured()) {
+            throw new RuntimeException("项目不是精选项目");
+        }
 
         project.unsetFeatured();
         projectRepository.save(project);
+
+        // 记录审核历史
+        ProjectReview reviewRecord = ProjectReview.createReviewRecord(
+                projectId, adminUserId, 1, 1,
+                ProjectReview.ReviewAction.UNFEATURE, "管理员取消精选项目"
+        );
+        projectReviewRepository.save(reviewRecord);
 
         log.info("取消精选成功: projectId={}, adminUserId={}", projectId, adminUserId);
     }

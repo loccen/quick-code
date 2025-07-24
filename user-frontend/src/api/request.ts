@@ -2,6 +2,7 @@
 import axios, { type AxiosInstance, type AxiosRequestConfig, type AxiosResponse, type InternalAxiosRequestConfig } from 'axios'
 import { ElMessage } from 'element-plus'
 import { API_CONFIG } from './config'
+import { envConfig } from '@/config/env'
 
 // 创建axios实例
 const request: AxiosInstance = axios.create({
@@ -21,7 +22,7 @@ request.interceptors.request.use(
 
     // 添加认证token（仅对非公开API）
     if (!isPublicApi) {
-      const token = localStorage.getItem('token')
+      const token = localStorage.getItem(envConfig.TOKEN_KEY)
       if (token && config.headers) {
         config.headers.Authorization = `Bearer ${token}`
       }
@@ -52,7 +53,7 @@ request.interceptors.response.use(
         case 401:
           ElMessage.error('未授权，请重新登录')
           // 清除token并跳转到登录页
-          localStorage.removeItem('token')
+          localStorage.removeItem(envConfig.TOKEN_KEY)
           window.location.href = '/login'
           break
         case 403:

@@ -27,7 +27,7 @@
             type="textarea"
             :rows="4"
             placeholder="请详细描述您的项目功能、特点等"
-            maxlength="1000"
+            maxlength="2000"
             show-word-limit
           />
         </el-form-item>
@@ -52,28 +52,18 @@
       <!-- 价格设置 -->
       <div class="form-section">
         <h3 class="section-title">价格设置</h3>
-        
-        <el-form-item label="定价模式" prop="isFree">
-          <el-radio-group v-model="formData.isFree">
-            <el-radio :label="true">免费项目</el-radio>
-            <el-radio :label="false">付费项目</el-radio>
-          </el-radio-group>
-        </el-form-item>
 
-        <el-form-item 
-          v-if="!formData.isFree" 
-          label="项目价格" 
-          prop="price"
-        >
+        <el-form-item label="项目价格" prop="price">
           <el-input-number
             v-model="formData.price"
-            :min="1"
-            :max="99999"
+            :min="0"
+            :max="999999"
             :step="1"
-            placeholder="请输入价格（积分）"
-            style="width: 200px"
+            :precision="2"
+            placeholder="请输入价格（积分，0表示免费）"
+            style="width: 250px"
           />
-          <span class="price-unit">积分</span>
+          <span class="price-unit">积分（0 = 免费项目）</span>
         </el-form-item>
       </div>
 
@@ -116,20 +106,12 @@
             />
           </el-select>
         </el-form-item>
-
-        <el-form-item label="项目版本" prop="version">
-          <el-input
-            v-model="formData.version"
-            placeholder="如：1.0.0"
-            style="width: 200px"
-          />
-        </el-form-item>
       </div>
 
       <!-- 链接信息 -->
       <div class="form-section">
         <h3 class="section-title">链接信息</h3>
-        
+
         <el-form-item label="演示地址" prop="demoUrl">
           <el-input
             v-model="formData.demoUrl"
@@ -137,126 +119,10 @@
           />
         </el-form-item>
 
-        <el-form-item label="文档地址" prop="documentUrl">
+        <el-form-item label="封面图片" prop="coverImage">
           <el-input
-            v-model="formData.documentUrl"
-            placeholder="请输入项目文档地址（可选）"
-          />
-        </el-form-item>
-
-        <el-form-item label="仓库地址" prop="repositoryUrl">
-          <el-input
-            v-model="formData.repositoryUrl"
-            placeholder="请输入源码仓库地址（可选）"
-          />
-        </el-form-item>
-      </div>
-
-      <!-- 项目特性 -->
-      <div class="form-section">
-        <h3 class="section-title">项目特性</h3>
-        
-        <el-form-item label="主要特性" prop="features">
-          <el-select
-            v-model="formData.features"
-            multiple
-            filterable
-            allow-create
-            placeholder="请输入项目的主要特性"
-            style="width: 100%"
-          >
-            <el-option
-              v-for="feature in commonFeatures"
-              :key="feature"
-              :label="feature"
-              :value="feature"
-            />
-          </el-select>
-        </el-form-item>
-
-        <el-form-item label="许可证类型" prop="licenseType">
-          <el-select
-            v-model="formData.licenseType"
-            placeholder="请选择许可证类型"
-            style="width: 200px"
-          >
-            <el-option label="MIT" value="MIT" />
-            <el-option label="Apache 2.0" value="Apache-2.0" />
-            <el-option label="GPL v3" value="GPL-3.0" />
-            <el-option label="BSD 3-Clause" value="BSD-3-Clause" />
-            <el-option label="商业许可" value="Commercial" />
-            <el-option label="其他" value="Other" />
-          </el-select>
-        </el-form-item>
-      </div>
-
-      <!-- 使用说明 -->
-      <div class="form-section">
-        <h3 class="section-title">使用说明</h3>
-        
-        <el-form-item label="安装说明" prop="installInstructions">
-          <el-input
-            v-model="formData.installInstructions"
-            type="textarea"
-            :rows="3"
-            placeholder="请输入项目安装说明"
-            maxlength="2000"
-            show-word-limit
-          />
-        </el-form-item>
-
-        <el-form-item label="使用说明" prop="usageInstructions">
-          <el-input
-            v-model="formData.usageInstructions"
-            type="textarea"
-            :rows="3"
-            placeholder="请输入项目使用说明"
-            maxlength="2000"
-            show-word-limit
-          />
-        </el-form-item>
-
-        <el-form-item label="系统要求" prop="systemRequirements">
-          <el-input
-            v-model="formData.systemRequirements"
-            type="textarea"
-            :rows="2"
-            placeholder="请输入最低系统要求"
-            maxlength="500"
-            show-word-limit
-          />
-        </el-form-item>
-      </div>
-
-      <!-- 其他设置 -->
-      <div class="form-section">
-        <h3 class="section-title">其他设置</h3>
-        
-        <el-form-item label="项目属性">
-          <el-checkbox-group v-model="projectAttributes">
-            <el-checkbox label="isOpenSource">开源项目</el-checkbox>
-            <el-checkbox label="isCommercialUse">支持商业使用</el-checkbox>
-            <el-checkbox label="publishImmediately">立即发布</el-checkbox>
-          </el-checkbox-group>
-        </el-form-item>
-
-        <el-form-item label="联系方式" prop="contactInfo">
-          <el-input
-            v-model="formData.contactInfo"
-            placeholder="请输入联系方式（可选）"
-            maxlength="200"
-            show-word-limit
-          />
-        </el-form-item>
-
-        <el-form-item label="备注信息" prop="remarks">
-          <el-input
-            v-model="formData.remarks"
-            type="textarea"
-            :rows="3"
-            placeholder="其他需要说明的信息"
-            maxlength="1000"
-            show-word-limit
+            v-model="formData.coverImage"
+            placeholder="请输入封面图片URL（可选）"
           />
         </el-form-item>
       </div>
@@ -308,27 +174,11 @@ const formData = reactive<ProjectUploadRequest>({
   description: '',
   categoryId: 0,
   tags: [],
-  price: undefined,
-  isFree: true,
+  price: 0,
   demoUrl: '',
-  documentUrl: '',
-  repositoryUrl: '',
   techStack: [],
-  features: [],
-  installInstructions: '',
-  usageInstructions: '',
-  systemRequirements: '',
-  version: '',
-  isOpenSource: false,
-  isCommercialUse: false,
-  licenseType: '',
-  contactInfo: '',
-  publishImmediately: false,
-  remarks: ''
+  coverImage: ''
 })
-
-// 项目属性（用于复选框组）
-const projectAttributes = ref<string[]>([])
 
 // 常用选项
 const commonTechStack = [
@@ -344,30 +194,91 @@ const commonTags = [
   '游戏', '教育', '金融', '医疗', '物联网'
 ]
 
-const commonFeatures = [
-  '响应式设计', '用户认证', '权限管理', '数据可视化',
-  '实时通信', '文件上传', '支付集成', '多语言支持',
-  'SEO优化', '性能优化', '安全防护', 'API接口'
-]
-
 // 表单验证规则
 const formRules: FormRules = {
   title: [
     { required: true, message: '请输入项目标题', trigger: 'blur' },
-    { min: 2, max: 100, message: '标题长度在 2 到 100 个字符', trigger: 'blur' }
+    { min: 1, max: 100, message: '标题长度在 1 到 100 个字符', trigger: 'blur' }
   ],
   description: [
     { required: true, message: '请输入项目描述', trigger: 'blur' },
-    { min: 10, max: 1000, message: '描述长度在 10 到 1000 个字符', trigger: 'blur' }
+    { min: 10, max: 2000, message: '描述长度在 10 到 2000 个字符', trigger: 'blur' }
   ],
   categoryId: [
     { required: true, message: '请选择项目分类', trigger: 'change' }
   ],
+  techStack: [
+    { required: true, message: '请至少选择一个技术栈', trigger: 'change' },
+    {
+      validator: (_rule, value, callback) => {
+        if (!value || value.length === 0) {
+          callback(new Error('请至少选择一个技术栈'))
+        } else if (value.length > 20) {
+          callback(new Error('技术栈数量不能超过20个'))
+        } else {
+          callback()
+        }
+      },
+      trigger: 'change'
+    }
+  ],
+  tags: [
+    {
+      validator: (_rule, value, callback) => {
+        if (value && value.length > 10) {
+          callback(new Error('标签数量不能超过10个'))
+        } else {
+          callback()
+        }
+      },
+      trigger: 'change'
+    }
+  ],
   price: [
     {
-      validator: (rule, value, callback) => {
-        if (!formData.isFree && (!value || value <= 0)) {
-          callback(new Error('付费项目请设置正确的价格'))
+      validator: (_rule, value, callback) => {
+        if (value !== undefined && value !== null) {
+          if (value < 0) {
+            callback(new Error('项目价格不能为负数'))
+          } else if (value > 999999.99) {
+            callback(new Error('项目价格不能超过999999.99'))
+          } else {
+            callback()
+          }
+        } else {
+          callback()
+        }
+      },
+      trigger: 'blur'
+    }
+  ],
+  demoUrl: [
+    {
+      validator: (_rule, value, callback) => {
+        if (value && value.trim() !== '') {
+          const urlPattern = /^https?:\/\/.+/
+          if (!urlPattern.test(value)) {
+            callback(new Error('演示URL格式不正确，必须以http://或https://开头'))
+          } else {
+            callback()
+          }
+        } else {
+          callback()
+        }
+      },
+      trigger: 'blur'
+    }
+  ],
+  coverImage: [
+    {
+      validator: (_rule, value, callback) => {
+        if (value && value.trim() !== '') {
+          const urlPattern = /^https?:\/\/.+/
+          if (!urlPattern.test(value)) {
+            callback(new Error('封面图片URL格式不正确，必须以http://或https://开头'))
+          } else {
+            callback()
+          }
         } else {
           callback()
         }
@@ -380,12 +291,7 @@ const formRules: FormRules = {
 // 计算属性
 const isEdit = computed(() => props.isEdit)
 
-// 监听项目属性变化
-watch(projectAttributes, (newAttrs) => {
-  formData.isOpenSource = newAttrs.includes('isOpenSource')
-  formData.isCommercialUse = newAttrs.includes('isCommercialUse')
-  formData.publishImmediately = newAttrs.includes('publishImmediately')
-}, { deep: true })
+// 移除项目属性监听，因为已简化字段
 
 // 监听表单数据变化
 watch(formData, (newData) => {
@@ -396,18 +302,10 @@ watch(formData, (newData) => {
 watch(() => props.modelValue, (newValue) => {
   if (newValue) {
     Object.assign(formData, newValue)
-    updateProjectAttributes()
   }
 }, { immediate: true, deep: true })
 
-// 更新项目属性复选框
-const updateProjectAttributes = () => {
-  const attrs: string[] = []
-  if (formData.isOpenSource) attrs.push('isOpenSource')
-  if (formData.isCommercialUse) attrs.push('isCommercialUse')
-  if (formData.publishImmediately) attrs.push('publishImmediately')
-  projectAttributes.value = attrs
-}
+// 移除项目属性更新函数，因为已简化字段
 
 // 加载分类数据
 const loadCategories = async () => {
@@ -438,7 +336,6 @@ const handleSubmit = async () => {
 // 重置表单
 const handleReset = () => {
   formRef.value?.resetFields()
-  projectAttributes.value = []
 }
 
 // 取消操作
@@ -449,7 +346,6 @@ const handleCancel = () => {
 // 组件挂载时加载数据
 onMounted(() => {
   loadCategories()
-  updateProjectAttributes()
 })
 </script>
 

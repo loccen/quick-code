@@ -4,8 +4,11 @@ import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
+import jakarta.persistence.LockModeType;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
+
+import org.springframework.data.jpa.repository.Lock;
 import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
@@ -282,4 +285,23 @@ public interface ProjectRepository extends BaseRepository<Project, Long> {
     @Modifying
     @Query("UPDATE Project p SET p.likeCount = p.likeCount - 1 WHERE p.id = :projectId AND p.likeCount > 0")
     void decrementLikeCount(@Param("projectId") Long projectId);
+
+    /**
+     * 按指定数量增加项目浏览次数
+     */
+    @Modifying
+    @Query("UPDATE Project p SET p.viewCount = p.viewCount + :amount WHERE p.id = :projectId")
+    int incrementViewCountByAmount(@Param("projectId") Long projectId, @Param("amount") Integer amount);
+
+    /**
+     * 使用悲观锁查询项目（防止并发审核）
+     */
+    @Query("SELECT p FROM Project p WHERE p.id = :projectId")
+    @Lock(LockModeType.PESSIMISTIC_WRITE)
+    Optional<Project> findByIdForUpdate(@Param("projectId") Long projectId);
+
+    /**
+     * 根据ID和状态查询项目
+     */
+    Optional<Project> findByIdAndStatus(Long id, Integer status);
 }

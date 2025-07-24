@@ -23,6 +23,63 @@ INSERT INTO `user_role_relations` (`user_id`, `role_id`) VALUES
 (3, 2), -- testuser2 -> USER
 (4, 3); -- reviewer -> REVIEWER
 
+-- 插入权限数据
+INSERT INTO `permissions` (`permission_name`, `permission_code`, `description`, `resource_type`, `action_type`) VALUES
+-- 用户管理权限
+('创建用户', 'user:create', '创建新用户', 'USER', 'CREATE'),
+('查看用户', 'user:read', '查看用户信息', 'USER', 'READ'),
+('更新用户', 'user:update', '更新用户信息', 'USER', 'UPDATE'),
+('删除用户', 'user:delete', '删除用户', 'USER', 'DELETE'),
+('管理用户', 'user:manage', '完整的用户管理权限', 'USER', 'MANAGE'),
+
+-- 项目管理权限
+('创建项目', 'project:create', '创建新项目', 'PROJECT', 'CREATE'),
+('查看项目', 'project:read', '查看项目信息', 'PROJECT', 'READ'),
+('更新项目', 'project:update', '更新项目信息', 'PROJECT', 'UPDATE'),
+('删除项目', 'project:delete', '删除项目', 'PROJECT', 'DELETE'),
+('审核项目', 'project:review', '审核项目内容', 'PROJECT', 'REVIEW'),
+('管理项目', 'project:manage', '完整的项目管理权限', 'PROJECT', 'MANAGE'),
+
+-- 积分管理权限
+('查看积分', 'point:view', '查看积分信息', 'POINT', 'READ'),
+('管理积分', 'point:manage', '管理积分系统', 'POINT', 'MANAGE'),
+('积分交易', 'point:transaction', '进行积分交易', 'POINT', 'CREATE'),
+
+-- 角色权限管理
+('创建角色', 'role:create', '创建新角色', 'ROLE', 'CREATE'),
+('查看角色', 'role:read', '查看角色信息', 'ROLE', 'READ'),
+('更新角色', 'role:update', '更新角色信息', 'ROLE', 'UPDATE'),
+('删除角色', 'role:delete', '删除角色', 'ROLE', 'DELETE'),
+('分配角色', 'role:assign', '分配角色给用户', 'ROLE', 'ASSIGN'),
+
+-- 系统管理权限
+('系统配置', 'system:config', '系统配置管理', 'SYSTEM', 'MANAGE'),
+('系统监控', 'system:monitor', '系统监控', 'SYSTEM', 'READ'),
+('系统日志', 'system:log', '查看系统日志', 'SYSTEM', 'READ');
+
+-- 分配角色权限
+INSERT INTO `role_permission_relations` (`role_id`, `permission_id`) VALUES
+-- ADMIN角色拥有所有权限
+(1, 1), (1, 2), (1, 3), (1, 4), (1, 5),  -- 用户管理权限
+(1, 6), (1, 7), (1, 8), (1, 9), (1, 10), (1, 11),  -- 项目管理权限
+(1, 12), (1, 13), (1, 14),  -- 积分管理权限
+(1, 15), (1, 16), (1, 17), (1, 18), (1, 19),  -- 角色权限管理
+(1, 20), (1, 21), (1, 22),  -- 系统管理权限
+
+-- USER角色拥有基本权限
+(2, 2),   -- 查看用户
+(2, 6),   -- 创建项目
+(2, 7),   -- 查看项目
+(2, 8),   -- 更新项目（自己的）
+(2, 12),  -- 查看积分
+(2, 14),  -- 积分交易
+
+-- REVIEWER角色拥有审核权限
+(3, 2),   -- 查看用户
+(3, 7),   -- 查看项目
+(3, 10),  -- 审核项目
+(3, 12);  -- 查看积分
+
 -- 插入项目分类
 INSERT INTO `project_categories` (`name`, `code`, `description`, `parent_id`, `sort_order`) VALUES
 ('前端项目', 'FRONTEND', '前端相关项目', NULL, 1),

@@ -100,18 +100,21 @@ public class PublicProjectController extends BaseController {
         log.info("获取公开项目详情: id={}", id);
 
         try {
-            ProjectDetailDTO project = projectService.getProjectDetail(id);
+            // 直接查询已发布的项目，避免信息泄露
+            ProjectDetailDTO project = projectService.getPublishedProjectDetail(id);
 
-            // 增加浏览次数
+            if (project == null) {
+                return error("项目不存在或已下架");
+            }
+
+            // 异步增加浏览次数
             projectService.incrementViewCount(id);
 
             return success(project);
-        } catch (RuntimeException e) {
-            log.warn("获取项目详情失败: id={}, error={}", id, e.getMessage());
-            return error("项目不存在或已下架");
         } catch (Exception e) {
             log.error("获取项目详情失败: id={}", id, e);
-            return error("获取项目详情失败: " + e.getMessage());
+            // 统一错误信息，避免信息泄露
+            return error("项目不存在或已下架");
         }
     }
 

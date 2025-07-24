@@ -118,6 +118,15 @@ public class UserServiceImpl implements UserService {
     return userRepository.findByUsernameOrEmail(usernameOrEmail);
   }
 
+  /**
+   * 根据用户名或邮箱查找用户（包含角色和权限信息）
+   * 用于认证和权限验证场景
+   */
+  @Transactional(readOnly = true)
+  public Optional<User> findByUsernameOrEmailWithRoles(String usernameOrEmail) {
+    return userRepository.findByUsernameOrEmail(usernameOrEmail);
+  }
+
   @Override
   @Transactional(readOnly = true)
   public boolean isUsernameAvailable(String username) {

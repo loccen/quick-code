@@ -265,7 +265,7 @@ export interface FailedFileInfo {
 }
 
 /**
- * 项目上传请求
+ * 项目上传请求（简化版本）
  */
 export interface ProjectUploadRequest {
   /** 项目标题 */
@@ -278,44 +278,12 @@ export interface ProjectUploadRequest {
   tags?: string[]
   /** 项目价格（积分） */
   price?: number
-  /** 是否免费 */
-  isFree?: boolean
   /** 项目演示URL */
   demoUrl?: string
-  /** 项目文档URL */
-  documentUrl?: string
-  /** 项目源码仓库URL */
-  repositoryUrl?: string
   /** 技术栈 */
   techStack?: string[]
-  /** 项目特性 */
-  features?: string[]
-  /** 安装说明 */
-  installInstructions?: string
-  /** 使用说明 */
-  usageInstructions?: string
-  /** 更新日志 */
-  changelog?: string
-  /** 许可证类型 */
-  licenseType?: string
-  /** 最低系统要求 */
-  systemRequirements?: string
-  /** 项目版本 */
-  version?: string
-  /** 是否开源 */
-  isOpenSource?: boolean
-  /** 是否支持商业使用 */
-  isCommercialUse?: boolean
-  /** 联系方式 */
-  contactInfo?: string
-  /** 项目截图URL列表 */
-  screenshots?: string[]
   /** 封面图片URL */
-  coverImageUrl?: string
-  /** 是否立即发布 */
-  publishImmediately?: boolean
-  /** 备注信息 */
-  remarks?: string
+  coverImage?: string
 }
 
 /**

@@ -44,56 +44,56 @@ export const projectApi = {
    * 创建项目
    */
   createProject(data: ProjectUploadRequest): Promise<ApiResponse<ProjectManagement>> {
-    return request.post('/api/projects', data)
+    return request.post('/projects', data)
   },
 
   /**
    * 更新项目
    */
   updateProject(id: number, data: Partial<ProjectUploadRequest>): Promise<ApiResponse<ProjectManagement>> {
-    return request.put(`/api/projects/${id}`, data)
+    return request.put(`/projects/${id}`, data)
   },
 
   /**
    * 获取项目详情
    */
   getProject(id: number): Promise<ApiResponse<ProjectManagement>> {
-    return request.get(`/api/projects/${id}`)
+    return request.get(`/projects/${id}`)
   },
 
   /**
    * 删除项目
    */
   deleteProject(id: number): Promise<ApiResponse<void>> {
-    return request.delete(`/api/projects/${id}`)
+    return request.delete(`/projects/${id}`)
   },
 
   /**
    * 获取我的项目列表
    */
   getMyProjects(params: ProjectQueryParams = {}): Promise<ApiResponse<PageResponse<ProjectManagement>>> {
-    return request.get('/api/projects/my', { params })
+    return request.get('/projects/my', { params })
   },
 
   /**
    * 发布项目
    */
   publishProject(id: number): Promise<ApiResponse<void>> {
-    return request.post(`/api/projects/${id}/publish`)
+    return request.post(`/projects/${id}/publish`)
   },
 
   /**
    * 下架项目
    */
   unpublishProject(id: number): Promise<ApiResponse<void>> {
-    return request.post(`/api/projects/${id}/unpublish`)
+    return request.post(`/projects/${id}/unpublish`)
   },
 
   /**
    * 获取项目统计信息
    */
   getProjectStats(id: number): Promise<ApiResponse<any>> {
-    return request.get(`/api/projects/${id}/stats`)
+    return request.get(`/projects/${id}/stats`)
   }
 }
 
@@ -119,7 +119,7 @@ export const projectFileApi = {
       formData.append('isPrimary', String(options.isPrimary))
     }
 
-    return request.post(`/api/upload/project/${projectId}/enhanced`, formData, {
+    return request.post(`/upload/project/${projectId}`, formData, {
       headers: {
         'Content-Type': 'multipart/form-data'
       }
@@ -140,7 +140,7 @@ export const projectFileApi = {
     })
     formData.append('fileType', fileType)
 
-    return request.post(`/api/upload/project/${projectId}/batch`, formData, {
+    return request.post(`/upload/project/${projectId}/batch`, formData, {
       headers: {
         'Content-Type': 'multipart/form-data'
       }
@@ -154,21 +154,21 @@ export const projectFileApi = {
     projectId: number, 
     params: ProjectFileQueryParams = {}
   ): Promise<ApiResponse<PageResponse<ProjectFile>>> {
-    return request.get(`/api/projects/${projectId}/files`, { params })
+    return request.get(`/projects/${projectId}/files`, { params })
   },
 
   /**
    * 删除项目文件
    */
   deleteFile(fileId: number): Promise<ApiResponse<void>> {
-    return request.delete(`/api/projects/files/${fileId}`)
+    return request.delete(`/projects/files/${fileId}`)
   },
 
   /**
    * 设置主文件
    */
   setPrimaryFile(fileId: number): Promise<ApiResponse<void>> {
-    return request.post(`/api/projects/files/${fileId}/primary`)
+    return request.post(`/projects/files/${fileId}/primary`)
   },
 
   /**
@@ -178,7 +178,7 @@ export const projectFileApi = {
     const formData = new FormData()
     formData.append('file', file)
 
-    return request.post(`/api/upload/project/files/${fileId}/replace`, formData, {
+    return request.post(`/upload/project/files/${fileId}/replace`, formData, {
       headers: {
         'Content-Type': 'multipart/form-data'
       }
@@ -197,7 +197,7 @@ export const projectDownloadApi = {
     projectId: number, 
     expirationMinutes: number = 60
   ): Promise<ApiResponse<DownloadTokenResponse>> {
-    return request.post(`/api/download/token/${projectId}`, null, {
+    return request.post(`/download/token/${projectId}`, null, {
       params: { expirationMinutes }
     })
   },
@@ -206,7 +206,7 @@ export const projectDownloadApi = {
    * 下载项目文件
    */
   downloadProject(projectId: number, source: string = 'WEB'): Promise<Blob> {
-    return request.get(`/api/download/project/${projectId}`, {
+    return request.get(`/download/project/${projectId}`, {
       params: { source },
       responseType: 'blob'
     }).then(response => response.data)
@@ -216,7 +216,7 @@ export const projectDownloadApi = {
    * 下载指定文件
    */
   downloadFile(projectId: number, fileId: number, source: string = 'WEB'): Promise<Blob> {
-    return request.get(`/api/download/project/${projectId}/file/${fileId}`, {
+    return request.get(`/download/project/${projectId}/file/${fileId}`, {
       params: { source },
       responseType: 'blob'
     }).then(response => response.data)
@@ -231,21 +231,21 @@ export const projectDownloadApi = {
     sort?: string
     direction?: string
   } = {}): Promise<ApiResponse<PageResponse<ProjectDownload>>> {
-    return request.get('/api/download/history', { params })
+    return request.get('/download/history', { params })
   },
 
   /**
    * 检查下载权限
    */
   checkDownloadPermission(projectId: number): Promise<ApiResponse<boolean>> {
-    return request.get(`/api/download/permission/${projectId}`)
+    return request.get(`/download/permission/${projectId}`)
   },
 
   /**
    * 获取项目下载统计
    */
   getDownloadStats(projectId: number, days: number = 30): Promise<ApiResponse<any>> {
-    return request.get(`/api/download/stats/${projectId}`, {
+    return request.get(`/download/stats/${projectId}`, {
       params: { days }
     })
   }
@@ -262,7 +262,7 @@ export const fileUploadApi = {
     const formData = new FormData()
     formData.append('file', file)
 
-    return request.post('/api/upload/avatar', formData, {
+    return request.post('/upload/avatar', formData, {
       headers: {
         'Content-Type': 'multipart/form-data'
       }
@@ -276,7 +276,7 @@ export const fileUploadApi = {
     const formData = new FormData()
     formData.append('file', file)
 
-    return request.post('/api/upload/project', formData, {
+    return request.post('/upload/project', formData, {
       headers: {
         'Content-Type': 'multipart/form-data'
       }

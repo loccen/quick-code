@@ -82,22 +82,9 @@ const loadProject = async () => {
       categoryId: 1,
       tags: ['Vue3', 'TypeScript'],
       price: 299,
-      isFree: false,
       demoUrl: 'https://example.com',
-      documentUrl: '',
-      repositoryUrl: '',
       techStack: ['Vue.js', 'TypeScript', 'Element Plus'],
-      features: ['响应式设计', '用户认证'],
-      installInstructions: '请按照以下步骤安装...',
-      usageInstructions: '使用方法如下...',
-      systemRequirements: 'Node.js 16+',
-      version: '1.0.0',
-      isOpenSource: false,
-      isCommercialUse: true,
-      licenseType: 'MIT',
-      contactInfo: 'contact@example.com',
-      publishImmediately: false,
-      remarks: '备注信息'
+      coverImage: 'https://example.com/cover.jpg'
     }
   } catch (error: any) {
     console.error('加载项目失败:', error)
