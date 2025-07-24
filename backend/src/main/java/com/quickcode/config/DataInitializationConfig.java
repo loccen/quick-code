@@ -168,50 +168,47 @@ public class DataInitializationConfig implements ApplicationRunner {
 
         log.info("初始化项目数据...");
 
-        // 获取用户ID（假设用户已经创建）
+        // 获取用户
         User user1 = userRepository.findByUsername("testuser1").orElse(null);
         User user2 = userRepository.findByUsername("testuser2").orElse(null);
+        User admin = userRepository.findByUsername("admin").orElse(null);
 
-        if (user1 == null || user2 == null) {
+        if (user1 == null || user2 == null || admin == null) {
             log.warn("用户数据不存在，跳过项目初始化");
             return;
         }
 
-        // 获取分类ID，使用默认分类如果特定分类不存在
+        // 获取分类
         Category vueCategory = categoryRepository.findByCode("VUE").orElse(null);
+        Category reactCategory = categoryRepository.findByCode("REACT").orElse(null);
+        Category angularCategory = categoryRepository.findByCode("ANGULAR").orElse(null);
+        Category miniprogramCategory = categoryRepository.findByCode("MINIPROGRAM").orElse(null);
         Category springBootCategory = categoryRepository.findByCode("SPRINGBOOT").orElse(null);
+        Category nodejsCategory = categoryRepository.findByCode("NODEJS").orElse(null);
+        Category pythonCategory = categoryRepository.findByCode("PYTHON").orElse(null);
+        Category golangCategory = categoryRepository.findByCode("GOLANG").orElse(null);
+        Category androidCategory = categoryRepository.findByCode("ANDROID").orElse(null);
+        Category iosCategory = categoryRepository.findByCode("IOS").orElse(null);
+        Category flutterCategory = categoryRepository.findByCode("FLUTTER").orElse(null);
         Category reactNativeCategory = categoryRepository.findByCode("REACTNATIVE").orElse(null);
 
-        // 如果子分类不存在，使用主分类
+        // 使用主分类作为备选
         Category frontendCategory = categoryRepository.findByCode("FRONTEND").orElse(null);
         Category backendCategory = categoryRepository.findByCode("BACKEND").orElse(null);
+        Category mobileCategory = categoryRepository.findByCode("MOBILE").orElse(null);
 
         if (frontendCategory == null || backendCategory == null) {
             log.warn("主分类数据不存在，跳过项目初始化");
             return;
         }
 
-        List<Project> projects = Arrays.asList(
-                createProject("Vue3管理后台模板",
-                        "基于Vue3 + Element Plus的现代化管理后台模板，包含用户管理、权限控制、数据统计等功能",
-                        vueCategory != null ? vueCategory.getId() : frontendCategory.getId(),
-                        user1.getId(), new BigDecimal("100.00"),
-                        Arrays.asList("Vue 3", "TypeScript", "Element Plus", "Vite", "Pinia"),
-                        Arrays.asList("管理后台", "Vue3", "TypeScript", "响应式")),
-
-                createProject("Spring Boot电商API",
-                        "完整的电商后端API，包含商品管理、订单处理、支付集成等功能",
-                        springBootCategory != null ? springBootCategory.getId() : backendCategory.getId(),
-                        user1.getId(), new BigDecimal("200.00"),
-                        Arrays.asList("Spring Boot", "MySQL", "Redis", "JWT", "Swagger"),
-                        Arrays.asList("电商", "API", "Spring Boot", "微服务")),
-
-                createProject("React Native购物App",
-                        "跨平台购物应用，支持商品浏览、购物车、订单管理等功能",
-                        reactNativeCategory != null ? reactNativeCategory.getId() : frontendCategory.getId(),
-                        user2.getId(), new BigDecimal("150.00"),
-                        Arrays.asList("React Native", "Redux", "AsyncStorage", "React Navigation"),
-                        Arrays.asList("移动应用", "购物", "跨平台", "React Native"))
+        // 创建20个丰富的项目数据
+        List<Project> projects = createRichProjectData(
+                Arrays.asList(user1, user2, admin),
+                Arrays.asList(vueCategory, reactCategory, angularCategory, miniprogramCategory,
+                        springBootCategory, nodejsCategory, pythonCategory, golangCategory,
+                        androidCategory, iosCategory, flutterCategory, reactNativeCategory),
+                Arrays.asList(frontendCategory, backendCategory, mobileCategory)
         );
 
         projectRepository.saveAll(projects);
@@ -229,8 +226,199 @@ public class DataInitializationConfig implements ApplicationRunner {
                 .build();
     }
 
-    private Project createProject(String title, String description, Long categoryId, Long userId, 
-                                BigDecimal price, List<String> techStack, List<String> tags) {
+    /**
+     * 创建丰富的项目测试数据
+     */
+    private List<Project> createRichProjectData(List<User> users, List<Category> categories, List<Category> fallbackCategories) {
+        List<Project> projects = Arrays.asList(
+                // Vue.js项目
+                createProjectWithStats("Vue3企业级管理系统",
+                        "基于Vue3 + TypeScript + Element Plus的现代化企业管理系统，包含完整的权限管理、数据统计、工作流等功能模块",
+                        getValidCategoryId(categories.get(0), fallbackCategories.get(0)),
+                        users.get(0).getId(), new BigDecimal("299.00"),
+                        Arrays.asList("Vue 3", "TypeScript", "Element Plus", "Vite", "Pinia", "Vue Router"),
+                        Arrays.asList("企业管理", "Vue3", "TypeScript", "权限系统"),
+                        150, 1200, 89, new BigDecimal("4.8"), 45, 1),
+
+                createProjectWithStats("Vue3电商前端模板",
+                        "完整的电商前端解决方案，支持商品展示、购物车、订单管理、支付集成等功能",
+                        getValidCategoryId(categories.get(0), fallbackCategories.get(0)),
+                        users.get(1).getId(), new BigDecimal("199.00"),
+                        Arrays.asList("Vue 3", "Vuex", "Vue Router", "Axios", "Element UI"),
+                        Arrays.asList("电商", "前端", "Vue", "响应式"),
+                        89, 856, 67, new BigDecimal("4.6"), 32, 1),
+
+                // React项目
+                createProjectWithStats("React企业级CRM系统",
+                        "基于React + Ant Design的客户关系管理系统，包含客户管理、销售跟进、数据分析等功能",
+                        getValidCategoryId(categories.get(1), fallbackCategories.get(0)),
+                        users.get(0).getId(), new BigDecimal("399.00"),
+                        Arrays.asList("React", "TypeScript", "Ant Design", "Redux Toolkit", "React Router"),
+                        Arrays.asList("CRM", "React", "企业应用", "客户管理"),
+                        234, 1567, 123, new BigDecimal("4.9"), 78, 1),
+
+                createProjectWithStats("React Native跨平台App",
+                        "完整的跨平台移动应用解决方案，支持iOS和Android，包含用户认证、数据同步等功能",
+                        getValidCategoryId(categories.get(11), fallbackCategories.get(2)),
+                        users.get(2).getId(), new BigDecimal("349.00"),
+                        Arrays.asList("React Native", "Redux", "React Navigation", "AsyncStorage"),
+                        Arrays.asList("移动应用", "跨平台", "React Native", "原生"),
+                        178, 934, 78, new BigDecimal("4.7"), 56, 1),
+
+                // Spring Boot项目
+                createProjectWithStats("Spring Boot微服务架构",
+                        "完整的微服务架构解决方案，包含用户服务、订单服务、支付服务等，支持分布式部署",
+                        getValidCategoryId(categories.get(4), fallbackCategories.get(1)),
+                        users.get(0).getId(), new BigDecimal("599.00"),
+                        Arrays.asList("Spring Boot", "Spring Cloud", "MySQL", "Redis", "RabbitMQ", "Docker"),
+                        Arrays.asList("微服务", "Spring Boot", "分布式", "云原生"),
+                        312, 2134, 156, new BigDecimal("4.9"), 89, 1),
+
+                createProjectWithStats("Spring Boot电商后端API",
+                        "完整的电商后端API系统，包含商品管理、订单处理、支付集成、库存管理等功能",
+                        getValidCategoryId(categories.get(4), fallbackCategories.get(1)),
+                        users.get(1).getId(), new BigDecimal("459.00"),
+                        Arrays.asList("Spring Boot", "MyBatis Plus", "MySQL", "Redis", "JWT"),
+                        Arrays.asList("电商", "API", "后端", "Spring Boot"),
+                        267, 1789, 134, new BigDecimal("4.8"), 67, 1),
+
+                // Node.js项目
+                createProjectWithStats("Node.js实时聊天系统",
+                        "基于Socket.io的实时聊天系统，支持群聊、私聊、文件传输、消息推送等功能",
+                        getValidCategoryId(categories.get(5), fallbackCategories.get(1)),
+                        users.get(2).getId(), new BigDecimal("289.00"),
+                        Arrays.asList("Node.js", "Express", "Socket.io", "MongoDB", "JWT"),
+                        Arrays.asList("聊天系统", "实时通信", "Node.js", "WebSocket"),
+                        145, 987, 89, new BigDecimal("4.5"), 43, 1),
+
+                createProjectWithStats("Node.js博客管理系统",
+                        "完整的博客管理系统，支持文章发布、评论管理、用户权限、SEO优化等功能",
+                        getValidCategoryId(categories.get(5), fallbackCategories.get(1)),
+                        users.get(0).getId(), new BigDecimal("199.00"),
+                        Arrays.asList("Node.js", "Express", "MongoDB", "EJS", "Bootstrap"),
+                        Arrays.asList("博客", "内容管理", "Node.js", "SEO"),
+                        98, 654, 45, new BigDecimal("4.3"), 28, 1),
+
+                // Python项目
+                createProjectWithStats("Python数据分析平台",
+                        "基于Django的数据分析平台，支持数据导入、清洗、分析、可视化等功能",
+                        getValidCategoryId(categories.get(6), fallbackCategories.get(1)),
+                        users.get(1).getId(), new BigDecimal("399.00"),
+                        Arrays.asList("Python", "Django", "Pandas", "NumPy", "Matplotlib", "Plotly"),
+                        Arrays.asList("数据分析", "Python", "可视化", "机器学习"),
+                        189, 1234, 98, new BigDecimal("4.7"), 67, 1),
+
+                createProjectWithStats("Python爬虫框架",
+                        "高效的分布式爬虫框架，支持多线程、反反爬、数据存储、监控等功能",
+                        getValidCategoryId(categories.get(6), fallbackCategories.get(1)),
+                        users.get(2).getId(), new BigDecimal("259.00"),
+                        Arrays.asList("Python", "Scrapy", "Redis", "MongoDB", "Celery"),
+                        Arrays.asList("爬虫", "数据采集", "Python", "分布式"),
+                        134, 876, 67, new BigDecimal("4.4"), 45, 1),
+
+                // 移动应用项目
+                createProjectWithStats("Flutter跨平台商城App",
+                        "基于Flutter的跨平台电商应用，支持商品浏览、购物车、支付、物流跟踪等功能",
+                        getValidCategoryId(categories.get(10), fallbackCategories.get(2)),
+                        users.get(0).getId(), new BigDecimal("449.00"),
+                        Arrays.asList("Flutter", "Dart", "Provider", "HTTP", "SQLite"),
+                        Arrays.asList("Flutter", "电商", "跨平台", "移动应用"),
+                        223, 1456, 112, new BigDecimal("4.8"), 78, 1),
+
+                createProjectWithStats("Android原生社交App",
+                        "完整的Android社交应用，包含动态发布、好友系统、即时通讯、位置服务等功能",
+                        getValidCategoryId(categories.get(8), fallbackCategories.get(2)),
+                        users.get(1).getId(), new BigDecimal("389.00"),
+                        Arrays.asList("Android", "Java", "Retrofit", "Room", "Firebase"),
+                        Arrays.asList("Android", "社交", "原生应用", "即时通讯"),
+                        167, 1123, 89, new BigDecimal("4.6"), 56, 1),
+
+                createProjectWithStats("iOS Swift健身App",
+                        "基于Swift的健身应用，支持运动记录、健身计划、数据统计、社区分享等功能",
+                        getValidCategoryId(categories.get(9), fallbackCategories.get(2)),
+                        users.get(2).getId(), new BigDecimal("329.00"),
+                        Arrays.asList("iOS", "Swift", "Core Data", "HealthKit", "MapKit"),
+                        Arrays.asList("iOS", "健身", "Swift", "健康"),
+                        145, 967, 78, new BigDecimal("4.7"), 45, 1),
+
+                // 小程序项目
+                createProjectWithStats("微信小程序商城",
+                        "完整的微信小程序商城解决方案，支持商品展示、下单支付、会员系统等功能",
+                        getValidCategoryId(categories.get(3), fallbackCategories.get(0)),
+                        users.get(0).getId(), new BigDecimal("299.00"),
+                        Arrays.asList("微信小程序", "云开发", "WeUI", "云函数", "云数据库"),
+                        Arrays.asList("小程序", "商城", "微信", "云开发"),
+                        178, 1234, 98, new BigDecimal("4.5"), 67, 1),
+
+                createProjectWithStats("小程序点餐系统",
+                        "餐厅点餐小程序，支持菜品展示、在线点餐、支付结算、订单管理等功能",
+                        getValidCategoryId(categories.get(3), fallbackCategories.get(0)),
+                        users.get(1).getId(), new BigDecimal("199.00"),
+                        Arrays.asList("微信小程序", "云开发", "支付API", "地图API"),
+                        Arrays.asList("小程序", "点餐", "餐饮", "O2O"),
+                        89, 567, 45, new BigDecimal("4.2"), 34, 1),
+
+                // Go语言项目
+                createProjectWithStats("Go微服务网关",
+                        "高性能的API网关服务，支持路由转发、负载均衡、限流熔断、监控等功能",
+                        getValidCategoryId(categories.get(7), fallbackCategories.get(1)),
+                        users.get(2).getId(), new BigDecimal("399.00"),
+                        Arrays.asList("Go", "Gin", "Redis", "Consul", "Prometheus"),
+                        Arrays.asList("Go", "微服务", "网关", "高性能"),
+                        156, 1089, 78, new BigDecimal("4.6"), 56, 1),
+
+                // Angular项目
+                createProjectWithStats("Angular企业门户",
+                        "基于Angular的企业门户网站，包含新闻发布、产品展示、在线客服等功能",
+                        getValidCategoryId(categories.get(2), fallbackCategories.get(0)),
+                        users.get(0).getId(), new BigDecimal("259.00"),
+                        Arrays.asList("Angular", "TypeScript", "Angular Material", "RxJS"),
+                        Arrays.asList("Angular", "企业门户", "TypeScript", "响应式"),
+                        123, 789, 56, new BigDecimal("4.3"), 34, 1),
+
+                // 全栈项目
+                createProjectWithStats("全栈在线教育平台",
+                        "完整的在线教育解决方案，包含课程管理、视频播放、在线考试、学习进度跟踪等功能",
+                        getValidCategoryId(categories.get(0), fallbackCategories.get(0)),
+                        users.get(1).getId(), new BigDecimal("799.00"),
+                        Arrays.asList("Vue 3", "Spring Boot", "MySQL", "Redis", "FFmpeg", "WebRTC"),
+                        Arrays.asList("在线教育", "全栈", "视频", "考试系统"),
+                        345, 2567, 189, new BigDecimal("4.9"), 123, 1),
+
+                createProjectWithStats("全栈项目管理系统",
+                        "敏捷项目管理系统，支持任务管理、团队协作、进度跟踪、文档管理等功能",
+                        getValidCategoryId(categories.get(4), fallbackCategories.get(1)),
+                        users.get(2).getId(), new BigDecimal("459.00"),
+                        Arrays.asList("React", "Node.js", "MongoDB", "Socket.io", "Docker"),
+                        Arrays.asList("项目管理", "团队协作", "敏捷开发", "全栈"),
+                        234, 1678, 134, new BigDecimal("4.7"), 89, 1),
+
+                createProjectWithStats("智能客服系统",
+                        "基于AI的智能客服系统，支持自动回复、人工客服、知识库管理、数据分析等功能",
+                        getValidCategoryId(categories.get(6), fallbackCategories.get(1)),
+                        users.get(0).getId(), new BigDecimal("699.00"),
+                        Arrays.asList("Python", "TensorFlow", "Django", "Redis", "Elasticsearch"),
+                        Arrays.asList("AI", "客服系统", "机器学习", "自然语言处理"),
+                        289, 1934, 145, new BigDecimal("4.8"), 98, 1)
+        );
+
+        return projects;
+    }
+
+    /**
+     * 获取有效的分类ID
+     */
+    private Long getValidCategoryId(Category category, Category fallback) {
+        return category != null ? category.getId() : fallback.getId();
+    }
+
+    /**
+     * 创建带统计数据的项目
+     */
+    private Project createProjectWithStats(String title, String description, Long categoryId, Long userId,
+                                         BigDecimal price, List<String> techStack, List<String> tags,
+                                         int downloadCount, int viewCount, int likeCount,
+                                         BigDecimal rating, int ratingCount, int status) {
         return Project.builder()
                 .title(title)
                 .description(description)
@@ -239,7 +427,12 @@ public class DataInitializationConfig implements ApplicationRunner {
                 .price(price)
                 .techStack(techStack)
                 .tags(tags)
-                .status(1) // 已发布
+                .downloadCount(downloadCount)
+                .viewCount(viewCount)
+                .likeCount(likeCount)
+                .rating(rating)
+                .ratingCount(ratingCount)
+                .status(status)
                 .build();
     }
 }
