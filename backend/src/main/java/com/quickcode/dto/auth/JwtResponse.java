@@ -101,9 +101,9 @@ public class JwtResponse {
         private LocalDateTime lastLoginTime;
 
         /**
-         * 角色列表
+         * 是否为管理员
          */
-        private List<String> roles;
+        private Boolean isAdmin;
 
         /**
          * 权限列表

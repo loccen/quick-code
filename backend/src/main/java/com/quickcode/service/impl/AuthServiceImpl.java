@@ -340,6 +340,6 @@ public class AuthServiceImpl implements AuthService {
         .email(user.getEmail()).nickname(user.getNickname()).avatarUrl(user.getAvatarUrl())
         .status(user.getStatus()).emailVerified(user.getEmailVerified())
         .twoFactorEnabled(user.getTwoFactorEnabled()).lastLoginTime(user.getLastLoginTime())
-        .permissions(permissions).build();
+        .isAdmin(user.isAdmin()).permissions(permissions).build();
   }
 }

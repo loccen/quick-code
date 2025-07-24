@@ -37,14 +37,9 @@ public interface UserService extends BaseService<User, Long> {
 
   /**
    * 根据用户名或邮箱查找用户
-   */
-  Optional<User> findByUsernameOrEmail(String usernameOrEmail);
-
-  /**
-   * 根据用户名或邮箱查找用户（包含角色和权限信息）
    * 用于认证和权限验证场景
    */
-  Optional<User> findByUsernameOrEmailWithRoles(String usernameOrEmail);
+  Optional<User> findByUsernameOrEmail(String usernameOrEmail);
 
   /**
    * 检查用户名是否可用

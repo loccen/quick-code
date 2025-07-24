@@ -35,7 +35,7 @@ public class CustomUserDetailsService implements UserDetailsService {
     public UserDetails loadUserByUsername(String usernameOrEmail) throws UsernameNotFoundException {
         log.debug("正在加载用户详情: {}", usernameOrEmail);
 
-        User user = userService.findByUsernameOrEmailWithRoles(usernameOrEmail)
+        User user = userService.findByUsernameOrEmail(usernameOrEmail)
                 .orElseThrow(() -> {
                     log.warn("用户不存在: {}", usernameOrEmail);
                     return new UsernameNotFoundException("用户不存在: " + usernameOrEmail);
