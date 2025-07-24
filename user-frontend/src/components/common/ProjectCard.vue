@@ -34,22 +34,75 @@
       <div class="project-footer">
         <div class="project-price">
           <i class="fas fa-coins"></i>
-          <span>{{ project.price }} 积分</span>
+          <span>{{ project.price }}</span>
         </div>
         <div class="project-actions">
-          <button 
-            class="btn btn-sm btn-outline" 
+          <!-- 演示按钮 - 所有模式都显示 -->
+          <button
+            class="btn btn-sm btn-outline"
             @click.stop="handleDemo"
           >
             <i class="fas fa-play"></i>
             演示
           </button>
-          <button 
-            class="btn btn-sm btn-primary" 
-            @click.stop="handlePurchase"
-          >
-            购买
-          </button>
+
+          <!-- 我上传的项目模式 -->
+          <template v-if="mode === 'uploaded'">
+            <button
+              class="btn btn-sm btn-primary"
+              @click.stop="handleEdit"
+            >
+              <i class="fas fa-edit"></i>
+              编辑
+            </button>
+            <button
+              class="btn btn-sm btn-danger"
+              @click.stop="handleDelete"
+            >
+              <i class="fas fa-trash"></i>
+              删除
+            </button>
+          </template>
+
+          <!-- 我购买的项目模式 -->
+          <template v-else-if="mode === 'purchased'">
+            <button
+              class="btn btn-sm btn-primary"
+              @click.stop="handleDownload"
+            >
+              <i class="fas fa-download"></i>
+              下载
+            </button>
+          </template>
+
+          <!-- 我收藏的项目模式 -->
+          <template v-else-if="mode === 'favorites'">
+            <button
+              class="btn btn-sm btn-primary"
+              @click.stop="handlePurchase"
+            >
+              <i class="fas fa-shopping-cart"></i>
+              购买
+            </button>
+            <button
+              class="btn btn-sm btn-outline"
+              @click.stop="handleUnfavorite"
+            >
+              <i class="fas fa-heart-broken"></i>
+              取消收藏
+            </button>
+          </template>
+
+          <!-- 市场模式（默认） -->
+          <template v-else>
+            <button
+              class="btn btn-sm btn-primary"
+              @click.stop="handlePurchase"
+            >
+              <i class="fas fa-shopping-cart"></i>
+              购买
+            </button>
+          </template>
         </div>
       </div>
 
@@ -59,6 +112,12 @@
         <div class="stat-item" v-if="project.rating && project.rating > 0">
           <i class="fas fa-star"></i>
           <span>{{ formatRating(project.rating) }}</span>
+        </div>
+
+        <!-- 浏览量 -->
+        <div class="stat-item" v-if="project.viewCount && project.viewCount > 0">
+          <i class="fas fa-eye"></i>
+          <span>{{ formatViews(project.viewCount) }}</span>
         </div>
 
         <!-- 下载量 -->
@@ -98,6 +157,7 @@ interface Project {
   username?: string // 作者用户名
   rating?: number
   downloadCount?: number // 下载次数
+  viewCount?: number // 浏览次数
   category?: string
   createdTime?: string // 创建时间
   updatedTime?: string
@@ -107,22 +167,33 @@ interface Project {
   createdAt?: string
 }
 
+// 项目卡片显示模式
+type ProjectCardMode = 'market' | 'uploaded' | 'purchased' | 'favorites'
+
 interface Props {
   project: Project
+  mode?: ProjectCardMode // 显示模式，默认为 'market'
 }
 
 interface Emits {
   (e: 'demo', project: Project): void
   (e: 'purchase', project: Project): void
+  (e: 'edit', project: Project): void
+  (e: 'delete', project: Project): void
+  (e: 'download', project: Project): void
+  (e: 'unfavorite', project: Project): void
 }
 
-const props = defineProps<Props>()
+const props = withDefaults(defineProps<Props>(), {
+  mode: 'market'
+})
 const emit = defineEmits<Emits>()
 const router = useRouter()
 
 // 开发环境调试信息
 if (import.meta.env.DEV) {
   console.log('ProjectCard props.project:', props.project)
+  console.log('ProjectCard mode:', props.mode)
 }
 
 /**
@@ -147,6 +218,34 @@ const handlePurchase = () => {
 }
 
 /**
+ * 处理编辑按钮点击
+ */
+const handleEdit = () => {
+  emit('edit', props.project)
+}
+
+/**
+ * 处理删除按钮点击
+ */
+const handleDelete = () => {
+  emit('delete', props.project)
+}
+
+/**
+ * 处理下载按钮点击
+ */
+const handleDownload = () => {
+  emit('download', props.project)
+}
+
+/**
+ * 处理取消收藏按钮点击
+ */
+const handleUnfavorite = () => {
+  emit('unfavorite', props.project)
+}
+
+/**
  * 格式化评分显示
  */
 const formatRating = (rating: number | string): string => {
@@ -164,6 +263,18 @@ const formatDownloads = (downloads: number): string => {
     return `${(downloads / 1000).toFixed(1)}k`
   }
   return downloads.toString()
+}
+
+/**
+ * 格式化浏览量显示
+ */
+const formatViews = (views: number): string => {
+  if (views >= 10000) {
+    return `${(views / 10000).toFixed(1)}万`
+  } else if (views >= 1000) {
+    return `${(views / 1000).toFixed(1)}k`
+  }
+  return views.toString()
 }
 
 /**
@@ -443,6 +554,18 @@ const formatDate = (dateString: string): string => {
               background: $primary-hover;
               transform: translateY(-1px);
               box-shadow: $shadow-primary-hover;
+            }
+          }
+
+          &.btn-danger {
+            background: #f56565;
+            color: white;
+            box-shadow: 0 2px 8px rgba(245, 101, 101, 0.3);
+
+            &:hover {
+              background: #e53e3e;
+              transform: translateY(-1px);
+              box-shadow: 0 4px 12px rgba(245, 101, 101, 0.4);
             }
           }
         }

@@ -43,19 +43,23 @@
               <div class="project-stats">
                 <div class="stat-item">
                   <el-icon><Star /></el-icon>
-                  <span>{{ project.rating || 0 }} 分</span>
+                  <span>{{ formatRating(project.rating || 0) }}</span>
+                </div>
+                <div class="stat-item">
+                  <el-icon><View /></el-icon>
+                  <span>{{ formatNumber(project.viewCount || project.views || 0) }}</span>
                 </div>
                 <div class="stat-item">
                   <el-icon><Download /></el-icon>
-                  <span>{{ project.downloads || 0 }} 次下载</span>
+                  <span>{{ formatNumber(project.downloadCount || project.downloads || 0) }}</span>
                 </div>
                 <div class="stat-item">
                   <el-icon><User /></el-icon>
-                  <span>{{ project.author }}</span>
+                  <span>{{ project.username || project.author || '未知作者' }}</span>
                 </div>
                 <div class="stat-item">
                   <el-icon><Calendar /></el-icon>
-                  <span>{{ project.createdAt }}</span>
+                  <span>{{ formatDate(project.createdTime || project.createdAt) }}</span>
                 </div>
               </div>
             </div>
@@ -65,8 +69,9 @@
           <div class="purchase-section">
             <div class="price-info">
               <div class="current-price">
-                <span class="price">¥{{ project.price }}</span>
-                <span class="unit">积分</span>
+                <span class="price">
+                  <i class="fas fa-coins"></i>
+                  {{ project.price }}</span>
               </div>
             </div>
 
@@ -142,7 +147,7 @@
               </div>
               <div class="meta-item">
                 <span class="label">更新时间：</span>
-                <span class="value">{{ project.updatedAt }}</span>
+                <span class="value">{{ formatDate(project.updatedTime || project.updatedAt) }}</span>
               </div>
               <div v-if="project.demoUrl" class="meta-item">
                 <span class="label">演示地址：</span>
@@ -164,7 +169,7 @@
         sub-title="抱歉，您访问的项目不存在或已被删除"
       >
         <template #extra>
-          <el-button type="primary" @click="$router.push('/market')">
+          <el-button type="primary" @click="router.push('/market')">
             返回项目市场
           </el-button>
         </template>
@@ -185,7 +190,8 @@ import {
   ShoppingCart,
   VideoPlay,
   Check,
-  Picture
+  Picture,
+  View
 } from '@element-plus/icons-vue'
 import { useUserStore } from '@/stores/user'
 import { publicProjectApi } from '@/api/modules/public'
@@ -194,9 +200,36 @@ const route = useRoute()
 const router = useRouter()
 const userStore = useUserStore()
 
+// 项目详情类型定义
+interface ProjectDetail {
+  id: number
+  title: string
+  description: string
+  thumbnail?: string
+  coverImage?: string
+  price: number
+  rating?: number
+  viewCount?: number
+  views?: number
+  downloadCount?: number
+  downloads?: number
+  username?: string
+  author?: string
+  createdTime?: string
+  createdAt?: string
+  updatedTime?: string
+  updatedAt?: string
+  tags?: string[]
+  techStack?: string[]
+  features?: string[]
+  sourceSize?: string
+  license?: string
+  demoUrl?: string
+}
+
 // 响应式数据
 const loading = ref(false)
-const project = ref<any>(null)
+const project = ref<ProjectDetail | null>(null)
 const imageLoadFailed = ref(false)
 const hasTriedFallback = ref(false)
 
@@ -278,6 +311,43 @@ const handleDemo = () => {
   }
 
   ElMessage.info('演示功能开发中...')
+}
+
+/**
+ * 格式化评分显示
+ */
+const formatRating = (rating: number): string => {
+  return rating.toFixed(1)
+}
+
+/**
+ * 格式化数字显示（浏览量、下载量等）
+ */
+const formatNumber = (num: number): string => {
+  if (num >= 10000) {
+    return `${(num / 10000).toFixed(1)}万`
+  } else if (num >= 1000) {
+    return `${(num / 1000).toFixed(1)}k`
+  }
+  return num.toString()
+}
+
+/**
+ * 格式化日期显示
+ */
+const formatDate = (dateStr?: string): string => {
+  if (!dateStr) return '未知时间'
+
+  try {
+    const date = new Date(dateStr)
+    return date.toLocaleDateString('zh-CN', {
+      year: 'numeric',
+      month: 'long',
+      day: 'numeric'
+    })
+  } catch {
+    return '未知时间'
+  }
 }
 
 // 生命周期
@@ -408,6 +478,10 @@ onMounted(() => {
           font-size: $font-size-4xl;
           font-weight: $font-weight-bold;
           color: var(--primary-color);
+
+          i {
+          color: $warning-color;
+          }
         }
 
         .unit {

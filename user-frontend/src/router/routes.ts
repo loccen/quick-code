@@ -167,10 +167,10 @@ export const userRoutes: RouteRecordRaw[] = [
       },
       {
         path: 'project/:id',
-        name: 'ProjectDetail',
-        component: () => import('@/views/project/ProjectDetailView.vue'),
+        name: 'MyProjectDetail',
+        component: () => import('@/views/project/MyProjectDetailView.vue'),
         meta: {
-          title: '项目详情',
+          title: '我的项目详情',
           hidden: true,
           requiresAuth: true
         }

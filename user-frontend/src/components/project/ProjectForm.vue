@@ -33,19 +33,12 @@
         </el-form-item>
 
         <el-form-item label="项目分类" prop="categoryId">
-          <el-select
+          <CategorySelect
             v-model="formData.categoryId"
             placeholder="请选择项目分类"
-            style="width: 100%"
-            filterable
-          >
-            <el-option
-              v-for="category in categories"
-              :key="category.id"
-              :label="category.name"
-              :value="category.id"
-            />
-          </el-select>
+            value-field="id"
+            @change="handleCategoryChange"
+          />
         </el-form-item>
       </div>
 
@@ -142,9 +135,8 @@
 <script setup lang="ts">
 import { ref, reactive, computed, onMounted, watch } from 'vue'
 import { ElMessage, type FormInstance, type FormRules } from 'element-plus'
-import { publicProjectApi } from '@/api/modules/public'
+import CategorySelect from './CategorySelect.vue'
 import type { ProjectUploadRequest } from '@/types/project'
-import type { ProjectCategory } from '@/api/modules/public'
 
 // Props
 interface Props {
@@ -166,7 +158,6 @@ const emit = defineEmits<{
 // 响应式数据
 const formRef = ref<FormInstance>()
 const isSubmitting = ref(false)
-const categories = ref<ProjectCategory[]>([])
 
 // 表单数据
 const formData = reactive<ProjectUploadRequest>({
@@ -305,16 +296,12 @@ watch(() => props.modelValue, (newValue) => {
   }
 }, { immediate: true, deep: true })
 
-// 移除项目属性更新函数，因为已简化字段
-
-// 加载分类数据
-const loadCategories = async () => {
-  try {
-    const response = await publicProjectApi.getCategories()
-    categories.value = response.data
-  } catch (error) {
-    console.error('加载分类失败:', error)
-    ElMessage.error('加载分类失败')
+// 处理分类变化
+const handleCategoryChange = (value: string | number | null, categoryData?: any) => {
+  // 由于使用value-field="id"，这里应该是number类型
+  if (typeof value === 'number') {
+    formData.categoryId = value
+    console.log('选择的分类:', categoryData)
   }
 }
 
@@ -343,9 +330,9 @@ const handleCancel = () => {
   emit('cancel')
 }
 
-// 组件挂载时加载数据
+// 组件挂载时的初始化
 onMounted(() => {
-  loadCategories()
+  // 分类数据由CategorySelect组件自行加载
 })
 </script>
 

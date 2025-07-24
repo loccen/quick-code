@@ -36,7 +36,7 @@
         sub-title="请检查项目ID是否正确"
       >
         <template #extra>
-          <el-button type="primary" @click="$router.push('/user/my-projects')">
+          <el-button type="primary" @click="router.push('/user/my-projects')">
             返回我的项目
           </el-button>
         </template>
@@ -51,6 +51,7 @@ import { useRoute, useRouter } from 'vue-router'
 import { ElMessage } from 'element-plus'
 import { Edit } from '@element-plus/icons-vue'
 import ProjectForm from '@/components/project/ProjectForm.vue'
+import { projectApi } from '@/api/modules/project'
 import type { ProjectUploadRequest } from '@/types/project'
 
 // 路由
@@ -70,25 +71,26 @@ const projectId = computed(() => {
 const loadProject = async () => {
   loading.value = true
   try {
-    // TODO: 调用API获取项目详情
-    // const response = await projectApi.getProject(projectId.value)
-    // projectData.value = response.data
-    
-    // 模拟数据
-    await new Promise(resolve => setTimeout(resolve, 1000))
-    projectData.value = {
-      title: '示例项目',
-      description: '这是一个示例项目的描述',
-      categoryId: 1,
-      tags: ['Vue3', 'TypeScript'],
-      price: 299,
-      demoUrl: 'https://example.com',
-      techStack: ['Vue.js', 'TypeScript', 'Element Plus'],
-      coverImage: 'https://example.com/cover.jpg'
+    const response = await projectApi.getProject(projectId.value)
+    if (response && response.code === 200 && response.data) {
+      // 转换后端数据格式为前端表单格式
+      projectData.value = {
+        title: response.data.title,
+        description: response.data.description,
+        categoryId: response.data.categoryId,
+        tags: response.data.tags || [],
+        price: response.data.price ? Number(response.data.price) : 0,
+        demoUrl: response.data.demoUrl || '',
+        techStack: response.data.techStack || [],
+        coverImage: response.data.coverImage || ''
+      }
+    } else {
+      throw new Error(response?.message || '获取项目详情失败')
     }
-  } catch (error: any) {
+  } catch (error: unknown) {
     console.error('加载项目失败:', error)
-    ElMessage.error('加载项目失败')
+    const errorMessage = error instanceof Error ? error.message : '加载项目失败'
+    ElMessage.error(errorMessage)
     projectData.value = undefined
   } finally {
     loading.value = false
@@ -98,13 +100,17 @@ const loadProject = async () => {
 // 提交更新
 const handleSubmit = async (data: ProjectUploadRequest) => {
   try {
-    // TODO: 调用API更新项目
-    // await projectApi.updateProject(projectId.value, data)
-    
-    ElMessage.success('项目更新成功')
-    router.push('/user/my-projects')
-  } catch (error: any) {
-    ElMessage.error(error.response?.data?.message || '更新失败')
+    const response = await projectApi.updateProject(projectId.value, data)
+    if (response && response.code === 200) {
+      ElMessage.success('项目更新成功')
+      router.push('/user/my-projects')
+    } else {
+      throw new Error(response?.message || '更新项目失败')
+    }
+  } catch (error: unknown) {
+    console.error('更新项目失败:', error)
+    const errorMessage = error instanceof Error ? error.message : '更新失败'
+    ElMessage.error(errorMessage)
   }
 }
 

@@ -12,22 +12,20 @@
           class="search-input"
         />
         
-        <el-select
+        <!-- 暂时禁用分类筛选，因为后端用户项目API不支持分类筛选 -->
+        <CategorySelect
           v-model="selectedCategory"
           placeholder="选择分类"
-          clearable
+          :show-all-levels="false"
+          value-field="id"
+          :disabled="true"
           @change="handleCategoryChange"
           class="category-select"
-        >
-          <el-option
-            v-for="category in categories"
-            :key="category.id"
-            :label="category.name"
-            :value="category.id"
-          />
-        </el-select>
+        />
 
+        <!-- 状态筛选 - 仅在支持状态筛选的场景下显示 -->
         <el-select
+          v-if="showStatusFilter"
           v-model="selectedStatus"
           placeholder="项目状态"
           clearable
@@ -96,9 +94,14 @@
         >
           <ProjectCard
             :project="project"
+            :mode="mode"
             @click="handleProjectClick(project)"
+            @demo="handleProjectDemo(project)"
+            @purchase="handleProjectPurchase(project)"
             @edit="handleProjectEdit(project)"
             @delete="handleProjectDelete(project)"
+            @download="handleProjectDownload(project)"
+            @unfavorite="handleProjectUnfavorite(project)"
             @publish="handleProjectPublish(project)"
             @unpublish="handleProjectUnpublish(project)"
           />
@@ -220,22 +223,24 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed, watch, onMounted } from 'vue'
+import { ref, computed, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
-import { ElMessage, ElMessageBox } from 'element-plus'
-import { 
-  Search, 
-  Grid, 
-  List, 
-  View, 
-  Download, 
-  Star, 
-  MoreFilled 
+import { ElMessage } from 'element-plus'
+import {
+  Search,
+  Grid,
+  List,
+  View,
+  Download,
+  Star,
+  MoreFilled
 } from '@element-plus/icons-vue'
 import ProjectCard from '@/components/common/ProjectCard.vue'
-import { publicProjectApi } from '@/api/modules/public'
+import CategorySelect from './CategorySelect.vue'
 import type { ProjectManagement } from '@/types/project'
-import type { ProjectCategory } from '@/api/modules/public'
+
+// 项目卡片显示模式
+type ProjectCardMode = 'market' | 'uploaded' | 'purchased' | 'favorites'
 
 // Props
 interface Props {
@@ -243,25 +248,39 @@ interface Props {
   loading?: boolean
   total?: number
   showActions?: boolean
+  showStatusFilter?: boolean // 是否显示状态筛选
+  mode?: ProjectCardMode // 项目卡片显示模式
 }
 
 const props = withDefaults(defineProps<Props>(), {
   projects: () => [],
   loading: false,
   total: 0,
-  showActions: true
+  showActions: true,
+  showStatusFilter: true,
+  mode: 'market'
 })
+
+// 筛选参数类型
+interface FilterParams {
+  category?: number | null
+  status?: number
+}
 
 // Emits
 const emit = defineEmits<{
   refresh: []
   search: [keyword: string]
-  filter: [filters: any]
+  filter: [filters: FilterParams]
   sort: [sortBy: string, sortDir: string]
   pageChange: [page: number, size: number]
   projectClick: [project: ProjectManagement]
+  projectDemo: [project: ProjectManagement]
+  projectPurchase: [project: ProjectManagement]
   projectEdit: [project: ProjectManagement]
   projectDelete: [project: ProjectManagement]
+  projectDownload: [project: ProjectManagement]
+  projectUnfavorite: [project: ProjectManagement]
   projectPublish: [project: ProjectManagement]
   projectUnpublish: [project: ProjectManagement]
 }>()
@@ -271,15 +290,13 @@ const router = useRouter()
 
 // 响应式数据
 const searchKeyword = ref('')
-const selectedCategory = ref<number>()
+const selectedCategory = ref<number | null>(null)
 const selectedStatus = ref<number>()
 const sortBy = ref('createdTime')
 const sortDir = ref('DESC')
 const viewMode = ref<'grid' | 'list'>('grid')
 const currentPage = ref(1)
 const pageSize = ref(20)
-const categories = ref<ProjectCategory[]>([])
-
 // 计算属性
 const projects = computed(() => props.projects)
 const total = computed(() => props.total)
@@ -294,11 +311,10 @@ const statusMap = {
   4: { text: '已下架', type: 'info' }
 }
 
-// 获取分类名称
+// 获取分类名称（现在由CategorySelect组件处理）
 const getCategoryName = (categoryId?: number) => {
   if (!categoryId) return '未分类'
-  const category = categories.value.find(c => c.id === categoryId)
-  return category?.name || '未知分类'
+  return `分类-${categoryId}` // 简化处理，实际分类名称由CategorySelect组件管理
 }
 
 // 获取状态文本
@@ -323,7 +339,10 @@ const handleSearch = () => {
 }
 
 // 分类变化处理
-const handleCategoryChange = () => {
+const handleCategoryChange = (value: string | number | null, categoryData?: unknown) => {
+  // 由于使用value-field="id"，这里应该是number类型
+  selectedCategory.value = typeof value === 'number' ? value : null
+  console.log('分类筛选变化:', value, categoryData)
   emitFilter()
 }
 
@@ -361,12 +380,28 @@ const handleProjectClick = (project: ProjectManagement) => {
   emit('projectClick', project)
 }
 
+const handleProjectDemo = (project: ProjectManagement) => {
+  emit('projectDemo', project)
+}
+
+const handleProjectPurchase = (project: ProjectManagement) => {
+  emit('projectPurchase', project)
+}
+
 const handleProjectEdit = (project: ProjectManagement) => {
   emit('projectEdit', project)
 }
 
 const handleProjectDelete = (project: ProjectManagement) => {
   emit('projectDelete', project)
+}
+
+const handleProjectDownload = (project: ProjectManagement) => {
+  emit('projectDownload', project)
+}
+
+const handleProjectUnfavorite = (project: ProjectManagement) => {
+  emit('projectUnfavorite', project)
 }
 
 const handleProjectPublish = (project: ProjectManagement) => {
@@ -402,19 +437,11 @@ const handleDropdownCommand = (command: string) => {
   }
 }
 
-// 加载分类数据
-const loadCategories = async () => {
-  try {
-    const response = await publicProjectApi.getCategories()
-    categories.value = response.data
-  } catch (error) {
-    console.error('加载分类失败:', error)
-  }
-}
+// 分类数据现在由CategorySelect组件管理
 
-// 组件挂载时加载数据
+// 组件挂载时的初始化
 onMounted(() => {
-  loadCategories()
+  // 分类数据由CategorySelect组件自行加载
 })
 </script>
 

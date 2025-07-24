@@ -236,7 +236,7 @@ import {
 } from '@element-plus/icons-vue'
 import ProjectForm from '@/components/project/ProjectForm.vue'
 import ProjectFileUpload from '@/components/project/ProjectFileUpload.vue'
-import { projectApi } from '@/api/modules/project'
+import { projectApi, projectFileApi } from '@/api/modules/project'
 import { publicProjectApi } from '@/api/modules/public'
 import type { ProjectUploadRequest, ProjectFile } from '@/types/project'
 import type { ProjectCategory } from '@/api/modules/public'
@@ -336,10 +336,15 @@ const prevStep = () => {
 const createProject = async () => {
   try {
     const response = await projectApi.createProject(projectData.value)
-    createdProjectId.value = response.data.id
-    ElMessage.success('项目创建成功')
+    if (response && response.code === 200 && response.data) {
+      createdProjectId.value = response.data.id
+      ElMessage.success('项目创建成功')
+    } else {
+      throw new Error(response?.message || '项目创建失败')
+    }
   } catch (error: any) {
-    ElMessage.error(error.response?.data?.message || '项目创建失败')
+    console.error('项目创建失败:', error)
+    ElMessage.error(error.response?.data?.message || error.message || '项目创建失败')
     throw error
   }
 }
@@ -374,13 +379,17 @@ const deleteFile = async (fileId: number) => {
       type: 'warning'
     })
 
-    // 调用删除文件API
-    // await projectFileApi.deleteFile(fileId)
+    if (createdProjectId.value) {
+      // 调用删除文件API
+      await projectFileApi.deleteFile(createdProjectId.value, fileId)
+    }
     uploadedFiles.value = uploadedFiles.value.filter(file => file.id !== fileId)
     ElMessage.success('文件删除成功')
-  } catch (error) {
-    // 用户取消删除或删除失败
-    console.log('删除操作取消或失败:', error)
+  } catch (error: any) {
+    if (error !== 'cancel') {
+      console.error('删除文件失败:', error)
+      ElMessage.error(error.response?.data?.message || '删除文件失败')
+    }
   }
 }
 

@@ -77,12 +77,15 @@
             :projects="uploadedProjects"
             :loading="uploadedLoading"
             :total="uploadedTotal"
+            :show-status-filter="true"
+            mode="uploaded"
             @refresh="loadUploadedProjects"
             @search="handleUploadedSearch"
             @filter="handleUploadedFilter"
             @sort="handleUploadedSort"
             @page-change="handleUploadedPageChange"
             @project-click="handleProjectClick"
+            @project-demo="handleProjectDemo"
             @project-edit="handleProjectEdit"
             @project-delete="handleProjectDelete"
             @project-publish="handleProjectPublish"
@@ -104,12 +107,16 @@
             :loading="purchasedLoading"
             :total="purchasedTotal"
             :show-actions="false"
+            :show-status-filter="false"
+            mode="purchased"
             @refresh="loadPurchasedProjects"
             @search="handlePurchasedSearch"
             @filter="handlePurchasedFilter"
             @sort="handlePurchasedSort"
             @page-change="handlePurchasedPageChange"
             @project-click="handleProjectClick"
+            @project-demo="handleProjectDemo"
+            @project-download="handleProjectDownload"
           />
         </el-tab-pane>
 
@@ -127,12 +134,17 @@
             :loading="favoritesLoading"
             :total="favoritesTotal"
             :show-actions="false"
+            :show-status-filter="false"
+            mode="favorites"
             @refresh="loadFavoriteProjects"
             @search="handleFavoritesSearch"
             @filter="handleFavoritesFilter"
             @sort="handleFavoritesSort"
             @page-change="handleFavoritesPageChange"
             @project-click="handleProjectClick"
+            @project-demo="handleProjectDemo"
+            @project-purchase="handleProjectPurchase"
+            @project-unfavorite="handleProjectUnfavorite"
           />
         </el-tab-pane>
       </el-tabs>
@@ -176,7 +188,8 @@ const uploadedParams = ref({
   page: 1,
   size: 20,
   keyword: '',
-  status: undefined,
+  status: undefined as number | undefined,
+  // categoryId: undefined as number | null | undefined, // 后端API不支持分类筛选，暂时移除
   sortBy: 'createdTime',
   sortDir: 'DESC'
 })
@@ -209,41 +222,30 @@ const favoritesParams = ref({
 const loadUploadedProjects = async () => {
   uploadedLoading.value = true
   try {
-    // 模拟API调用
-    await new Promise(resolve => setTimeout(resolve, 1000))
+    const params = {
+      page: uploadedParams.value.page - 1, // 后端页码从0开始
+      size: uploadedParams.value.size,
+      keyword: uploadedParams.value.keyword,
+      status: uploadedParams.value.status,
+      // categoryId: uploadedParams.value.categoryId, // 后端API不支持分类筛选
+      sortBy: uploadedParams.value.sortBy,
+      sortDir: uploadedParams.value.sortDir
+    }
 
-    // 模拟数据
-    const mockData: ProjectManagement[] = Array.from({ length: 5 }, (_, index) => ({
-      id: index + 1,
-      title: `项目 ${index + 1}`,
-      description: `这是第 ${index + 1} 个项目的描述`,
-      categoryId: 1,
-      categoryName: '前端框架',
-      userId: 1,
-      username: '当前用户',
-      price: 299 + index * 100,
-      isFree: index % 3 === 0,
-      coverImage: `/images/project-${index + 1}.jpg`,
-      status: index % 4,
-      statusDesc: ['草稿', '待审核', '已发布', '已拒绝'][index % 4],
-      isFeatured: index === 0,
-      viewCount: Math.floor(Math.random() * 1000),
-      downloadCount: Math.floor(Math.random() * 100),
-      likeCount: Math.floor(Math.random() * 50),
-      rating: Math.random() * 5,
-      ratingCount: Math.floor(Math.random() * 20),
-      publishedTime: `2024-01-${String(index + 1).padStart(2, '0')}`,
-      createdTime: `2024-01-${String(index + 1).padStart(2, '0')}`,
-      updatedTime: `2024-01-${String(index + 1).padStart(2, '0')}`,
-      tags: ['Vue3', 'TypeScript'],
-      techStack: ['Vue.js', 'TypeScript', 'Element Plus']
-    }))
-
-    uploadedProjects.value = mockData
-    uploadedTotal.value = mockData.length
-    uploadedCount.value = mockData.length
-  } catch (error) {
+    const response = await projectApi.getMyProjects(params)
+    if (response && response.code === 200 && response.data) {
+      uploadedProjects.value = response.data.content || []
+      uploadedTotal.value = response.data.total || 0
+      uploadedCount.value = response.data.total || 0
+    } else {
+      throw new Error(response?.message || '获取项目列表失败')
+    }
+  } catch (error: any) {
     console.error('加载上传项目失败:', error)
+    ElMessage.error(error.response?.data?.message || error.message || '加载项目失败')
+    uploadedProjects.value = []
+    uploadedTotal.value = 0
+    uploadedCount.value = 0
   } finally {
     uploadedLoading.value = false
   }
@@ -253,16 +255,17 @@ const loadUploadedProjects = async () => {
 const loadPurchasedProjects = async () => {
   purchasedLoading.value = true
   try {
-    // 模拟API调用
-    await new Promise(resolve => setTimeout(resolve, 1000))
-
-    // 模拟数据
-    const mockData: ProjectManagement[] = []
-    purchasedProjects.value = mockData
-    purchasedTotal.value = mockData.length
-    purchasedCount.value = mockData.length
-  } catch (error) {
+    // TODO: 实现购买项目API调用
+    // 暂时使用空数据
+    purchasedProjects.value = []
+    purchasedTotal.value = 0
+    purchasedCount.value = 0
+  } catch (error: any) {
     console.error('加载购买项目失败:', error)
+    ElMessage.error('加载购买项目失败')
+    purchasedProjects.value = []
+    purchasedTotal.value = 0
+    purchasedCount.value = 0
   } finally {
     purchasedLoading.value = false
   }
@@ -294,9 +297,16 @@ const handleUploadedSearch = (keyword: string) => {
   loadUploadedProjects()
 }
 
-const handleUploadedFilter = (filters: any) => {
+interface FilterParams {
+  category?: number | null
+  status?: number
+}
+
+const handleUploadedFilter = (filters: FilterParams) => {
   uploadedParams.value.status = filters.status
+  // uploadedParams.value.categoryId = filters.category // 后端API不支持分类筛选
   uploadedParams.value.page = 1
+  console.log('上传项目筛选参数:', filters)
   loadUploadedProjects()
 }
 
@@ -381,14 +391,54 @@ const handleProjectDelete = async (project: ProjectManagement) => {
       }
     )
 
-    // TODO: 调用删除API
-    // await projectApi.deleteProject(project.id)
+    const response = await projectApi.deleteProject(project.id)
+    if (response && response.code === 200) {
+      ElMessage.success('项目删除成功')
+      loadUploadedProjects()
+    } else {
+      throw new Error(response?.message || '删除项目失败')
+    }
+  } catch (error: any) {
+    if (error !== 'cancel') {
+      console.error('删除项目失败:', error)
+      ElMessage.error(error.response?.data?.message || error.message || '删除项目失败')
+    }
+  }
+}
 
-    ElMessage.success('项目删除成功')
-    loadUploadedProjects()
-  } catch (error) {
-    // 用户取消删除
-    console.log('删除操作取消:', error)
+const handleProjectDemo = (project: ProjectManagement) => {
+  // 打开项目演示
+  // TODO: 后续需要在ProjectManagement类型中添加demoUrl字段
+  const demoUrl = (project as any).demoUrl
+  if (demoUrl) {
+    window.open(demoUrl, '_blank')
+  } else {
+    ElMessage.info('该项目暂无演示链接')
+  }
+}
+
+const handleProjectPurchase = (project: ProjectManagement) => {
+  // 跳转到项目详情页进行购买
+  router.push(`/market/project/${project.id}`)
+}
+
+const handleProjectDownload = (project: ProjectManagement) => {
+  // 下载已购买的项目
+  console.log('下载项目:', project.title)
+  ElMessage.info('下载功能开发中')
+  // TODO: 实现项目下载功能
+}
+
+const handleProjectUnfavorite = async (project: ProjectManagement) => {
+  try {
+    // TODO: 调用取消收藏API
+    // await projectApi.unfavoriteProject(project.id)
+
+    console.log('取消收藏项目:', project.title)
+    ElMessage.success('已取消收藏')
+    loadFavoriteProjects()
+  } catch (error: any) {
+    ElMessage.error(error.response?.data?.message || '取消收藏失败')
   }
 }
 
@@ -397,6 +447,7 @@ const handleProjectPublish = async (project: ProjectManagement) => {
     // TODO: 调用发布API
     // await projectApi.publishProject(project.id)
 
+    console.log('发布项目:', project.title)
     ElMessage.success('项目发布成功')
     loadUploadedProjects()
   } catch (error: any) {

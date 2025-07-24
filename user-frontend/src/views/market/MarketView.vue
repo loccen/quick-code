@@ -32,19 +32,14 @@
           </div>
 
           <div class="filter-bar">
-            <el-select
+            <CategorySelect
               v-model="selectedCategory"
               placeholder="选择分类"
-              clearable
+              :show-all-levels="false"
+              value-field="code"
               @change="handleCategoryChange"
-            >
-              <el-option
-                v-for="category in categories"
-                :key="category.code"
-                :label="category.name"
-                :value="category.code"
-              />
-            </el-select>
+              class="category-filter"
+            />
 
             <el-select
               v-model="sortBy"
@@ -118,6 +113,7 @@
 <script setup lang="ts">
 import { publicProjectApi } from '@/api/modules/public'
 import ProjectCard from '@/components/common/ProjectCard.vue'
+import CategorySelect from '@/components/project/CategorySelect.vue'
 import { useUserStore } from '@/stores/user'
 import { Search, ArrowDown, ArrowUp } from '@element-plus/icons-vue'
 import { ElMessage } from 'element-plus'
@@ -127,31 +123,39 @@ import { useRouter } from 'vue-router'
 const router = useRouter()
 const userStore = useUserStore()
 
+// 项目类型定义
+interface Project {
+  id: number
+  title: string
+  description: string
+  thumbnail?: string
+  coverImage?: string
+  price: number
+  rating?: number
+  viewCount?: number
+  downloadCount?: number
+  username?: string
+  author?: string
+  createdTime?: string
+  createdAt?: string
+  tags?: string[]
+  category?: string
+}
+
 // 响应式数据
 const loading = ref(false)
 const searchKeyword = ref('')
-const selectedCategory = ref('')
+const selectedCategory = ref<string | null>(null)
 const sortBy = ref('createdAt')
 const sortDirection = ref('desc')
 const currentPage = ref(1)
 const pageSize = ref(12)
 
-const projects = ref<any[]>([])
-const categories = ref<any[]>([])
+const projects = ref<Project[]>([])
 const total = ref(0)
 const totalPages = computed(() => Math.ceil(total.value / pageSize.value))
 
-/**
- * 获取项目分类
- */
-const fetchCategories = async () => {
-  try {
-    const response = await publicProjectApi.getCategories()
-    categories.value = response.data
-  } catch (error) {
-    console.error('获取分类失败:', error)
-  }
-}
+// 分类数据现在由CategorySelect组件管理
 
 /**
  * 获取项目列表
@@ -162,7 +166,7 @@ const fetchProjects = async () => {
     const params = {
       page: currentPage.value - 1,
       size: pageSize.value,
-      category: selectedCategory.value,
+      category: selectedCategory.value || undefined,
       keyword: searchKeyword.value,
       sortBy: sortBy.value,
       sortDir: sortDirection.value
@@ -190,9 +194,11 @@ const handleSearch = () => {
 /**
  * 处理分类变化
  */
-const handleCategoryChange = () => {
+const handleCategoryChange = (value: string | number | null, categoryData?: unknown) => {
+  selectedCategory.value = typeof value === 'string' ? value : null
   currentPage.value = 1
   fetchProjects()
+  console.log('选择的分类:', categoryData)
 }
 
 /**
@@ -232,7 +238,7 @@ const handleSizeChange = (size: number) => {
 /**
  * 处理项目购买
  */
-const handlePurchase = (project: any) => {
+const handlePurchase = (project: Project) => {
   if (!userStore.isAuthenticated) {
     ElMessage.warning('请先登录后再购买项目')
     router.push({
@@ -249,7 +255,7 @@ const handlePurchase = (project: any) => {
 /**
  * 处理项目演示
  */
-const handleDemo = (project: any) => {
+const handleDemo = (project: Project) => {
   if (!userStore.isAuthenticated) {
     ElMessage.warning('请先登录后再体验项目演示')
     router.push({
@@ -265,7 +271,6 @@ const handleDemo = (project: any) => {
 
 // 生命周期
 onMounted(() => {
-  fetchCategories()
   fetchProjects()
 })
 </script>

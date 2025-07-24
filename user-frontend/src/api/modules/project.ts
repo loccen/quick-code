@@ -57,7 +57,7 @@ export const projectApi = {
   /**
    * 获取项目详情
    */
-  getProject(id: number): Promise<ApiResponse<ProjectManagement>> {
+  getProject(id: number): Promise<ApiResponse<any>> {
     return request.get(`/projects/${id}`)
   },
 
@@ -160,15 +160,17 @@ export const projectFileApi = {
   /**
    * 删除项目文件
    */
-  deleteFile(fileId: number): Promise<ApiResponse<void>> {
-    return request.delete(`/projects/files/${fileId}`)
+  deleteFile(projectId: number, fileId: number): Promise<ApiResponse<void>> {
+    return request.delete(`/projects/${projectId}/files/${fileId}`)
   },
 
   /**
-   * 设置主文件
+   * 批量删除项目文件
    */
-  setPrimaryFile(fileId: number): Promise<ApiResponse<void>> {
-    return request.post(`/projects/files/${fileId}/primary`)
+  deleteFiles(projectId: number, fileIds: number[]): Promise<ApiResponse<any>> {
+    return request.delete(`/projects/${projectId}/files/batch`, {
+      data: fileIds
+    })
   },
 
   /**
@@ -178,11 +180,25 @@ export const projectFileApi = {
     const formData = new FormData()
     formData.append('file', file)
 
-    return request.post(`/upload/project/files/${fileId}/replace`, formData, {
+    return request.put(`/upload/project/file/${fileId}`, formData, {
       headers: {
         'Content-Type': 'multipart/form-data'
       }
     })
+  },
+
+  /**
+   * 设置主文件
+   */
+  setPrimaryFile(projectId: number, fileId: number): Promise<ApiResponse<void>> {
+    return request.post(`/projects/${projectId}/files/${fileId}/primary`)
+  },
+
+  /**
+   * 获取项目文件统计
+   */
+  getFileStatistics(projectId: number): Promise<ApiResponse<any>> {
+    return request.get(`/projects/${projectId}/files/statistics`)
   }
 }
 
