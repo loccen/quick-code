@@ -3,6 +3,7 @@ package com.quickcode.service.impl;
 import com.quickcode.entity.ProjectFile;
 import com.quickcode.repository.ProjectFileRepository;
 import com.quickcode.repository.ProjectRepository;
+import com.quickcode.service.FileExtractionService;
 import com.quickcode.service.FileSecurityService;
 import com.quickcode.service.FileStorageService;
 import com.quickcode.service.ProjectFileService;
@@ -37,6 +38,7 @@ public class ProjectFileServiceImpl implements ProjectFileService {
     private final ProjectRepository projectRepository;
     private final FileStorageService fileStorageService;
     private final FileSecurityService fileSecurityService;
+    private final FileExtractionService fileExtractionService;
 
 
 
@@ -458,9 +460,51 @@ public class ProjectFileServiceImpl implements ProjectFileService {
      * 处理源码文件
      */
     private boolean processSourceFile(ProjectFile projectFile) {
-        // 这里可以实现源码文件的解压、分析等逻辑
-        log.info("处理源码文件: {}", projectFile.getFileName());
-        return true;
+        log.info("开始处理源码文件: fileId={}, fileName={}", projectFile.getId(), projectFile.getFileName());
+
+        try {
+            // 1. 解压文件
+            FileExtractionService.ExtractionResult extractionResult = fileExtractionService.extractProjectFile(projectFile);
+            if (!extractionResult.isSuccess()) {
+                log.warn("文件解压失败: fileId={}, message={}", projectFile.getId(), extractionResult.getMessage());
+                return false;
+            }
+
+            log.info("文件解压成功: fileId={}, extractedFiles={}, extractedSize={}",
+                projectFile.getId(), extractionResult.getFileCount(), extractionResult.getExtractedSize());
+
+            // 2. 分析项目结构
+            FileExtractionService.ProjectStructureAnalysis structureAnalysis =
+                fileExtractionService.analyzeProjectStructure(extractionResult.getExtractedPath());
+
+            log.info("项目结构分析完成: fileId={}, projectType={}, techStack={}",
+                projectFile.getId(), structureAnalysis.getProjectType(), structureAnalysis.getTechStack());
+
+            // 3. 检测Docker配置
+            FileExtractionService.DockerConfigDetection dockerDetection =
+                fileExtractionService.detectDockerConfig(extractionResult.getExtractedPath());
+
+            if (dockerDetection.isDockerized()) {
+                log.info("检测到Docker配置: fileId={}, hasDockerfile={}, baseImage={}",
+                    projectFile.getId(), dockerDetection.hasDockerfile(), dockerDetection.getBaseImage());
+            }
+
+            // 4. 检查项目完整性
+            FileExtractionService.ProjectIntegrityCheck integrityCheck =
+                fileExtractionService.checkProjectIntegrity(extractionResult.getExtractedPath());
+
+            log.info("项目完整性检查完成: fileId={}, isComplete={}, qualityScore={}",
+                projectFile.getId(), integrityCheck.isComplete(), integrityCheck.getQualityScore());
+
+            // 5. 清理解压文件
+            fileExtractionService.cleanupExtractedFiles(extractionResult.getExtractedPath());
+
+            return true;
+
+        } catch (Exception e) {
+            log.error("处理源码文件时发生异常: fileId={}", projectFile.getId(), e);
+            return false;
+        }
     }
 
     /**
