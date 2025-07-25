@@ -76,12 +76,32 @@
 
       <!-- 上传进度 -->
       <div v-if="isUploading" class="upload-progress">
-        <el-progress 
-          :percentage="uploadProgress" 
+        <el-progress
+          :percentage="uploadProgress"
           :status="uploadStatus"
           :stroke-width="6"
         />
         <p class="progress-text">{{ progressText }}</p>
+        <div class="upload-details">
+          <span class="current-file">{{ currentUploadingFile }}</span>
+          <span class="upload-speed">{{ uploadSpeed }}</span>
+        </div>
+      </div>
+
+      <!-- 错误信息显示 -->
+      <div v-if="uploadErrors.length > 0" class="upload-errors">
+        <el-alert
+          title="上传过程中遇到以下问题："
+          type="warning"
+          :closable="false"
+          class="error-alert"
+        >
+          <ul class="error-list">
+            <li v-for="(error, index) in uploadErrors" :key="index">
+              {{ error }}
+            </li>
+          </ul>
+        </el-alert>
       </div>
     </div>
 
@@ -166,6 +186,11 @@ const uploadStatus = ref<'success' | 'exception' | undefined>()
 const fileType = ref<'SOURCE' | 'COVER' | 'DEMO' | 'DOCUMENT'>('SOURCE')
 const description = ref('')
 const isPrimary = ref(false)
+const uploadErrors = ref<string[]>([])
+const currentUploadingFile = ref('')
+const uploadSpeed = ref('')
+const uploadStartTime = ref(0)
+const uploadedBytes = ref(0)
 
 // 计算属性
 const acceptedTypesText = computed(() => {
@@ -180,7 +205,14 @@ const progressText = computed(() => {
   if (uploadProgress.value === 100) {
     return '上传完成'
   }
+  if (uploadProgress.value === 0) {
+    return '准备上传...'
+  }
   return `上传进度: ${uploadProgress.value}%`
+})
+
+const canUpload = computed(() => {
+  return selectedFiles.value.length > 0 && !isUploading.value
 })
 
 const acceptedTypes = computed(() => {
@@ -204,26 +236,38 @@ const formatFileSize = (bytes: number): string => {
 }
 
 // 验证文件
-const validateFile = (file: File): boolean => {
+const validateFile = (file: File): { isValid: boolean; error?: string } => {
   // 检查文件大小
   const maxSizeBytes = props.maxSize * 1024 * 1024
   if (file.size > maxSizeBytes) {
-    ElMessage.error(`文件 ${file.name} 超过最大限制 ${props.maxSize}MB`)
-    return false
+    const error = `文件 ${file.name} 大小 ${formatFileSize(file.size)} 超过最大限制 ${props.maxSize}MB`
+    return { isValid: false, error }
   }
 
   // 检查文件类型
   const fileName = file.name.toLowerCase()
-  const isValidType = props.acceptedTypes.some(type => 
+  const isValidType = props.acceptedTypes.some(type =>
     fileName.endsWith(type.toLowerCase())
   )
-  
+
   if (!isValidType) {
-    ElMessage.error(`文件 ${file.name} 类型不支持`)
-    return false
+    const error = `文件 ${file.name} 类型不支持，支持的类型：${props.acceptedTypes.join(', ')}`
+    return { isValid: false, error }
   }
 
-  return true
+  // 检查文件名长度
+  if (file.name.length > 255) {
+    const error = `文件 ${file.name} 名称过长，请重命名后再上传`
+    return { isValid: false, error }
+  }
+
+  // 检查是否为空文件
+  if (file.size === 0) {
+    const error = `文件 ${file.name} 为空文件，无法上传`
+    return { isValid: false, error }
+  }
+
+  return { isValid: true }
 }
 
 // 触发文件选择
@@ -268,12 +312,37 @@ const handleDrop = (event: DragEvent) => {
 
 // 添加文件
 const addFiles = (files: File[]) => {
-  const validFiles = files.filter(validateFile)
-  
-  if (!props.allowMultiple) {
-    selectedFiles.value = validFiles.slice(0, 1)
+  const validFiles: File[] = []
+  const errors: string[] = []
+
+  files.forEach(file => {
+    const validation = validateFile(file)
+    if (validation.isValid) {
+      validFiles.push(file)
+    } else if (validation.error) {
+      errors.push(validation.error)
+    }
+  })
+
+  // 显示验证错误
+  if (errors.length > 0) {
+    uploadErrors.value = errors
+    errors.forEach(error => ElMessage.error(error))
   } else {
-    selectedFiles.value.push(...validFiles)
+    uploadErrors.value = []
+  }
+
+  // 添加有效文件
+  if (validFiles.length > 0) {
+    if (!props.allowMultiple) {
+      selectedFiles.value = validFiles.slice(0, 1)
+    } else {
+      selectedFiles.value.push(...validFiles)
+    }
+
+    if (validFiles.length !== files.length) {
+      ElMessage.warning(`已添加 ${validFiles.length} 个有效文件，${files.length - validFiles.length} 个文件被跳过`)
+    }
   }
 }
 
@@ -300,45 +369,119 @@ const handleUpload = async () => {
   isUploading.value = true
   uploadProgress.value = 0
   uploadStatus.value = undefined
+  uploadErrors.value = []
+  uploadStartTime.value = Date.now()
+  uploadedBytes.value = 0
 
   try {
-    const uploadPromises = selectedFiles.value.map(async (file, index) => {
-      const options: ProjectFileUploadRequest = {
-        projectId: props.projectId,
-        fileType: fileType.value,
-        description: description.value || undefined,
-        isPrimary: isPrimary.value && index === 0 // 只有第一个文件可以设为主文件
+    const totalFiles = selectedFiles.value.length
+    let completedFiles = 0
+    const results: any[] = []
+    const errors: string[] = []
+
+    for (let index = 0; index < selectedFiles.value.length; index++) {
+      const file = selectedFiles.value[index]
+      currentUploadingFile.value = file.name
+
+      try {
+        const options: ProjectFileUploadRequest = {
+          projectId: props.projectId,
+          fileType: fileType.value,
+          description: description.value || undefined,
+          isPrimary: isPrimary.value && index === 0 // 只有第一个文件可以设为主文件
+        }
+
+        const response = await projectFileApi.uploadFile(props.projectId, file, options)
+        results.push(response.data)
+        completedFiles++
+
+        // 更新总体进度
+        uploadProgress.value = Math.round((completedFiles / totalFiles) * 100)
+        emit('progress', uploadProgress.value)
+
+        // 更新上传速度
+        updateUploadSpeed(file.size)
+
+      } catch (error: unknown) {
+        const errorMessage = getErrorMessage(error, file.name)
+        errors.push(errorMessage)
+        console.error(`文件 ${file.name} 上传失败:`, error)
       }
+    }
 
-      const response = await projectFileApi.uploadFile(props.projectId, file, options)
-      
-      // 更新进度
-      uploadProgress.value = Math.round(((index + 1) / selectedFiles.value.length) * 100)
-      emit('progress', uploadProgress.value)
-      
-      return response.data
-    })
+    // 处理上传结果
+    if (results.length > 0) {
+      uploadStatus.value = 'success'
+      ElMessage.success(`成功上传 ${results.length} 个文件`)
+      emit('success', results)
+    }
 
-    const results = await Promise.all(uploadPromises)
-    
-    uploadStatus.value = 'success'
-    ElMessage.success('文件上传成功')
-    emit('success', results)
-    
-    // 清空表单
-    clearFiles()
-    description.value = ''
-    isPrimary.value = false
-    
-  } catch (error: any) {
+    if (errors.length > 0) {
+      uploadErrors.value = errors
+      if (results.length === 0) {
+        uploadStatus.value = 'exception'
+        ElMessage.error('所有文件上传失败')
+      } else {
+        ElMessage.warning(`${errors.length} 个文件上传失败`)
+      }
+    }
+
+    // 清空表单（仅在全部成功时）
+    if (errors.length === 0) {
+      clearFiles()
+      description.value = ''
+      isPrimary.value = false
+    }
+
+  } catch (error: unknown) {
     uploadStatus.value = 'exception'
-    const errorMessage = error.response?.data?.message || '文件上传失败'
+    const errorMessage = getErrorMessage(error)
     ElMessage.error(errorMessage)
     emit('error', errorMessage)
   } finally {
     isUploading.value = false
+    currentUploadingFile.value = ''
+    uploadSpeed.value = ''
   }
 }
+
+// 更新上传速度
+const updateUploadSpeed = (fileSize: number) => {
+  uploadedBytes.value += fileSize
+  const elapsedTime = (Date.now() - uploadStartTime.value) / 1000 // 秒
+
+  if (elapsedTime > 0) {
+    const speed = uploadedBytes.value / elapsedTime // 字节/秒
+    const speedMB = speed / (1024 * 1024) // MB/秒
+
+    if (speedMB >= 1) {
+      uploadSpeed.value = `${speedMB.toFixed(1)} MB/s`
+    } else {
+      const speedKB = speed / 1024 // KB/秒
+      uploadSpeed.value = `${speedKB.toFixed(1)} KB/s`
+    }
+  }
+}
+
+// 获取错误信息
+const getErrorMessage = (error: unknown, fileName?: string): string => {
+  const prefix = fileName ? `文件 ${fileName} ` : ''
+
+  if (error && typeof error === 'object' && 'response' in error) {
+    const response = (error as any).response
+    if (response?.data?.message) {
+      return prefix + response.data.message
+    }
+  }
+
+  if (error instanceof Error) {
+    return prefix + error.message
+  }
+
+  return prefix + '上传失败，请重试'
+}
+
+
 </script>
 
 <style scoped>
