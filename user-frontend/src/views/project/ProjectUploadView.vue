@@ -105,11 +105,11 @@
                 </div>
               </div>
               <div class="file-actions">
-                <el-button 
-                  type="danger" 
-                  size="small" 
+                <el-button
+                  type="danger"
+                  size="small"
                   :icon="Delete"
-                  @click="deleteFile(file.id)"
+                  @click="handleDeleteFile(file.id)"
                   circle
                 />
               </div>
@@ -118,13 +118,13 @@
         </div>
 
         <div class="step-actions">
-          <el-button @click="prevStep">
+          <el-button @click="handlePrevStep">
             <el-icon><ArrowLeft /></el-icon>
             上一步
           </el-button>
-          <el-button 
-            type="primary" 
-            @click="nextStep" 
+          <el-button
+            type="primary"
+            @click="handleNextStep"
             :disabled="!hasRequiredFiles"
           >
             下一步：预览确认
@@ -186,12 +186,12 @@
         </div>
 
         <div class="step-actions">
-          <el-button @click="prevStep">
+          <el-button @click="handlePrevStep">
             <el-icon><ArrowLeft /></el-icon>
             上一步
           </el-button>
-          <el-button 
-            type="primary" 
+          <el-button
+            type="primary"
             @click="handlePublish"
             :loading="isPublishing"
           >
@@ -211,32 +211,35 @@
       width="400px"
     >
       <div class="progress-content">
-        <el-progress 
-          :percentage="uploadProgress" 
-          :status="uploadStatus"
+        <el-progress
+          :percentage="uploadProgress.overall"
+          :status="uploadState.isUploadingFiles ? undefined : 'success'"
           :stroke-width="8"
         />
         <p class="progress-text">{{ progressText }}</p>
+        <p v-if="uploadProgress.currentFile" class="current-file">
+          正在上传: {{ uploadProgress.currentFile }}
+        </p>
       </div>
     </el-dialog>
   </div>
 </template>
 
 <script setup lang="ts">
-import { ref, computed, onMounted } from 'vue'
+import { ref, computed, onMounted, onUnmounted } from 'vue'
 import { useRouter } from 'vue-router'
 import { ElMessage, ElMessageBox } from 'element-plus'
-import { 
-  Upload, 
-  ArrowRight, 
-  ArrowLeft, 
-  Document, 
-  Delete, 
-  Check 
+import {
+  Upload,
+  ArrowRight,
+  ArrowLeft,
+  Document,
+  Delete,
+  Check
 } from '@element-plus/icons-vue'
 import ProjectForm from '@/components/project/ProjectForm.vue'
 import ProjectFileUpload from '@/components/project/ProjectFileUpload.vue'
-import { projectApi, projectFileApi } from '@/api/modules/project'
+import { useProjectUpload } from '@/composables/useProjectUpload'
 import { publicProjectApi } from '@/api/modules/public'
 import type { ProjectUploadRequest, ProjectFile } from '@/types/project'
 import type { ProjectCategory } from '@/api/modules/public'
@@ -244,43 +247,41 @@ import type { ProjectCategory } from '@/api/modules/public'
 // 路由
 const router = useRouter()
 
-// 响应式数据
-const currentStep = ref(0)
-const projectData = ref<ProjectUploadRequest>({
-  title: '',
-  description: '',
-  categoryId: 0,
-  tags: [],
-  price: 0,
-  demoUrl: '',
-  techStack: [],
-  coverImage: ''
-})
+// 使用项目上传组合式函数
+const {
+  uploadState,
+  projectData,
+  uploadResult,
+  uploadProgress,
+  isProjectDataValid,
+  hasRequiredFiles,
+  canProceedToNextStep,
+  uploadSummary,
+  nextStep,
+  prevStep,
+  createProject,
+  uploadFiles,
+  deleteFile,
+  publishProject,
+  resetUpload,
+  getUploadStatus
+} = useProjectUpload()
 
-const createdProjectId = ref<number>()
-const uploadedFiles = ref<ProjectFile[]>([])
+// 其他响应式数据
 const categories = ref<ProjectCategory[]>([])
-const isPublishing = ref(false)
 const showProgressDialog = ref(false)
-const uploadProgress = ref(0)
-const uploadStatus = ref<'success' | 'exception' | undefined>()
 
 // 计算属性
-const isProjectDataValid = computed(() => {
-  return projectData.value.title && 
-         projectData.value.description && 
-         projectData.value.categoryId > 0
-})
-
-const hasRequiredFiles = computed(() => {
-  return uploadedFiles.value.some(file => file.fileType === 'SOURCE')
-})
+const currentStep = computed(() => uploadState.currentStep)
+const createdProjectId = computed(() => uploadResult.projectId)
+const uploadedFiles = computed(() => uploadResult.uploadedFiles)
+const isPublishing = computed(() => uploadState.isPublishing)
 
 const progressText = computed(() => {
-  if (uploadProgress.value === 100) {
+  if (uploadProgress.overall === 100) {
     return '上传完成'
   }
-  return `上传进度: ${uploadProgress.value}%`
+  return `上传进度: ${uploadProgress.overall}%`
 })
 
 // 获取分类名称
@@ -307,105 +308,61 @@ const getFileCountByType = (fileType: string) => {
   return uploadedFiles.value.filter(file => file.fileType === fileType).length
 }
 
-// 步骤控制
-const nextStep = async () => {
-  try {
-    if (currentStep.value === 0) {
-      // 创建项目
-      await createProject()
-    }
-
-    // 只有在没有错误的情况下才进入下一步
-    if (currentStep.value < 2) {
-      currentStep.value++
-    }
-  } catch (error) {
-    // 如果创建项目失败，不进入下一步
-    console.error('进入下一步失败:', error)
-    // 错误信息已经在createProject中显示，这里不需要重复显示
+// 步骤控制方法（使用组合式函数中的方法）
+const handleNextStep = async () => {
+  const success = await nextStep()
+  if (!success) {
+    console.log('进入下一步失败')
   }
 }
 
-const prevStep = () => {
-  if (currentStep.value > 0) {
-    currentStep.value--
-  }
-}
-
-// 创建项目
-const createProject = async () => {
-  try {
-    const response = await projectApi.createProject(projectData.value)
-    if (response && response.code === 200 && response.data) {
-      createdProjectId.value = response.data.id
-      ElMessage.success('项目创建成功')
-    } else {
-      throw new Error(response?.message || '项目创建失败')
-    }
-  } catch (error: any) {
-    console.error('项目创建失败:', error)
-    ElMessage.error(error.response?.data?.message || error.message || '项目创建失败')
-    throw error
-  }
+const handlePrevStep = () => {
+  prevStep()
 }
 
 // 处理项目表单提交
 const handleProjectSubmit = (data: ProjectUploadRequest) => {
   console.log('处理项目表单提交:', data)
-  projectData.value = data
-  nextStep()
+  // 更新项目数据
+  Object.assign(projectData.value, data)
+  // 进入下一步
+  handleNextStep()
 }
 
 // 处理文件上传成功
 const handleFileUploadSuccess = (files: any[]) => {
-  uploadedFiles.value.push(...files)
-  ElMessage.success(`成功上传 ${files.length} 个文件`)
+  // 文件上传成功的处理已经在组合式函数中完成
+  console.log('文件上传成功:', files)
 }
 
 // 处理文件上传错误
 const handleFileUploadError = (error: string) => {
-  ElMessage.error(error)
+  console.error('文件上传错误:', error)
 }
 
 // 处理文件上传进度
 const handleFileUploadProgress = (progress: number) => {
-  uploadProgress.value = progress
+  console.log('文件上传进度:', progress)
 }
 
-// 删除文件
-const deleteFile = async (fileId: number) => {
+// 删除文件（使用组合式函数中的方法）
+const handleDeleteFile = async (fileId: number) => {
   try {
-    await ElMessageBox.confirm('确定要删除这个文件吗？', '确认删除', {
-      type: 'warning'
-    })
-
-    if (createdProjectId.value) {
-      // 调用删除文件API
-      await projectFileApi.deleteFile(createdProjectId.value, fileId)
-    }
-    uploadedFiles.value = uploadedFiles.value.filter(file => file.id !== fileId)
-    ElMessage.success('文件删除成功')
-  } catch (error: any) {
-    if (error !== 'cancel') {
-      console.error('删除文件失败:', error)
-      ElMessage.error(error.response?.data?.message || '删除文件失败')
-    }
+    await deleteFile(fileId)
+  } catch (error) {
+    console.error('删除文件失败:', error)
   }
 }
 
-// 发布项目
+// 发布项目（使用组合式函数中的方法）
 const handlePublish = async () => {
   try {
-    isPublishing.value = true
-    
-    ElMessage.success('项目保存成功，等待管理员审核')
-    
+    await publishProject()
+
     // 跳转到我的项目页面
     router.push('/user/my-projects')
   } catch (error: any) {
-    ElMessage.error(error.response?.data?.message || '操作失败')
-  } finally {
-    isPublishing.value = false
+    console.error('发布项目失败:', error)
   }
 }
 
