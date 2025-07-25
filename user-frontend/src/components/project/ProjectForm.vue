@@ -46,17 +46,12 @@
       <div class="form-section">
         <h3 class="section-title">价格设置</h3>
 
-        <el-form-item label="项目价格" prop="price">
-          <el-input-number
+        <el-form-item prop="price">
+          <PriceSelector
             v-model="formData.price"
-            :min="0"
-            :max="999999"
-            :step="1"
-            :precision="2"
-            placeholder="请输入价格（积分，0表示免费）"
-            style="width: 250px"
+            :disabled="isSubmitting"
+            @change="handlePriceChange"
           />
-          <span class="price-unit">积分（0 = 免费项目）</span>
         </el-form-item>
       </div>
 
@@ -65,21 +60,12 @@
         <h3 class="section-title">技术信息</h3>
         
         <el-form-item label="技术栈" prop="techStack">
-          <el-select
+          <TechStackSelector
             v-model="formData.techStack"
-            multiple
-            filterable
-            allow-create
-            placeholder="请选择或输入技术栈"
-            style="width: 100%"
-          >
-            <el-option
-              v-for="tech in commonTechStack"
-              :key="tech"
-              :label="tech"
-              :value="tech"
-            />
-          </el-select>
+            :disabled="isSubmitting"
+            :max-techs="20"
+            @change="handleTechStackChange"
+          />
         </el-form-item>
 
         <el-form-item label="项目标签" prop="tags">
@@ -136,6 +122,8 @@
 import { ref, reactive, computed, onMounted, watch } from 'vue'
 import { ElMessage, type FormInstance, type FormRules } from 'element-plus'
 import CategorySelect from './CategorySelect.vue'
+import TechStackSelector from './TechStackSelector.vue'
+import PriceSelector from './PriceSelector.vue'
 import type { ProjectUploadRequest } from '@/types/project'
 
 // Props
@@ -171,14 +159,7 @@ const formData = reactive<ProjectUploadRequest>({
   coverImage: ''
 })
 
-// 常用选项
-const commonTechStack = [
-  'Vue.js', 'React', 'Angular', 'Node.js', 'Express', 'Koa',
-  'Spring Boot', 'Django', 'Flask', 'Laravel', 'PHP',
-  'MySQL', 'PostgreSQL', 'MongoDB', 'Redis',
-  'Docker', 'Kubernetes', 'AWS', 'Azure'
-]
-
+// 常用标签选项
 const commonTags = [
   '前端', '后端', '全栈', '移动端', '桌面应用',
   '管理系统', '电商', '博客', '论坛', '工具',
@@ -297,12 +278,24 @@ watch(() => props.modelValue, (newValue) => {
 }, { immediate: true, deep: true })
 
 // 处理分类变化
-const handleCategoryChange = (value: string | number | null, categoryData?: any) => {
+const handleCategoryChange = (value: string | number | null, categoryData?: unknown) => {
   // 由于使用value-field="id"，这里应该是number类型
   if (typeof value === 'number') {
     formData.categoryId = value
     console.log('选择的分类:', categoryData)
   }
+}
+
+// 处理技术栈变化
+const handleTechStackChange = (techStack: string[]) => {
+  formData.techStack = techStack
+  console.log('技术栈变化:', techStack)
+}
+
+// 处理价格变化
+const handlePriceChange = (price: number) => {
+  formData.price = price
+  console.log('价格变化:', price)
 }
 
 // 提交表单
