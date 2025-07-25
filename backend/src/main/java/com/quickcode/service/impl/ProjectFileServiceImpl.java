@@ -3,6 +3,7 @@ package com.quickcode.service.impl;
 import com.quickcode.entity.ProjectFile;
 import com.quickcode.repository.ProjectFileRepository;
 import com.quickcode.repository.ProjectRepository;
+import com.quickcode.service.FileSecurityService;
 import com.quickcode.service.FileStorageService;
 import com.quickcode.service.ProjectFileService;
 import com.quickcode.service.FileStorageService.StorageResult;
@@ -22,7 +23,7 @@ import java.util.stream.Collectors;
 
 /**
  * 项目文件服务实现类
- * 
+ *
  * @author QuickCode Team
  * @since 1.0.0
  */
@@ -35,19 +36,9 @@ public class ProjectFileServiceImpl implements ProjectFileService {
     private final ProjectFileRepository projectFileRepository;
     private final ProjectRepository projectRepository;
     private final FileStorageService fileStorageService;
+    private final FileSecurityService fileSecurityService;
 
-    // 允许的文件类型
-    private static final List<String> ALLOWED_SOURCE_TYPES = Arrays.asList(
-        "zip", "rar", "7z", "tar.gz", "tar"
-    );
-    
-    private static final List<String> ALLOWED_IMAGE_TYPES = Arrays.asList(
-        "jpg", "jpeg", "png", "gif", "webp"
-    );
-    
-    private static final List<String> ALLOWED_DOCUMENT_TYPES = Arrays.asList(
-        "pdf", "doc", "docx", "txt", "md"
-    );
+
 
     @Override
     public FileUploadResult uploadProjectFile(Long projectId, MultipartFile file, String fileType, 
@@ -63,14 +54,14 @@ public class ProjectFileServiceImpl implements ProjectFileService {
             }
 
             // 验证文件类型
-            if (!validateFileType(file, fileType)) {
+            if (!fileSecurityService.validateFileType(file, fileType)) {
                 return new FileUploadResult(null, null, false, "不支持的文件类型");
             }
 
             // 执行安全检查
-            SecurityCheckResult securityResult = performSecurityCheck(file);
+            FileSecurityService.SecurityCheckResult securityResult = fileSecurityService.performSecurityCheck(file, fileType);
             if (!securityResult.isSafe()) {
-                return new FileUploadResult(null, null, false, 
+                return new FileUploadResult(null, null, false,
                     "文件安全检查失败: " + String.join(", ", securityResult.getIssues()));
             }
 
@@ -313,28 +304,7 @@ public class ProjectFileServiceImpl implements ProjectFileService {
         return deletedCount;
     }
 
-    /**
-     * 验证文件类型
-     */
-    private boolean validateFileType(MultipartFile file, String fileType) {
-        List<String> allowedTypes;
-        
-        switch (fileType) {
-            case "SOURCE":
-                allowedTypes = ALLOWED_SOURCE_TYPES;
-                break;
-            case "COVER":
-                allowedTypes = ALLOWED_IMAGE_TYPES;
-                break;
-            case "DOCUMENT":
-                allowedTypes = ALLOWED_DOCUMENT_TYPES;
-                break;
-            default:
-                return true; // 其他类型暂时允许
-        }
-        
-        return fileStorageService.validateFileType(file, allowedTypes);
-    }
+
 
     // 基础CRUD方法实现
     @Override
@@ -400,46 +370,16 @@ public class ProjectFileServiceImpl implements ProjectFileService {
 
     @Override
     public SecurityCheckResult performSecurityCheck(MultipartFile file) {
-        List<String> issues = new ArrayList<>();
-        String riskLevel = "LOW";
-        boolean isSafe = true;
+        // 使用新的安全检查服务，默认文件类型为SOURCE
+        FileSecurityService.SecurityCheckResult result = fileSecurityService.performSecurityCheck(file, "SOURCE");
 
-        try {
-            // 检查文件大小
-            if (file.getSize() > 500 * 1024 * 1024) { // 500MB
-                issues.add("文件过大，可能存在风险");
-                riskLevel = "MEDIUM";
-            }
-
-            // 检查文件扩展名
-            String fileName = file.getOriginalFilename();
-            if (fileName != null) {
-                String extension = fileStorageService.getFileExtension(fileName).toLowerCase();
-                List<String> dangerousExtensions = Arrays.asList("exe", "bat", "cmd", "scr", "vbs", "js");
-                if (dangerousExtensions.contains(extension)) {
-                    issues.add("危险的文件扩展名: " + extension);
-                    riskLevel = "HIGH";
-                    isSafe = false;
-                }
-            }
-
-            // 检查MIME类型
-            String contentType = file.getContentType();
-            if (contentType != null && contentType.contains("executable")) {
-                issues.add("可执行文件类型");
-                riskLevel = "HIGH";
-                isSafe = false;
-            }
-
-        } catch (Exception e) {
-            log.error("文件安全检查失败", e);
-            issues.add("安全检查过程中发生错误");
-            riskLevel = "UNKNOWN";
-            isSafe = false;
-        }
-
-        String recommendation = isSafe ? "文件安全，可以上传" : "建议不要上传此文件";
-        return new SecurityCheckResult(isSafe, riskLevel, issues, recommendation);
+        // 转换为旧的SecurityCheckResult格式以保持兼容性
+        return new SecurityCheckResult(
+            result.isSafe(),
+            result.getRiskLevel().getCode(),
+            result.getIssues(),
+            result.getRecommendation()
+        );
     }
 
     @Override
