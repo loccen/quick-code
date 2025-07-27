@@ -4,7 +4,7 @@
     <div class="price-type-selector">
       <el-radio-group v-model="priceType" @change="handlePriceTypeChange">
         <el-radio-button label="free">
-          <el-icon><Gift /></el-icon>
+          <el-icon><Present /></el-icon>
           免费项目
         </el-radio-button>
         <el-radio-button label="paid">
@@ -128,7 +128,7 @@
 
 <script setup lang="ts">
 import { ref, computed, watch } from 'vue'
-import { Gift, Money, QuestionFilled } from '@element-plus/icons-vue'
+import { Present, Money, QuestionFilled } from '@element-plus/icons-vue'
 
 // Props
 interface Props {

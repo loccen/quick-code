@@ -104,14 +104,14 @@
 <script setup lang="ts">
 import { ref, computed, watch } from 'vue'
 import { ElMessage } from 'element-plus'
-import { 
-  Check, 
-  Plus, 
+import {
+  Check,
+  Plus,
   InfoFilled,
   Monitor,
-  Server,
-  DataBase,
-  Mobile,
+  Setting,
+  Coin,
+  Iphone,
   Tools
 } from '@element-plus/icons-vue'
 
@@ -165,51 +165,51 @@ const techCategories = [
     key: 'backend',
     label: '后端技术',
     technologies: [
-      { name: 'Node.js', icon: 'Server' },
-      { name: 'Express', icon: 'Server' },
-      { name: 'Koa', icon: 'Server' },
-      { name: 'Nest.js', icon: 'Server' },
-      { name: 'Spring Boot', icon: 'Server' },
-      { name: 'Spring Cloud', icon: 'Server' },
-      { name: 'Django', icon: 'Server' },
-      { name: 'Flask', icon: 'Server' },
-      { name: 'FastAPI', icon: 'Server' },
-      { name: 'Laravel', icon: 'Server' },
-      { name: 'PHP', icon: 'Server' },
-      { name: 'Java', icon: 'Server' },
-      { name: 'Python', icon: 'Server' },
-      { name: 'Go', icon: 'Server' },
-      { name: 'Rust', icon: 'Server' }
+      { name: 'Node.js', icon: 'Setting' },
+      { name: 'Express', icon: 'Setting' },
+      { name: 'Koa', icon: 'Setting' },
+      { name: 'Nest.js', icon: 'Setting' },
+      { name: 'Spring Boot', icon: 'Setting' },
+      { name: 'Spring Cloud', icon: 'Setting' },
+      { name: 'Django', icon: 'Setting' },
+      { name: 'Flask', icon: 'Setting' },
+      { name: 'FastAPI', icon: 'Setting' },
+      { name: 'Laravel', icon: 'Setting' },
+      { name: 'PHP', icon: 'Setting' },
+      { name: 'Java', icon: 'Setting' },
+      { name: 'Python', icon: 'Setting' },
+      { name: 'Go', icon: 'Setting' },
+      { name: 'Rust', icon: 'Setting' }
     ]
   },
   {
     key: 'database',
     label: '数据库',
     technologies: [
-      { name: 'MySQL', icon: 'DataBase' },
-      { name: 'PostgreSQL', icon: 'DataBase' },
-      { name: 'MongoDB', icon: 'DataBase' },
-      { name: 'Redis', icon: 'DataBase' },
-      { name: 'SQLite', icon: 'DataBase' },
-      { name: 'Oracle', icon: 'DataBase' },
-      { name: 'SQL Server', icon: 'DataBase' },
-      { name: 'Elasticsearch', icon: 'DataBase' },
-      { name: 'InfluxDB', icon: 'DataBase' },
-      { name: 'Cassandra', icon: 'DataBase' }
+      { name: 'MySQL', icon: 'Coin' },
+      { name: 'PostgreSQL', icon: 'Coin' },
+      { name: 'MongoDB', icon: 'Coin' },
+      { name: 'Redis', icon: 'Coin' },
+      { name: 'SQLite', icon: 'Coin' },
+      { name: 'Oracle', icon: 'Coin' },
+      { name: 'SQL Server', icon: 'Coin' },
+      { name: 'Elasticsearch', icon: 'Coin' },
+      { name: 'InfluxDB', icon: 'Coin' },
+      { name: 'Cassandra', icon: 'Coin' }
     ]
   },
   {
     key: 'mobile',
     label: '移动开发',
     technologies: [
-      { name: 'React Native', icon: 'Mobile' },
-      { name: 'Flutter', icon: 'Mobile' },
-      { name: 'Ionic', icon: 'Mobile' },
-      { name: 'Cordova', icon: 'Mobile' },
-      { name: 'Swift', icon: 'Mobile' },
-      { name: 'Kotlin', icon: 'Mobile' },
-      { name: 'Xamarin', icon: 'Mobile' },
-      { name: 'Unity', icon: 'Mobile' }
+      { name: 'React Native', icon: 'Iphone' },
+      { name: 'Flutter', icon: 'Iphone' },
+      { name: 'Ionic', icon: 'Iphone' },
+      { name: 'Cordova', icon: 'Iphone' },
+      { name: 'Swift', icon: 'Iphone' },
+      { name: 'Kotlin', icon: 'Iphone' },
+      { name: 'Xamarin', icon: 'Iphone' },
+      { name: 'Unity', icon: 'Iphone' }
     ]
   },
   {

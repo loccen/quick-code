@@ -275,13 +275,13 @@ export interface ProjectUploadRequest {
   /** 项目分类ID */
   categoryId: number
   /** 项目标签 */
-  tags?: string[]
+  tags: string[]
   /** 项目价格（积分） */
-  price?: number
+  price: number
   /** 项目演示URL */
   demoUrl?: string
   /** 技术栈 */
-  techStack?: string[]
+  techStack: string[]
   /** 封面图片URL */
   coverImage?: string
 }

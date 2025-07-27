@@ -167,10 +167,11 @@ export const useUserStore = defineStore('user', () => {
       }
 
       // 注册成功后，后端返回完整的认证信息，直接设置登录状态
-      const { accessToken, refreshToken: refreshTokenValue, user: userInfo } = response.data
-
-      setTokens(accessToken, refreshTokenValue)
-      setUser(userInfo)
+      if (response.data.jwtResponse) {
+        const { accessToken, refreshToken: refreshTokenValue, user: userInfo } = response.data.jwtResponse
+        setTokens(accessToken, refreshTokenValue)
+        setUser(userInfo)
+      }
 
       ElMessage.success('注册成功，欢迎加入速码网！')
       return true
@@ -208,9 +209,10 @@ export const useUserStore = defineStore('user', () => {
       }
 
       const response = await authApi.refreshToken(refreshToken.value)
-      const { accessToken, refreshToken: newRefreshToken } = response.data
-
-      setTokens(accessToken, newRefreshToken)
+      if (response.data.jwtResponse) {
+        const { accessToken, refreshToken: newRefreshToken } = response.data.jwtResponse
+        setTokens(accessToken, newRefreshToken)
+      }
       return true
     } catch (error) {
       console.error('刷新令牌失败:', error)

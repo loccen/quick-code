@@ -62,12 +62,13 @@ class ImagePerformanceMonitor {
     const observer = new PerformanceObserver((list) => {
       const entries = list.getEntries()
       entries.forEach((entry) => {
-        if (entry.initiatorType === 'img' || entry.name.match(/\.(jpg|jpeg|png|gif|webp|svg)$/i)) {
+        const resourceEntry = entry as PerformanceResourceTiming
+        if (resourceEntry.initiatorType === 'img' || entry.name.match(/\.(jpg|jpeg|png|gif|webp|svg)$/i)) {
           this.recordImageRequest(entry.name, {
             timestamp: entry.startTime,
-            status: entry.responseEnd > 0 ? 'success' : 'error',
-            loadTime: entry.responseEnd - entry.startTime,
-            size: (entry as any).transferSize || 0
+            status: resourceEntry.responseEnd > 0 ? 'success' : 'error',
+            loadTime: resourceEntry.responseEnd - entry.startTime,
+            size: resourceEntry.transferSize || 0
           })
         }
       })
@@ -131,7 +132,7 @@ class ImagePerformanceMonitor {
               originalSrcSetter.call(this, value)
             },
             get: function() {
-              return originalSrcSetter ? this.getAttribute('src') : ''
+              return this.getAttribute('src') || ''
             }
           })
         }
