@@ -57,20 +57,27 @@ public class FileSecurityServiceImpl implements FileSecurityService {
                 isSafe = false;
             }
 
-            // 4. 文件内容检查
+            // 4. 高级文件内容检查
             ContentCheckResult contentResult = null;
             if (fileUploadConfig.getSecurity().getContentCheck().getEnabled()) {
                 try {
-                    contentResult = checkFileContent(file);
+                    contentResult = performAdvancedContentCheck(file);
                     if (contentResult.hasExecutableContent()) {
                         issues.add("检测到可执行文件内容");
                         isSafe = false;
                     }
                     if (contentResult.hasSuspiciousContent()) {
                         issues.add("检测到可疑内容");
+                        isSafe = false;
                     }
                     if (contentResult.getSensitiveInfoResult().hasSensitiveInfo()) {
-                        issues.add("检测到敏感信息");
+                        issues.add("检测到敏感信息: " +
+                            String.join(", ", contentResult.getSensitiveInfoResult().getDetectedKeywords()));
+                        // 敏感信息不一定阻止上传，但需要警告
+                    }
+                    if (contentResult.hasMaliciousCode()) {
+                        issues.add("检测到恶意代码模式");
+                        isSafe = false;
                     }
                 } catch (IOException e) {
                     log.warn("文件内容检查失败: {}", fileName, e);
@@ -205,16 +212,44 @@ public class FileSecurityServiceImpl implements FileSecurityService {
     public SensitiveInfoCheckResult checkSensitiveInfo(String content) {
         List<String> sensitiveKeywords = fileUploadConfig.getSecurity()
             .getContentCheck().getSensitiveKeywords();
-        
+
         List<String> detectedKeywords = new ArrayList<>();
         String lowerContent = content.toLowerCase();
-        
+
+        // 1. 基础关键词检查
         for (String keyword : sensitiveKeywords) {
             if (lowerContent.contains(keyword.toLowerCase())) {
                 detectedKeywords.add(keyword);
             }
         }
-        
+
+        // 2. 增强的模式检查
+        // 检查常见的密码模式
+        if (lowerContent.matches(".*password\\s*[=:]\\s*['\"][^'\"]{6,}['\"].*")) {
+            detectedKeywords.add("password_assignment_pattern");
+        }
+
+        // 检查API密钥模式
+        if (lowerContent.matches(".*[a-z0-9]{32,}.*") &&
+            (lowerContent.contains("key") || lowerContent.contains("token") || lowerContent.contains("secret"))) {
+            detectedKeywords.add("api_key_pattern");
+        }
+
+        // 检查JWT令牌模式
+        if (lowerContent.matches(".*eyj[a-za-z0-9+/=]+\\.[a-za-z0-9+/=]+\\.[a-za-z0-9+/=]*.*")) {
+            detectedKeywords.add("jwt_token_pattern");
+        }
+
+        // 检查数据库连接字符串
+        if (lowerContent.matches(".*(jdbc:|mongodb://|mysql://|postgres://|redis://).*")) {
+            detectedKeywords.add("database_connection_string");
+        }
+
+        // 检查私钥格式
+        if (lowerContent.contains("-----begin") && lowerContent.contains("private key")) {
+            detectedKeywords.add("private_key_format");
+        }
+
         boolean hasSensitiveInfo = !detectedKeywords.isEmpty();
         return new SensitiveInfoCheckResult(hasSensitiveInfo, detectedKeywords, detectedKeywords.size());
     }
@@ -225,16 +260,45 @@ public class FileSecurityServiceImpl implements FileSecurityService {
             return RiskLevel.LOW;
         }
 
-        // 根据问题严重程度计算风险等级
-        boolean hasHighRiskIssue = issues.stream().anyMatch(issue -> 
-            issue.contains("可执行") || issue.contains("危险") || issue.contains("恶意"));
-        
-        boolean hasMediumRiskIssue = issues.stream().anyMatch(issue -> 
-            issue.contains("敏感") || issue.contains("可疑") || issue.contains("超过限制"));
+        int riskScore = 0;
+        String fileName = file.getOriginalFilename();
 
-        if (hasHighRiskIssue) {
+        // 根据问题类型计算风险分数
+        for (String issue : issues) {
+            if (issue.contains("恶意代码") || issue.contains("可执行文件内容")) {
+                riskScore += 50; // 严重风险
+            } else if (issue.contains("危险") || issue.contains("可执行")) {
+                riskScore += 30; // 高风险
+            } else if (issue.contains("可疑") || issue.contains("敏感信息")) {
+                riskScore += 20; // 中等风险
+            } else if (issue.contains("超过限制") || issue.contains("不支持")) {
+                riskScore += 10; // 低风险
+            } else {
+                riskScore += 5; // 其他问题
+            }
+        }
+
+        // 文件类型额外风险评估
+        if (fileName != null) {
+            if (matchesExecutablePattern(fileName)) {
+                riskScore += 25;
+            }
+            if (matchesSensitiveFilePattern(fileName)) {
+                riskScore += 15;
+            }
+        }
+
+        // 文件大小风险评估
+        if (file.getSize() > 100 * 1024 * 1024) { // 大于100MB
+            riskScore += 10;
+        }
+
+        // 根据总分数确定风险等级
+        if (riskScore >= 80) {
+            return RiskLevel.CRITICAL;
+        } else if (riskScore >= 50) {
             return RiskLevel.HIGH;
-        } else if (hasMediumRiskIssue) {
+        } else if (riskScore >= 20) {
             return RiskLevel.MEDIUM;
         } else {
             return RiskLevel.LOW;
@@ -299,5 +363,120 @@ public class FileSecurityServiceImpl implements FileSecurityService {
             sb.append(String.format("%02X", bytes[i]));
         }
         return sb.toString();
+    }
+
+    @Override
+    public ContentCheckResult performAdvancedContentCheck(MultipartFile file) throws IOException {
+        log.info("执行高级文件内容检查: fileName={}, size={}", file.getOriginalFilename(), file.getSize());
+
+        String fileName = file.getOriginalFilename();
+        if (fileName == null) {
+            fileName = "unknown";
+        }
+
+        // 1. 基础检查
+        ContentCheckResult basicResult = checkFileContent(file);
+
+        // 2. 检查文件名模式
+        boolean isExecutableFile = matchesExecutablePattern(fileName);
+        boolean isSensitiveFile = matchesSensitiveFilePattern(fileName);
+
+        // 3. 恶意代码模式检查
+        List<String> maliciousPatterns = new ArrayList<>();
+        boolean hasMaliciousCode = false;
+
+        // 对文本文件进行恶意代码检查
+        if (isTextFile(file.getContentType()) && file.getSize() <= fileUploadConfig.getSecurity().getContentCheck().getMaxTextScanSize()) {
+            try {
+                String content = new String(file.getBytes());
+                maliciousPatterns = checkMaliciousCodePatterns(content, fileName);
+                hasMaliciousCode = !maliciousPatterns.isEmpty();
+            } catch (Exception e) {
+                log.warn("恶意代码检查失败: {}", fileName, e);
+            }
+        }
+
+        // 4. 综合判断可疑内容
+        boolean hasSuspiciousContent = basicResult.hasSuspiciousContent() ||
+                                     isExecutableFile ||
+                                     isSensitiveFile ||
+                                     hasMaliciousCode;
+
+        // 5. 增强的敏感信息检查
+        SensitiveInfoCheckResult enhancedSensitiveResult = basicResult.getSensitiveInfoResult();
+        if (isSensitiveFile && !enhancedSensitiveResult.hasSensitiveInfo()) {
+            // 如果文件名敏感但内容检查未发现敏感信息，标记为潜在敏感
+            List<String> fileNameKeywords = new ArrayList<>();
+            fileNameKeywords.add("敏感文件名: " + fileName);
+            enhancedSensitiveResult = new SensitiveInfoCheckResult(true, fileNameKeywords, 1);
+        }
+
+        return new ContentCheckResult(
+            basicResult.hasExecutableContent() || isExecutableFile,
+            hasSuspiciousContent,
+            hasMaliciousCode,
+            basicResult.getDetectedSignatures(),
+            maliciousPatterns,
+            enhancedSensitiveResult
+        );
+    }
+
+    @Override
+    public List<String> checkMaliciousCodePatterns(String content, String fileName) {
+        List<String> detectedPatterns = new ArrayList<>();
+        List<String> patterns = fileUploadConfig.getSecurity().getContentCheck().getMaliciousCodePatterns();
+
+        String lowerContent = content.toLowerCase();
+
+        for (String pattern : patterns) {
+            try {
+                if (lowerContent.matches(".*" + pattern.toLowerCase() + ".*")) {
+                    detectedPatterns.add(pattern);
+                    log.warn("检测到恶意代码模式: fileName={}, pattern={}", fileName, pattern);
+                }
+            } catch (Exception e) {
+                log.debug("模式匹配失败: pattern={}", pattern, e);
+            }
+        }
+
+        return detectedPatterns;
+    }
+
+    @Override
+    public boolean matchesExecutablePattern(String fileName) {
+        if (fileName == null) {
+            return false;
+        }
+
+        List<String> patterns = fileUploadConfig.getSecurity().getContentCheck().getExecutablePatterns();
+        String lowerFileName = fileName.toLowerCase();
+
+        return patterns.stream().anyMatch(pattern -> {
+            try {
+                return lowerFileName.matches(pattern);
+            } catch (Exception e) {
+                log.debug("可执行文件模式匹配失败: pattern={}", pattern, e);
+                return false;
+            }
+        });
+    }
+
+    @Override
+    public boolean matchesSensitiveFilePattern(String fileName) {
+        if (fileName == null) {
+            return false;
+        }
+
+        List<String> patterns = fileUploadConfig.getSecurity().getContentCheck().getSensitiveFilePatterns();
+        String lowerFileName = fileName.toLowerCase();
+
+        return patterns.stream().anyMatch(pattern -> {
+            try {
+                return lowerFileName.matches(pattern);
+            } catch (Exception e) {
+                log.debug("敏感文件模式匹配失败: pattern={}", pattern, e);
+                return false;
+            }
+        });
     }
 }

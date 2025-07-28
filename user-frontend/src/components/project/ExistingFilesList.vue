@@ -205,7 +205,7 @@ const loadProjectFiles = async () => {
   loading.value = true
   try {
     const response = await projectFileApi.getProjectFiles(props.projectId, {
-      page: 1,
+      page: 0,
       size: 100 // 获取所有文件
     })
     

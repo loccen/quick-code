@@ -127,7 +127,7 @@
           >
             <ul>
               <li><strong>源码文件（必需）：</strong>支持 .zip、.rar、.tar.gz、.7z 格式，建议包含完整的项目结构</li>
-              <li><strong>封面图片（推荐）：</strong>支持 .jpg、.png、.gif 格式，建议尺寸 800x600 像素</li>
+              <li><strong>封面图片（推荐）：</strong>支持 .jpg、.png、.gif、.svg 格式，建议尺寸 800x600 像素</li>
               <li><strong>演示文件（可选）：</strong>可上传项目截图、演示视频等</li>
               <li><strong>文档说明（可选）：</strong>可上传项目说明文档、API文档等</li>
             </ul>

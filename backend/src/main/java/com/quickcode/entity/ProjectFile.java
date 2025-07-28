@@ -254,9 +254,12 @@ public class ProjectFile extends BaseEntity {
 
     /**
      * 标记文件已删除
+     * 重写父类方法，同时设置文件状态
      */
+    @Override
     public void markDeleted() {
-        this.fileStatus = FileStatus.DELETED.getCode();
+        super.markDeleted(); // 调用父类方法设置逻辑删除标记
+        this.fileStatus = FileStatus.DELETED.getCode(); // 设置文件状态
     }
 
     /**
@@ -266,6 +269,15 @@ public class ProjectFile extends BaseEntity {
         return FileStatus.UPLOADED.getCode().equals(this.fileStatus) ||
                FileStatus.PROCESSING.getCode().equals(this.fileStatus) ||
                FileStatus.PROCESSED.getCode().equals(this.fileStatus);
+    }
+
+    /**
+     * 检查文件是否可用（未删除且已上传）
+     * 重写父类方法，添加文件特定的逻辑
+     */
+    @Override
+    public boolean isAvailable() {
+        return super.isAvailable() && isUploaded();
     }
 
     /**

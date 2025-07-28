@@ -525,6 +525,7 @@ public class ProjectController extends BaseController {
         try {
             Pageable pageable = PageRequest.of(page, size, Sort.by(Sort.Direction.DESC, "uploadTime"));
             Page<ProjectFile> files = projectFileService.getProjectFiles(projectId, fileType, pageable);
+            log.info("files number:{}", files.getContent().size());
             Page<ProjectFileUploadResponse> response = files.map(ProjectFileUploadResponse::fromProjectFile);
 
             return success(response, "获取项目文件列表成功");

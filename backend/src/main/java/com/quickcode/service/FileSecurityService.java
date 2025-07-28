@@ -58,12 +58,46 @@ public interface FileSecurityService {
 
     /**
      * 检查文件内容
-     * 
+     *
      * @param file 文件
      * @return 检查结果
      * @throws IOException 读取文件失败
      */
     ContentCheckResult checkFileContent(MultipartFile file) throws IOException;
+
+    /**
+     * 执行高级文件内容检查
+     *
+     * @param file 文件
+     * @return 高级检查结果
+     * @throws IOException 读取文件失败
+     */
+    ContentCheckResult performAdvancedContentCheck(MultipartFile file) throws IOException;
+
+    /**
+     * 检查恶意代码模式
+     *
+     * @param content 文件内容
+     * @param fileName 文件名
+     * @return 检测到的恶意模式列表
+     */
+    List<String> checkMaliciousCodePatterns(String content, String fileName);
+
+    /**
+     * 检查可执行文件模式
+     *
+     * @param fileName 文件名
+     * @return 是否匹配可执行文件模式
+     */
+    boolean matchesExecutablePattern(String fileName);
+
+    /**
+     * 检查敏感文件名模式
+     *
+     * @param fileName 文件名
+     * @return 是否匹配敏感文件模式
+     */
+    boolean matchesSensitiveFilePattern(String fileName);
 
     /**
      * 检查文件头部特征
@@ -123,21 +157,35 @@ public interface FileSecurityService {
     class ContentCheckResult {
         private final boolean hasExecutableContent;
         private final boolean hasSuspiciousContent;
+        private final boolean hasMaliciousCode;
         private final List<String> detectedSignatures;
+        private final List<String> detectedMaliciousPatterns;
         private final SensitiveInfoCheckResult sensitiveInfoResult;
 
         public ContentCheckResult(boolean hasExecutableContent, boolean hasSuspiciousContent,
-                                List<String> detectedSignatures, SensitiveInfoCheckResult sensitiveInfoResult) {
+                                boolean hasMaliciousCode, List<String> detectedSignatures,
+                                List<String> detectedMaliciousPatterns, SensitiveInfoCheckResult sensitiveInfoResult) {
             this.hasExecutableContent = hasExecutableContent;
             this.hasSuspiciousContent = hasSuspiciousContent;
+            this.hasMaliciousCode = hasMaliciousCode;
             this.detectedSignatures = detectedSignatures;
+            this.detectedMaliciousPatterns = detectedMaliciousPatterns;
             this.sensitiveInfoResult = sensitiveInfoResult;
+        }
+
+        // 兼容性构造函数
+        public ContentCheckResult(boolean hasExecutableContent, boolean hasSuspiciousContent,
+                                List<String> detectedSignatures, SensitiveInfoCheckResult sensitiveInfoResult) {
+            this(hasExecutableContent, hasSuspiciousContent, false, detectedSignatures,
+                 new java.util.ArrayList<>(), sensitiveInfoResult);
         }
 
         // Getters
         public boolean hasExecutableContent() { return hasExecutableContent; }
         public boolean hasSuspiciousContent() { return hasSuspiciousContent; }
+        public boolean hasMaliciousCode() { return hasMaliciousCode; }
         public List<String> getDetectedSignatures() { return detectedSignatures; }
+        public List<String> getDetectedMaliciousPatterns() { return detectedMaliciousPatterns; }
         public SensitiveInfoCheckResult getSensitiveInfoResult() { return sensitiveInfoResult; }
     }
 

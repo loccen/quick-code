@@ -49,6 +49,14 @@ public abstract class BaseEntity {
     @Column(name = "version")
     private Long version;
 
+    /**
+     * 逻辑删除标记
+     * 0: 未删除
+     * 1: 已删除
+     */
+    @Column(name = "deleted", nullable = false)
+    protected Integer deleted = 0;
+
     @PrePersist
     protected void onCreate() {
         LocalDateTime now = LocalDateTime.now();
@@ -58,10 +66,41 @@ public abstract class BaseEntity {
         if (updatedTime == null) {
             updatedTime = now;
         }
+        if (deleted == null) {
+            deleted = 0;
+        }
     }
 
     @PreUpdate
     protected void onUpdate() {
         updatedTime = LocalDateTime.now();
+    }
+
+    /**
+     * 标记为已删除
+     */
+    public void markDeleted() {
+        this.deleted = 1;
+    }
+
+    /**
+     * 恢复删除状态
+     */
+    public void unmarkDeleted() {
+        this.deleted = 0;
+    }
+
+    /**
+     * 检查是否已被逻辑删除
+     */
+    public boolean isDeleted() {
+        return this.deleted != null && this.deleted == 1;
+    }
+
+    /**
+     * 检查是否可用（未删除）
+     */
+    public boolean isAvailable() {
+        return !isDeleted();
     }
 }

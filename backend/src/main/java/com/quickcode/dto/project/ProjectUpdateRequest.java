@@ -25,9 +25,8 @@ import java.util.List;
 public class ProjectUpdateRequest {
 
     /**
-     * 项目ID
+     * 项目ID（由URL路径参数提供，请求体中可选）
      */
-    @NotNull(message = "项目ID不能为空")
     private Long id;
 
     /**

@@ -49,7 +49,7 @@
               </div>
               <template #tip>
                 <div class="el-upload__tip">
-                  支持 .jpg、.png、.gif 格式，建议尺寸 800x600 像素，文件大小不超过 10MB
+                  支持 .jpg、.png、.gif、.svg 格式，建议尺寸 800x600 像素，文件大小不超过 10MB
                 </div>
               </template>
             </el-upload>
@@ -186,7 +186,7 @@ const documentFiles = ref<UploadFile[]>([])
 
 // 文件类型限制
 const sourceAcceptTypes = '.zip,.rar,.tar.gz,.7z'
-const imageAcceptTypes = '.jpg,.jpeg,.png,.gif'
+const imageAcceptTypes = '.jpg,.jpeg,.png,.gif,.svg'
 const demoAcceptTypes = '.jpg,.jpeg,.png,.gif,.mp4,.avi,.mov,.wmv'
 const documentAcceptTypes = '.pdf,.doc,.docx,.md,.txt'
 
@@ -257,11 +257,11 @@ const beforeSourceUpload = (file: File) => {
 }
 
 const beforeImageUpload = (file: File) => {
-  const isValidType = /\.(jpg|jpeg|png|gif)$/i.test(file.name)
+  const isValidType = /\.(jpg|jpeg|png|gif|svg)$/i.test(file.name)
   const isValidSize = file.size <= 10 * 1024 * 1024 // 10MB
 
   if (!isValidType) {
-    ElMessage.error('封面图片只支持 .jpg、.png、.gif 格式')
+    ElMessage.error('封面图片只支持 .jpg、.png、.gif、.svg 格式')
     return false
   }
   if (!isValidSize) {
