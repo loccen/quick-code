@@ -104,12 +104,21 @@ public interface ProjectDownloadService extends BaseService<ProjectDownload, Lon
 
     /**
      * 检查下载权限
-     * 
+     *
      * @param projectId 项目ID
      * @param userId 用户ID
      * @return 是否有下载权限
      */
     boolean hasDownloadPermission(Long projectId, Long userId);
+
+    /**
+     * 获取下载权限详细信息
+     *
+     * @param projectId 项目ID
+     * @param userId 用户ID
+     * @return 权限详细信息
+     */
+    DownloadPermissionInfo getDownloadPermissionInfo(Long projectId, Long userId);
 
     /**
      * 检查用户是否已下载过项目
@@ -314,7 +323,7 @@ public interface ProjectDownloadService extends BaseService<ProjectDownload, Lon
 
     /**
      * 支持断点续传的下载
-     * 
+     *
      * @param projectId 项目ID
      * @param userId 用户ID
      * @param rangeStart 开始位置
@@ -323,4 +332,38 @@ public interface ProjectDownloadService extends BaseService<ProjectDownload, Lon
      * @throws IOException 下载失败时抛出
      */
     DownloadResult downloadWithRange(Long projectId, Long userId, long rangeStart, long rangeEnd) throws IOException;
+
+    /**
+     * 下载权限信息
+     */
+    class DownloadPermissionInfo {
+        private final boolean hasPermission;
+        private final String reason;
+        private final boolean isProjectOwner;
+        private final boolean isFreeProject;
+        private final boolean hasPurchased;
+        private final boolean isProjectPublished;
+        private final java.math.BigDecimal projectPrice;
+
+        public DownloadPermissionInfo(boolean hasPermission, String reason, boolean isProjectOwner,
+                                    boolean isFreeProject, boolean hasPurchased, boolean isProjectPublished,
+                                    java.math.BigDecimal projectPrice) {
+            this.hasPermission = hasPermission;
+            this.reason = reason;
+            this.isProjectOwner = isProjectOwner;
+            this.isFreeProject = isFreeProject;
+            this.hasPurchased = hasPurchased;
+            this.isProjectPublished = isProjectPublished;
+            this.projectPrice = projectPrice;
+        }
+
+        // Getters
+        public boolean hasPermission() { return hasPermission; }
+        public String getReason() { return reason; }
+        public boolean isProjectOwner() { return isProjectOwner; }
+        public boolean isFreeProject() { return isFreeProject; }
+        public boolean hasPurchased() { return hasPurchased; }
+        public boolean isProjectPublished() { return isProjectPublished; }
+        public java.math.BigDecimal getProjectPrice() { return projectPrice; }
+    }
 }

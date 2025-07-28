@@ -1,11 +1,13 @@
 package com.quickcode.service.impl;
 
+import com.quickcode.entity.Project;
 import com.quickcode.entity.ProjectDownload;
 import com.quickcode.entity.ProjectFile;
 import com.quickcode.repository.ProjectDownloadRepository;
 import com.quickcode.repository.ProjectFileRepository;
 import com.quickcode.repository.ProjectRepository;
 import com.quickcode.service.FileStorageService;
+import com.quickcode.service.OrderService;
 import com.quickcode.service.ProjectDownloadService;
 import com.quickcode.service.ProjectFileService;
 import lombok.RequiredArgsConstructor;
@@ -37,6 +39,7 @@ public class ProjectDownloadServiceImpl implements ProjectDownloadService {
     private final ProjectRepository projectRepository;
     private final ProjectFileRepository projectFileRepository;
     private final FileStorageService fileStorageService;
+    private final OrderService orderService;
     private final ProjectFileService projectFileService;
 
     // 下载频率限制配置
@@ -177,15 +180,120 @@ public class ProjectDownloadServiceImpl implements ProjectDownloadService {
 
     @Override
     public boolean hasDownloadPermission(Long projectId, Long userId) {
-        // 简化的权限检查逻辑
-        // 实际项目中应该检查：
-        // 1. 项目是否已发布
-        // 2. 用户是否已购买项目
-        // 3. 用户是否是项目所有者
-        // 4. 项目是否免费
-        
-        // 暂时简化为所有已发布的项目都可以下载
-        return projectRepository.existsById(projectId);
+        log.debug("检查下载权限: projectId={}, userId={}", projectId, userId);
+
+        try {
+            // 1. 检查项目是否存在
+            Optional<Project> projectOpt = projectRepository.findById(projectId);
+            if (projectOpt.isEmpty()) {
+                log.warn("项目不存在: projectId={}", projectId);
+                return false;
+            }
+
+            Project project = projectOpt.get();
+
+            // 2. 检查项目是否已发布
+            if (!project.isPublished()) {
+                log.warn("项目未发布: projectId={}", projectId);
+                return false;
+            }
+
+            // 3. 如果用户未登录，只能下载免费项目
+            if (userId == null) {
+                boolean isFree = project.getPrice() == null ||
+                               project.getPrice().compareTo(java.math.BigDecimal.ZERO) == 0;
+                log.debug("匿名用户下载权限检查: projectId={}, isFree={}", projectId, isFree);
+                return isFree;
+            }
+
+            // 4. 检查用户是否是项目所有者
+            if (project.getUserId().equals(userId)) {
+                log.debug("项目所有者下载: projectId={}, userId={}", projectId, userId);
+                return true;
+            }
+
+            // 5. 检查项目是否免费
+            boolean isFree = project.getPrice() == null ||
+                           project.getPrice().compareTo(java.math.BigDecimal.ZERO) == 0;
+            if (isFree) {
+                log.debug("免费项目下载: projectId={}, userId={}", projectId, userId);
+                return true;
+            }
+
+            // 6. 检查用户是否已购买项目
+            boolean hasPurchased = orderService.hasUserPurchasedProject(projectId, userId);
+            log.debug("付费项目下载权限检查: projectId={}, userId={}, hasPurchased={}",
+                     projectId, userId, hasPurchased);
+
+            return hasPurchased;
+
+        } catch (Exception e) {
+            log.error("检查下载权限时发生异常: projectId={}, userId={}", projectId, userId, e);
+            return false;
+        }
+    }
+
+    @Override
+    public DownloadPermissionInfo getDownloadPermissionInfo(Long projectId, Long userId) {
+        log.debug("获取下载权限详细信息: projectId={}, userId={}", projectId, userId);
+
+        try {
+            // 1. 检查项目是否存在
+            Optional<Project> projectOpt = projectRepository.findById(projectId);
+            if (projectOpt.isEmpty()) {
+                return new DownloadPermissionInfo(false, "项目不存在", false, false, false, false, null);
+            }
+
+            Project project = projectOpt.get();
+            boolean isProjectPublished = project.isPublished();
+            boolean isFreeProject = project.getPrice() == null ||
+                                  project.getPrice().compareTo(java.math.BigDecimal.ZERO) == 0;
+            boolean isProjectOwner = userId != null && project.getUserId().equals(userId);
+            boolean hasPurchased = false;
+
+            // 2. 检查项目是否已发布
+            if (!isProjectPublished) {
+                return new DownloadPermissionInfo(false, "项目未发布", isProjectOwner, isFreeProject,
+                                                hasPurchased, isProjectPublished, project.getPrice());
+            }
+
+            // 3. 如果用户未登录，只能下载免费项目
+            if (userId == null) {
+                if (isFreeProject) {
+                    return new DownloadPermissionInfo(true, "免费项目，允许下载", isProjectOwner, isFreeProject,
+                                                    hasPurchased, isProjectPublished, project.getPrice());
+                } else {
+                    return new DownloadPermissionInfo(false, "付费项目，需要登录并购买", isProjectOwner, isFreeProject,
+                                                    hasPurchased, isProjectPublished, project.getPrice());
+                }
+            }
+
+            // 4. 检查用户是否是项目所有者
+            if (isProjectOwner) {
+                return new DownloadPermissionInfo(true, "项目所有者，允许下载", isProjectOwner, isFreeProject,
+                                                hasPurchased, isProjectPublished, project.getPrice());
+            }
+
+            // 5. 检查项目是否免费
+            if (isFreeProject) {
+                return new DownloadPermissionInfo(true, "免费项目，允许下载", isProjectOwner, isFreeProject,
+                                                hasPurchased, isProjectPublished, project.getPrice());
+            }
+
+            // 6. 检查用户是否已购买项目
+            hasPurchased = orderService.hasUserPurchasedProject(projectId, userId);
+            if (hasPurchased) {
+                return new DownloadPermissionInfo(true, "已购买项目，允许下载", isProjectOwner, isFreeProject,
+                                                hasPurchased, isProjectPublished, project.getPrice());
+            } else {
+                return new DownloadPermissionInfo(false, "付费项目，需要购买后才能下载", isProjectOwner, isFreeProject,
+                                                hasPurchased, isProjectPublished, project.getPrice());
+            }
+
+        } catch (Exception e) {
+            log.error("获取下载权限详细信息时发生异常: projectId={}, userId={}", projectId, userId, e);
+            return new DownloadPermissionInfo(false, "系统异常，请稍后重试", false, false, false, false, null);
+        }
     }
 
     @Override

@@ -145,6 +145,29 @@ public class ProjectDownloadController extends BaseController {
     }
 
     /**
+     * 检查下载权限
+     */
+    @GetMapping("/project/{projectId}/permission")
+    public ApiResponse<ProjectDownloadService.DownloadPermissionInfo> checkDownloadPermission(
+            @PathVariable Long projectId,
+            HttpServletRequest request) {
+
+        Long userId = getCurrentUserId();
+        log.info("检查下载权限: projectId={}, userId={}", projectId, userId);
+
+        try {
+            ProjectDownloadService.DownloadPermissionInfo permissionInfo =
+                    projectDownloadService.getDownloadPermissionInfo(projectId, userId);
+
+            return success(permissionInfo);
+
+        } catch (Exception e) {
+            log.error("检查下载权限失败: projectId={}, userId={}", projectId, userId, e);
+            return error("检查下载权限失败");
+        }
+    }
+
+    /**
      * 生成下载令牌
      */
     @PostMapping("/project/{projectId}/token")
