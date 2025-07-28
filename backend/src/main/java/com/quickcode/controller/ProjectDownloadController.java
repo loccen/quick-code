@@ -4,6 +4,7 @@ import com.quickcode.common.response.ApiResponse;
 import com.quickcode.dto.ProjectDownloadHistoryResponse;
 import com.quickcode.dto.ProjectDownloadStatisticsResponse;
 import com.quickcode.entity.ProjectDownload;
+import com.quickcode.service.DownloadTokenService;
 import com.quickcode.service.ProjectDownloadService;
 import com.quickcode.service.ProjectDownloadService.DownloadResult;
 import com.quickcode.service.ProjectDownloadService.DownloadStatistics;
@@ -42,6 +43,7 @@ import java.util.Map;
 public class ProjectDownloadController extends BaseController {
 
     private final ProjectDownloadService projectDownloadService;
+    private final DownloadTokenService downloadTokenService;
 
     /**
      * 下载项目主文件
@@ -331,5 +333,136 @@ public class ProjectDownloadController extends BaseController {
         }
         
         return request.getRemoteAddr();
+    }
+
+    // ==================== 令牌管理接口 ====================
+
+    /**
+     * 刷新下载令牌
+     */
+    @PostMapping("/token/{token}/refresh")
+    @PreAuthorize("isAuthenticated()")
+    public ApiResponse<Map<String, Object>> refreshDownloadToken(
+            @PathVariable String token,
+            @RequestParam(value = "expirationMinutes", defaultValue = "60") int expirationMinutes) {
+
+        Long userId = getCurrentUserId();
+        log.info("刷新下载令牌: userId={}, expiration={}分钟", userId, expirationMinutes);
+
+        try {
+            DownloadTokenService.DownloadTokenInfo tokenInfo = downloadTokenService.refreshDownloadToken(token, expirationMinutes);
+
+            Map<String, Object> result = Map.of(
+                    "token", tokenInfo.getToken(),
+                    "projectId", tokenInfo.getProjectId(),
+                    "expirationMinutes", expirationMinutes,
+                    "expirationTime", tokenInfo.getExpirationTime().format(DateTimeFormatter.ISO_LOCAL_DATE_TIME)
+            );
+
+            return success(result, "下载令牌刷新成功");
+
+        } catch (Exception e) {
+            log.error("刷新下载令牌失败: userId={}", userId, e);
+            return error("刷新下载令牌失败: " + e.getMessage());
+        }
+    }
+
+    /**
+     * 撤销下载令牌
+     */
+    @DeleteMapping("/token/{token}")
+    @PreAuthorize("isAuthenticated()")
+    public ApiResponse<Void> revokeDownloadToken(@PathVariable String token) {
+
+        Long userId = getCurrentUserId();
+        log.info("撤销下载令牌: userId={}", userId);
+
+        try {
+            boolean success = downloadTokenService.revokeDownloadToken(token);
+
+            if (success) {
+                return success();
+            } else {
+                return error("撤销下载令牌失败");
+            }
+
+        } catch (Exception e) {
+            log.error("撤销下载令牌失败: userId={}", userId, e);
+            return error("撤销下载令牌失败");
+        }
+    }
+
+    /**
+     * 获取用户的活跃下载令牌
+     */
+    @GetMapping("/tokens/active")
+    @PreAuthorize("isAuthenticated()")
+    public ApiResponse<java.util.List<Map<String, Object>>> getUserActiveTokens() {
+
+        Long userId = getCurrentUserId();
+        log.info("获取用户活跃下载令牌: userId={}", userId);
+
+        try {
+            java.util.List<DownloadTokenService.DownloadTokenInfo> tokens = downloadTokenService.getUserActiveTokens(userId);
+
+            java.util.List<Map<String, Object>> result = tokens.stream()
+                    .map(tokenInfo -> Map.of(
+                            "projectId", tokenInfo.getProjectId(),
+                            "expirationTime", tokenInfo.getExpirationTime().format(DateTimeFormatter.ISO_LOCAL_DATE_TIME),
+                            "metadata", tokenInfo.getMetadata() != null ? tokenInfo.getMetadata() : Map.of(),
+                            "remainingTime", downloadTokenService.getTokenRemainingTime(tokenInfo.getToken())
+                    ))
+                    .collect(java.util.stream.Collectors.toList());
+
+            return success(result);
+
+        } catch (Exception e) {
+            log.error("获取用户活跃下载令牌失败: userId={}", userId, e);
+            return error("获取活跃令牌失败");
+        }
+    }
+
+    /**
+     * 获取令牌统计信息
+     */
+    @GetMapping("/tokens/statistics")
+    @PreAuthorize("hasRole('ADMIN')")
+    public ApiResponse<Map<String, Object>> getTokenStatistics() {
+
+        log.info("获取令牌统计信息");
+
+        try {
+            Map<String, Object> statistics = downloadTokenService.getTokenStatistics();
+            return success(statistics);
+
+        } catch (Exception e) {
+            log.error("获取令牌统计信息失败", e);
+            return error("获取令牌统计信息失败");
+        }
+    }
+
+    /**
+     * 清理过期令牌
+     */
+    @PostMapping("/tokens/cleanup")
+    @PreAuthorize("hasRole('ADMIN')")
+    public ApiResponse<Map<String, Object>> cleanupExpiredTokens() {
+
+        log.info("清理过期令牌");
+
+        try {
+            int cleanedCount = downloadTokenService.cleanupExpiredTokens();
+
+            Map<String, Object> result = Map.of(
+                    "cleanedCount", cleanedCount,
+                    "timestamp", LocalDateTime.now().format(DateTimeFormatter.ISO_LOCAL_DATE_TIME)
+            );
+
+            return success(result, "过期令牌清理完成");
+
+        } catch (Exception e) {
+            log.error("清理过期令牌失败", e);
+            return error("清理过期令牌失败");
+        }
     }
 }

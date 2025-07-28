@@ -6,6 +6,7 @@ import com.quickcode.entity.ProjectFile;
 import com.quickcode.repository.ProjectDownloadRepository;
 import com.quickcode.repository.ProjectFileRepository;
 import com.quickcode.repository.ProjectRepository;
+import com.quickcode.service.DownloadTokenService;
 import com.quickcode.service.FileStorageService;
 import com.quickcode.service.OrderService;
 import com.quickcode.service.ProjectDownloadService;
@@ -40,6 +41,7 @@ public class ProjectDownloadServiceImpl implements ProjectDownloadService {
     private final ProjectFileRepository projectFileRepository;
     private final FileStorageService fileStorageService;
     private final OrderService orderService;
+    private final DownloadTokenService downloadTokenService;
     private final ProjectFileService projectFileService;
 
     // 下载频率限制配置
@@ -579,30 +581,55 @@ public class ProjectDownloadServiceImpl implements ProjectDownloadService {
 
     @Override
     public String generateDownloadToken(Long projectId, Long userId, int expirationMinutes) {
-        // 生成下载令牌
-        // 实际项目中应该使用JWT或其他安全的令牌生成方式
-        String token = UUID.randomUUID().toString();
-        long expirationTime = System.currentTimeMillis() + expirationMinutes * 60 * 1000;
+        log.info("生成下载令牌: projectId={}, userId={}, expiration={}分钟", projectId, userId, expirationMinutes);
 
-        // 这里应该将令牌存储到缓存中（如Redis）
-        // 暂时简化处理
-        log.info("生成下载令牌: projectId={}, userId={}, token={}, expiration={}",
-                projectId, userId, token, expirationTime);
+        try {
+            // 使用DownloadTokenService生成JWT令牌
+            Map<String, Object> metadata = new HashMap<>();
+            metadata.put("source", "download_api");
+            metadata.put("generatedAt", LocalDateTime.now().toString());
 
-        return token;
+            DownloadTokenService.DownloadTokenInfo tokenInfo = downloadTokenService.generateDownloadToken(
+                    projectId, userId, expirationMinutes, metadata);
+
+            log.info("下载令牌生成成功: projectId={}, userId={}, tokenLength={}",
+                    projectId, userId, tokenInfo.getToken().length());
+
+            return tokenInfo.getToken();
+
+        } catch (Exception e) {
+            log.error("生成下载令牌失败: projectId={}, userId={}", projectId, userId, e);
+            throw new RuntimeException("生成下载令牌失败", e);
+        }
     }
 
     @Override
     public boolean validateDownloadToken(String token, Long projectId, Long userId) {
-        // 验证下载令牌
-        // 实际项目中应该从缓存中验证令牌的有效性
-        // 暂时简化处理
-        if (token == null || token.trim().isEmpty()) {
+        log.debug("验证下载令牌: projectId={}, userId={}", projectId, userId);
+
+        try {
+            // 使用DownloadTokenService验证JWT令牌
+            DownloadTokenService.TokenValidationResult result = downloadTokenService.validateDownloadToken(token, projectId);
+
+            if (!result.isValid()) {
+                log.warn("下载令牌验证失败: projectId={}, userId={}, reason={}",
+                        projectId, userId, result.getReason());
+                return false;
+            }
+
+            // 检查用户ID匹配（如果提供）
+            if (userId != null && !userId.equals(result.getUserId())) {
+                log.warn("下载令牌用户ID不匹配: expected={}, actual={}", userId, result.getUserId());
+                return false;
+            }
+
+            log.debug("下载令牌验证成功: projectId={}, userId={}", projectId, userId);
+            return true;
+
+        } catch (Exception e) {
+            log.error("验证下载令牌时发生异常: projectId={}, userId={}", projectId, userId, e);
             return false;
         }
-
-        log.info("验证下载令牌: projectId={}, userId={}, token={}", projectId, userId, token);
-        return true; // 暂时总是返回true
     }
 
     @Override
