@@ -266,4 +266,69 @@ public interface ProjectDownloadRepository extends BaseRepository<ProjectDownloa
      */
     @Query("SELECT pd FROM ProjectDownload pd WHERE pd.projectId = :projectId AND pd.downloadStatus = 1 ORDER BY pd.downloadTime DESC")
     Page<ProjectDownload> findProjectRecentDownloads(@Param("projectId") Long projectId, Pageable pageable);
+
+    /**
+     * 查找下载排行用户
+     */
+    @Query("SELECT pd.userId, COUNT(pd) as downloadCount FROM ProjectDownload pd WHERE pd.downloadStatus = 1 AND pd.downloadTime >= :startTime GROUP BY pd.userId ORDER BY downloadCount DESC")
+    Page<Object[]> findTopDownloaders(@Param("startTime") LocalDateTime startTime, Pageable pageable);
+
+    /**
+     * 获取下载趋势数据
+     */
+    @Query("SELECT DATE(pd.downloadTime) as downloadDate, COUNT(pd) as downloadCount FROM ProjectDownload pd WHERE pd.downloadStatus = 1 AND pd.downloadTime >= :startTime GROUP BY DATE(pd.downloadTime) ORDER BY downloadDate")
+    List<Object[]> findDownloadTrends(@Param("startTime") LocalDateTime startTime);
+
+    /**
+     * 获取项目下载趋势数据
+     */
+    @Query("SELECT DATE(pd.downloadTime) as downloadDate, COUNT(pd) as downloadCount FROM ProjectDownload pd WHERE pd.projectId = :projectId AND pd.downloadStatus = 1 AND pd.downloadTime >= :startTime GROUP BY DATE(pd.downloadTime) ORDER BY downloadDate")
+    List<Object[]> findProjectDownloadTrends(@Param("projectId") Long projectId, @Param("startTime") LocalDateTime startTime);
+
+    /**
+     * 检测异常下载行为
+     */
+    @Query("SELECT COUNT(pd) FROM ProjectDownload pd WHERE (pd.userId = :userId OR pd.downloadIp = :clientIp) AND pd.downloadTime >= :startTime")
+    Long countDownloadsInTimeWindow(@Param("userId") Long userId, @Param("clientIp") String clientIp, @Param("startTime") LocalDateTime startTime);
+
+    /**
+     * 获取下载来源统计
+     */
+    @Query("SELECT pd.downloadSource, COUNT(pd) as downloadCount FROM ProjectDownload pd WHERE pd.downloadStatus = 1 AND pd.downloadTime >= :startTime GROUP BY pd.downloadSource ORDER BY downloadCount DESC")
+    List<Object[]> findDownloadsBySourceInPeriod(@Param("startTime") LocalDateTime startTime);
+
+    /**
+     * 获取用户下载统计
+     */
+    @Query("SELECT COUNT(DISTINCT pd.projectId) as uniqueProjects, COUNT(pd) as totalDownloads, SUM(pd.fileSize) as totalSize FROM ProjectDownload pd WHERE pd.userId = :userId AND pd.downloadStatus = 1")
+    Object[] getUserDownloadStatistics(@Param("userId") Long userId);
+
+    /**
+     * 获取项目下载统计
+     */
+    @Query("SELECT COUNT(DISTINCT pd.userId) as uniqueDownloaders, COUNT(pd) as totalDownloads, SUM(pd.fileSize) as totalSize, AVG(pd.downloadDuration) as avgDuration FROM ProjectDownload pd WHERE pd.projectId = :projectId AND pd.downloadStatus = 1")
+    Object[] getProjectDownloadStatistics(@Param("projectId") Long projectId);
+
+    /**
+     * 根据用户ID查找下载记录，按下载时间倒序
+     */
+    Page<ProjectDownload> findByUserIdOrderByDownloadTimeDesc(Long userId, Pageable pageable);
+
+    /**
+     * 统计指定时间后的总下载数
+     */
+    @Query("SELECT COUNT(pd) FROM ProjectDownload pd WHERE pd.downloadTime >= :startTime AND pd.downloadStatus = :status")
+    Long countByDownloadTimeGreaterThanEqualAndDownloadStatus(@Param("startTime") LocalDateTime startTime, @Param("status") Integer status);
+
+    /**
+     * 统计指定时间后的唯一用户数
+     */
+    @Query("SELECT COUNT(DISTINCT pd.userId) FROM ProjectDownload pd WHERE pd.downloadTime >= :startTime AND pd.downloadStatus = 1")
+    Long countDistinctUsersByDownloadTimeGreaterThanEqual(@Param("startTime") LocalDateTime startTime);
+
+    /**
+     * 统计指定时间后的唯一项目数
+     */
+    @Query("SELECT COUNT(DISTINCT pd.projectId) FROM ProjectDownload pd WHERE pd.downloadTime >= :startTime AND pd.downloadStatus = 1")
+    Long countDistinctProjectsByDownloadTimeGreaterThanEqual(@Param("startTime") LocalDateTime startTime);
 }

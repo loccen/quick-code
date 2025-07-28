@@ -15,6 +15,7 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.core.io.Resource;
 import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -479,17 +480,74 @@ public class ProjectDownloadServiceImpl implements ProjectDownloadService {
     @Override
     public List<Map<String, Object>> getPopularDownloads(int limit, int days) {
         log.info("获取热门下载项目: limit={}, days={}", limit, days);
-        // 这里应该使用Repository的聚合查询方法
-        // 暂时返回空列表
-        return new ArrayList<>();
+
+        try {
+            LocalDateTime startTime = LocalDateTime.now().minusDays(days);
+            Pageable pageable = PageRequest.of(0, limit);
+
+            Page<Object[]> results = projectDownloadRepository.findMostDownloadedProjects(pageable);
+
+            List<Map<String, Object>> popularDownloads = new ArrayList<>();
+            for (Object[] result : results.getContent()) {
+                Long projectId = (Long) result[0];
+                Long downloadCount = (Long) result[1];
+
+                Map<String, Object> item = new HashMap<>();
+                item.put("projectId", projectId);
+                item.put("downloadCount", downloadCount);
+                item.put("period", days + "天");
+
+                // 获取项目基本信息
+                Optional<Project> projectOpt = projectRepository.findById(projectId);
+                if (projectOpt.isPresent()) {
+                    Project project = projectOpt.get();
+                    item.put("projectName", project.getTitle());
+                    item.put("projectDescription", project.getDescription());
+                    item.put("authorId", project.getUserId());
+                }
+
+                popularDownloads.add(item);
+            }
+
+            log.info("热门下载项目查询完成: count={}", popularDownloads.size());
+            return popularDownloads;
+
+        } catch (Exception e) {
+            log.error("获取热门下载项目失败", e);
+            return new ArrayList<>();
+        }
     }
 
     @Override
     public List<Map<String, Object>> getTopDownloaders(int limit, int days) {
         log.info("获取下载排行用户: limit={}, days={}", limit, days);
-        // 这里应该使用Repository的聚合查询方法
-        // 暂时返回空列表
-        return new ArrayList<>();
+
+        try {
+            LocalDateTime startTime = LocalDateTime.now().minusDays(days);
+            Pageable pageable = PageRequest.of(0, limit);
+
+            Page<Object[]> results = projectDownloadRepository.findTopDownloaders(startTime, pageable);
+
+            List<Map<String, Object>> topDownloaders = new ArrayList<>();
+            for (Object[] result : results.getContent()) {
+                Long userId = (Long) result[0];
+                Long downloadCount = (Long) result[1];
+
+                Map<String, Object> item = new HashMap<>();
+                item.put("userId", userId);
+                item.put("downloadCount", downloadCount);
+                item.put("period", days + "天");
+
+                topDownloaders.add(item);
+            }
+
+            log.info("下载排行用户查询完成: count={}", topDownloaders.size());
+            return topDownloaders;
+
+        } catch (Exception e) {
+            log.error("获取下载排行用户失败", e);
+            return new ArrayList<>();
+        }
     }
 
     @Override
@@ -737,5 +795,120 @@ public class ProjectDownloadServiceImpl implements ProjectDownloadService {
     @Override
     public void deleteAll() {
         projectDownloadRepository.deleteAll();
+    }
+
+    // ==================== 新增统计分析方法 ====================
+
+    /**
+     * 获取用户下载统计详情
+     */
+    public Map<String, Object> getUserDownloadStatistics(Long userId) {
+        log.debug("获取用户下载统计: userId={}", userId);
+
+        try {
+            Object[] stats = projectDownloadRepository.getUserDownloadStatistics(userId);
+
+            Map<String, Object> result = new HashMap<>();
+            if (stats != null) {
+                result.put("uniqueProjects", stats[0] != null ? stats[0] : 0L);
+                result.put("totalDownloads", stats[1] != null ? stats[1] : 0L);
+                result.put("totalSize", stats[2] != null ? stats[2] : 0L);
+            } else {
+                result.put("uniqueProjects", 0L);
+                result.put("totalDownloads", 0L);
+                result.put("totalSize", 0L);
+            }
+
+            // 获取最近下载记录
+            Pageable recentPageable = PageRequest.of(0, 5);
+            Page<ProjectDownload> recentDownloads = projectDownloadRepository.findByUserIdOrderByDownloadTimeDesc(userId, recentPageable);
+            result.put("recentDownloads", recentDownloads.getContent());
+
+            return result;
+
+        } catch (Exception e) {
+            log.error("获取用户下载统计失败: userId={}", userId, e);
+            return new HashMap<>();
+        }
+    }
+
+    /**
+     * 获取项目下载统计详情
+     */
+    public Map<String, Object> getProjectDownloadStatistics(Long projectId) {
+        log.debug("获取项目下载统计: projectId={}", projectId);
+
+        try {
+            Object[] stats = projectDownloadRepository.getProjectDownloadStatistics(projectId);
+
+            Map<String, Object> result = new HashMap<>();
+            if (stats != null) {
+                result.put("uniqueDownloaders", stats[0] != null ? stats[0] : 0L);
+                result.put("totalDownloads", stats[1] != null ? stats[1] : 0L);
+                result.put("totalSize", stats[2] != null ? stats[2] : 0L);
+                result.put("avgDuration", stats[3] != null ? stats[3] : 0.0);
+            } else {
+                result.put("uniqueDownloaders", 0L);
+                result.put("totalDownloads", 0L);
+                result.put("totalSize", 0L);
+                result.put("avgDuration", 0.0);
+            }
+
+            // 获取下载趋势
+            LocalDateTime thirtyDaysAgo = LocalDateTime.now().minusDays(30);
+            List<Object[]> trends = projectDownloadRepository.findProjectDownloadTrends(projectId, thirtyDaysAgo);
+            result.put("downloadTrends", trends);
+
+            return result;
+
+        } catch (Exception e) {
+            log.error("获取项目下载统计失败: projectId={}", projectId, e);
+            return new HashMap<>();
+        }
+    }
+
+    /**
+     * 获取下载来源统计
+     */
+    public Map<String, Object> getDownloadSourceStatistics(int days) {
+        log.debug("获取下载来源统计: days={}", days);
+
+        try {
+            LocalDateTime startTime = LocalDateTime.now().minusDays(days);
+            List<Object[]> sourceStats = projectDownloadRepository.findDownloadsBySourceInPeriod(startTime);
+
+            Map<String, Object> result = new HashMap<>();
+            List<Map<String, Object>> sources = new ArrayList<>();
+            long totalDownloads = 0;
+
+            for (Object[] stat : sourceStats) {
+                String source = (String) stat[0];
+                Long count = (Long) stat[1];
+
+                Map<String, Object> sourceData = new HashMap<>();
+                sourceData.put("source", source != null ? source : "unknown");
+                sourceData.put("count", count);
+
+                sources.add(sourceData);
+                totalDownloads += count;
+            }
+
+            // 计算百分比
+            for (Map<String, Object> sourceData : sources) {
+                Long count = (Long) sourceData.get("count");
+                double percentage = totalDownloads > 0 ? (double) count / totalDownloads * 100 : 0;
+                sourceData.put("percentage", Math.round(percentage * 100.0) / 100.0);
+            }
+
+            result.put("sources", sources);
+            result.put("totalDownloads", totalDownloads);
+            result.put("period", days + "天");
+
+            return result;
+
+        } catch (Exception e) {
+            log.error("获取下载来源统计失败", e);
+            return new HashMap<>();
+        }
     }
 }

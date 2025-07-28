@@ -6,6 +6,7 @@ import com.quickcode.dto.ProjectDownloadStatisticsResponse;
 import com.quickcode.entity.ProjectDownload;
 import com.quickcode.service.DownloadTokenService;
 import com.quickcode.service.ProjectDownloadService;
+import com.quickcode.service.impl.ProjectDownloadServiceImpl;
 import com.quickcode.service.ProjectDownloadService.DownloadResult;
 import com.quickcode.service.ProjectDownloadService.DownloadStatistics;
 import lombok.RequiredArgsConstructor;
@@ -463,6 +464,163 @@ public class ProjectDownloadController extends BaseController {
         } catch (Exception e) {
             log.error("清理过期令牌失败", e);
             return error("清理过期令牌失败");
+        }
+    }
+
+    // ==================== 下载统计分析接口 ====================
+
+    /**
+     * 获取用户下载统计
+     */
+    @GetMapping("/statistics/user")
+    @PreAuthorize("isAuthenticated()")
+    public ApiResponse<Map<String, Object>> getUserDownloadStatistics() {
+
+        Long userId = getCurrentUserId();
+        log.info("获取用户下载统计: userId={}", userId);
+
+        try {
+            Map<String, Object> statistics = ((ProjectDownloadServiceImpl) projectDownloadService).getUserDownloadStatistics(userId);
+            return success(statistics);
+
+        } catch (Exception e) {
+            log.error("获取用户下载统计失败: userId={}", userId, e);
+            return error("获取下载统计失败");
+        }
+    }
+
+    /**
+     * 获取项目下载统计
+     */
+    @GetMapping("/statistics/project/{projectId}")
+    @PreAuthorize("isAuthenticated()")
+    public ApiResponse<Map<String, Object>> getProjectDownloadStatistics(@PathVariable Long projectId) {
+
+        Long userId = getCurrentUserId();
+        log.info("获取项目下载统计: projectId={}, userId={}", projectId, userId);
+
+        try {
+            // TODO: 验证用户是否为项目所有者或管理员
+
+            Map<String, Object> statistics = ((ProjectDownloadServiceImpl) projectDownloadService).getProjectDownloadStatistics(projectId);
+            return success(statistics);
+
+        } catch (Exception e) {
+            log.error("获取项目下载统计失败: projectId={}", projectId, e);
+            return error("获取项目下载统计失败");
+        }
+    }
+
+    /**
+     * 获取下载来源统计
+     */
+    @GetMapping("/statistics/sources")
+    @PreAuthorize("hasRole('ADMIN')")
+    public ApiResponse<Map<String, Object>> getDownloadSourceStatistics(
+            @RequestParam(defaultValue = "30") int days) {
+
+        log.info("获取下载来源统计: days={}", days);
+
+        try {
+            Map<String, Object> statistics = ((ProjectDownloadServiceImpl) projectDownloadService).getDownloadSourceStatistics(days);
+            return success(statistics);
+
+        } catch (Exception e) {
+            log.error("获取下载来源统计失败", e);
+            return error("获取下载来源统计失败");
+        }
+    }
+
+    /**
+     * 获取热门下载项目
+     */
+    @GetMapping("/statistics/popular")
+    public ApiResponse<List<Map<String, Object>>> getPopularDownloads(
+            @RequestParam(defaultValue = "10") int limit,
+            @RequestParam(defaultValue = "7") int days) {
+
+        log.info("获取热门下载项目: limit={}, days={}", limit, days);
+
+        try {
+            List<Map<String, Object>> popularDownloads = projectDownloadService.getPopularDownloads(limit, days);
+            return success(popularDownloads);
+
+        } catch (Exception e) {
+            log.error("获取热门下载项目失败", e);
+            return error("获取热门下载项目失败");
+        }
+    }
+
+    /**
+     * 获取下载排行用户
+     */
+    @GetMapping("/statistics/top-downloaders")
+    @PreAuthorize("hasRole('ADMIN')")
+    public ApiResponse<List<Map<String, Object>>> getTopDownloaders(
+            @RequestParam(defaultValue = "10") int limit,
+            @RequestParam(defaultValue = "7") int days) {
+
+        log.info("获取下载排行用户: limit={}, days={}", limit, days);
+
+        try {
+            List<Map<String, Object>> topDownloaders = projectDownloadService.getTopDownloaders(limit, days);
+            return success(topDownloaders);
+
+        } catch (Exception e) {
+            log.error("获取下载排行用户失败", e);
+            return error("获取下载排行用户失败");
+        }
+    }
+
+    /**
+     * 获取下载趋势
+     */
+    @GetMapping("/statistics/trends")
+    @PreAuthorize("hasRole('ADMIN')")
+    public ApiResponse<List<Map<String, Object>>> getDownloadTrends(
+            @RequestParam(required = false) Long projectId,
+            @RequestParam(defaultValue = "30") int days) {
+
+        log.info("获取下载趋势: projectId={}, days={}", projectId, days);
+
+        try {
+            List<Map<String, Object>> trends = projectDownloadService.getDownloadTrends(projectId, days);
+            return success(trends);
+
+        } catch (Exception e) {
+            log.error("获取下载趋势失败", e);
+            return error("获取下载趋势失败");
+        }
+    }
+
+    /**
+     * 检测异常下载行为
+     */
+    @PostMapping("/security/detect-abnormal")
+    @PreAuthorize("hasRole('ADMIN')")
+    public ApiResponse<Map<String, Object>> detectAbnormalDownloadBehavior(
+            @RequestParam(required = false) Long userId,
+            @RequestParam(required = false) String clientIp,
+            @RequestParam(defaultValue = "60") int timeWindowMinutes) {
+
+        log.info("检测异常下载行为: userId={}, clientIp={}, timeWindow={}分钟", userId, clientIp, timeWindowMinutes);
+
+        try {
+            boolean isAbnormal = projectDownloadService.detectAbnormalDownloadBehavior(userId, clientIp, timeWindowMinutes);
+
+            Map<String, Object> result = Map.of(
+                    "isAbnormal", isAbnormal,
+                    "userId", userId != null ? userId : "N/A",
+                    "clientIp", clientIp != null ? clientIp : "N/A",
+                    "timeWindowMinutes", timeWindowMinutes,
+                    "timestamp", LocalDateTime.now().format(DateTimeFormatter.ISO_LOCAL_DATE_TIME)
+            );
+
+            return success(result);
+
+        } catch (Exception e) {
+            log.error("检测异常下载行为失败", e);
+            return error("检测异常下载行为失败");
         }
     }
 }
