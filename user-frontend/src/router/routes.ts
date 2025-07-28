@@ -148,7 +148,7 @@ export const userRoutes: RouteRecordRaw[] = [
       {
         path: 'project/upload',
         name: 'ProjectUpload',
-        component: () => import('@/views/project/ProjectUploadView.vue'),
+        component: () => import('@/views/project/ProjectUploadIntegratedView.vue'),
         meta: {
           title: '上传项目',
           icon: 'Upload',

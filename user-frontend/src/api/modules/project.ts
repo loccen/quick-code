@@ -105,9 +105,10 @@ export const projectFileApi = {
    * 上传项目文件
    */
   uploadFile(
-    projectId: number, 
-    file: File, 
-    options: ProjectFileUploadRequest
+    projectId: number,
+    file: File,
+    options: ProjectFileUploadRequest,
+    onProgress?: (progress: number) => void
   ): Promise<ApiResponse<ProjectFileUploadResponse>> {
     const formData = new FormData()
     formData.append('file', file)
@@ -122,7 +123,13 @@ export const projectFileApi = {
     return request.post(`/upload/project/${projectId}`, formData, {
       headers: {
         'Content-Type': 'multipart/form-data'
-      }
+      },
+      onUploadProgress: onProgress ? (progressEvent) => {
+        if (progressEvent.total) {
+          const progress = Math.round((progressEvent.loaded * 100) / progressEvent.total)
+          onProgress(progress)
+        }
+      } : undefined
     })
   },
 

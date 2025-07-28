@@ -51,9 +51,9 @@
     <div class="selected-techs">
       <div class="selected-header">
         <span class="selected-title">已选择技术栈 ({{ selectedTechs.length }}/{{ maxTechs }})</span>
-        <el-button 
+        <el-button
           v-if="selectedTechs.length > 0"
-          type="text" 
+          link
           size="small"
           @click="clearAll"
         >
@@ -107,12 +107,7 @@ import { ElMessage } from 'element-plus'
 import {
   Check,
   Plus,
-  InfoFilled,
-  Monitor,
-  Setting,
-  Coin,
-  Iphone,
-  Tools
+  InfoFilled
 } from '@element-plus/icons-vue'
 
 // Props

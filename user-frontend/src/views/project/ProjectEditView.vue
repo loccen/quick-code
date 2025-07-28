@@ -20,10 +20,11 @@
 
     <!-- 编辑表单 -->
     <div v-else-if="projectData" class="edit-content">
-      <ProjectForm
-        v-model="projectData"
-        :is-edit="true"
-        @submit="handleSubmit"
+      <ProjectUploadIntegrated
+        :is-edit-mode="true"
+        :project-id="projectId"
+        :initial-data="projectData"
+        @submit-success="handleSubmitSuccess"
         @cancel="handleCancel"
       />
     </div>
@@ -50,7 +51,7 @@ import { ref, computed, onMounted } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { ElMessage } from 'element-plus'
 import { Edit } from '@element-plus/icons-vue'
-import ProjectForm from '@/components/project/ProjectForm.vue'
+import ProjectUploadIntegrated from '@/components/project/ProjectUploadIntegrated.vue'
 import { projectApi } from '@/api/modules/project'
 import type { ProjectUploadRequest } from '@/types/project'
 
@@ -97,21 +98,10 @@ const loadProject = async () => {
   }
 }
 
-// 提交更新
-const handleSubmit = async (data: ProjectUploadRequest) => {
-  try {
-    const response = await projectApi.updateProject(projectId.value, data)
-    if (response && response.code === 200) {
-      ElMessage.success('项目更新成功')
-      router.push('/user/my-projects')
-    } else {
-      throw new Error(response?.message || '更新项目失败')
-    }
-  } catch (error: unknown) {
-    console.error('更新项目失败:', error)
-    const errorMessage = error instanceof Error ? error.message : '更新失败'
-    ElMessage.error(errorMessage)
-  }
+// 处理提交成功
+const handleSubmitSuccess = (updatedProjectId: number) => {
+  console.log('项目更新成功:', updatedProjectId)
+  router.push('/user/my-projects')
 }
 
 // 取消编辑

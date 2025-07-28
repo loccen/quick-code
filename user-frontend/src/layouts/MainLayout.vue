@@ -56,7 +56,7 @@
         <div class="header-left">
           <!-- 侧边栏切换按钮 -->
           <el-button
-            type="text"
+            link
             class="sidebar-toggle"
             @click="appStore.toggleSidebar"
           >
@@ -79,7 +79,7 @@
         <div class="header-right">
           <!-- 主题切换 -->
           <el-button
-            type="text"
+            link
             class="theme-toggle"
             @click="toggleTheme"
           >
@@ -159,7 +159,7 @@
 
         <!-- 标签页操作菜单 -->
         <el-dropdown class="tabs-actions" @command="handleTabsCommand">
-          <el-button type="text" size="small">
+          <el-button link size="small">
             <el-icon><MoreFilled /></el-icon>
           </el-button>
           <template #dropdown>

@@ -3,11 +3,11 @@
     <!-- 价格类型选择 -->
     <div class="price-type-selector">
       <el-radio-group v-model="priceType" @change="handlePriceTypeChange">
-        <el-radio-button label="free">
+        <el-radio-button value="free">
           <el-icon><Present /></el-icon>
           免费项目
         </el-radio-button>
-        <el-radio-button label="paid">
+        <el-radio-button value="paid">
           <el-icon><Money /></el-icon>
           付费项目
         </el-radio-button>

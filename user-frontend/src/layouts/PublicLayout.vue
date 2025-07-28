@@ -93,12 +93,16 @@
 
     <!-- 底部 -->
     <Footer />
+
+    <!-- 全局上传进度悬浮组件 -->
+    <UploadProgressFloat />
   </div>
 </template>
 
 <script setup lang="ts">
 import Footer from '@/components/Footer.vue'
 import PageBackground from '@/components/common/PageBackground.vue'
+import UploadProgressFloat from '@/components/upload/UploadProgressFloat.vue'
 import { useUserStore } from '@/stores/user'
 import { generateLoginUrl, generateRegisterUrl } from '@/utils/redirect'
 import { ArrowDown, FolderOpened, ShoppingCart, SwitchButton, Upload, User } from '@element-plus/icons-vue'
