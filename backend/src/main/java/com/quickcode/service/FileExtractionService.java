@@ -49,11 +49,37 @@ public interface FileExtractionService {
 
     /**
      * 清理解压文件
-     * 
+     *
      * @param extractedPath 解压后的路径
      * @return 是否清理成功
      */
     boolean cleanupExtractedFiles(String extractedPath);
+
+    /**
+     * 验证压缩文件完整性
+     *
+     * @param projectFile 项目文件
+     * @return 验证结果
+     */
+    ValidationResult validateArchiveIntegrity(ProjectFile projectFile);
+
+    /**
+     * 预检查解压操作
+     *
+     * @param projectFile 项目文件
+     * @return 预检查结果
+     */
+    PreExtractionCheck preCheckExtraction(ProjectFile projectFile);
+
+    /**
+     * 安全解压文件
+     *
+     * @param projectFile 项目文件
+     * @param maxFiles 最大文件数量
+     * @param maxSize 最大解压大小
+     * @return 解压结果
+     */
+    ExtractionResult safeExtractProjectFile(ProjectFile projectFile, int maxFiles, long maxSize);
 
     /**
      * 解压结果
@@ -200,5 +226,62 @@ public interface FileExtractionService {
 
         public String getCode() { return code; }
         public String getDescription() { return description; }
+    }
+
+    /**
+     * 压缩文件验证结果
+     */
+    class ValidationResult {
+        private final boolean isValid;
+        private final String message;
+        private final List<String> issues;
+        private final long actualSize;
+        private final String checksum;
+
+        public ValidationResult(boolean isValid, String message, List<String> issues,
+                              long actualSize, String checksum) {
+            this.isValid = isValid;
+            this.message = message;
+            this.issues = issues;
+            this.actualSize = actualSize;
+            this.checksum = checksum;
+        }
+
+        // Getters
+        public boolean isValid() { return isValid; }
+        public String getMessage() { return message; }
+        public List<String> getIssues() { return issues; }
+        public long getActualSize() { return actualSize; }
+        public String getChecksum() { return checksum; }
+    }
+
+    /**
+     * 解压预检查结果
+     */
+    class PreExtractionCheck {
+        private final boolean canExtract;
+        private final String reason;
+        private final long estimatedSize;
+        private final int estimatedFileCount;
+        private final List<String> warnings;
+        private final List<String> securityIssues;
+
+        public PreExtractionCheck(boolean canExtract, String reason, long estimatedSize,
+                                int estimatedFileCount, List<String> warnings, List<String> securityIssues) {
+            this.canExtract = canExtract;
+            this.reason = reason;
+            this.estimatedSize = estimatedSize;
+            this.estimatedFileCount = estimatedFileCount;
+            this.warnings = warnings;
+            this.securityIssues = securityIssues;
+        }
+
+        // Getters
+        public boolean canExtract() { return canExtract; }
+        public String getReason() { return reason; }
+        public long getEstimatedSize() { return estimatedSize; }
+        public int getEstimatedFileCount() { return estimatedFileCount; }
+        public List<String> getWarnings() { return warnings; }
+        public List<String> getSecurityIssues() { return securityIssues; }
     }
 }
