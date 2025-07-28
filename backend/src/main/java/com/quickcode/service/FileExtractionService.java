@@ -82,6 +82,38 @@ public interface FileExtractionService {
     ExtractionResult safeExtractProjectFile(ProjectFile projectFile, int maxFiles, long maxSize);
 
     /**
+     * 执行全面的项目质量评估
+     *
+     * @param extractedPath 解压后的路径
+     * @return 质量评估结果
+     */
+    QualityAssessmentResult performQualityAssessment(String extractedPath);
+
+    /**
+     * 检查代码质量
+     *
+     * @param extractedPath 解压后的路径
+     * @return 代码质量检查结果
+     */
+    CodeQualityCheck checkCodeQuality(String extractedPath);
+
+    /**
+     * 检查文档完整性
+     *
+     * @param extractedPath 解压后的路径
+     * @return 文档检查结果
+     */
+    DocumentationCheck checkDocumentation(String extractedPath);
+
+    /**
+     * 检查项目配置文件
+     *
+     * @param extractedPath 解压后的路径
+     * @return 配置检查结果
+     */
+    ConfigurationCheck checkConfiguration(String extractedPath);
+
+    /**
      * 解压结果
      */
     class ExtractionResult {
@@ -283,5 +315,158 @@ public interface FileExtractionService {
         public int getEstimatedFileCount() { return estimatedFileCount; }
         public List<String> getWarnings() { return warnings; }
         public List<String> getSecurityIssues() { return securityIssues; }
+    }
+
+    /**
+     * 全面质量评估结果
+     */
+    class QualityAssessmentResult {
+        private final int overallScore;
+        private final String qualityLevel;
+        private final CodeQualityCheck codeQuality;
+        private final DocumentationCheck documentation;
+        private final ConfigurationCheck configuration;
+        private final ProjectIntegrityCheck integrity;
+        private final List<String> recommendations;
+        private final List<String> criticalIssues;
+
+        public QualityAssessmentResult(int overallScore, String qualityLevel,
+                                     CodeQualityCheck codeQuality, DocumentationCheck documentation,
+                                     ConfigurationCheck configuration, ProjectIntegrityCheck integrity,
+                                     List<String> recommendations, List<String> criticalIssues) {
+            this.overallScore = overallScore;
+            this.qualityLevel = qualityLevel;
+            this.codeQuality = codeQuality;
+            this.documentation = documentation;
+            this.configuration = configuration;
+            this.integrity = integrity;
+            this.recommendations = recommendations;
+            this.criticalIssues = criticalIssues;
+        }
+
+        // Getters
+        public int getOverallScore() { return overallScore; }
+        public String getQualityLevel() { return qualityLevel; }
+        public CodeQualityCheck getCodeQuality() { return codeQuality; }
+        public DocumentationCheck getDocumentation() { return documentation; }
+        public ConfigurationCheck getConfiguration() { return configuration; }
+        public ProjectIntegrityCheck getIntegrity() { return integrity; }
+        public List<String> getRecommendations() { return recommendations; }
+        public List<String> getCriticalIssues() { return criticalIssues; }
+    }
+
+    /**
+     * 代码质量检查结果
+     */
+    class CodeQualityCheck {
+        private final int codeScore;
+        private final Map<String, Integer> languageStats;
+        private final List<String> codeIssues;
+        private final List<String> bestPractices;
+        private final int complexity;
+        private final int maintainability;
+        private final boolean hasTests;
+        private final double testCoverage;
+
+        public CodeQualityCheck(int codeScore, Map<String, Integer> languageStats,
+                              List<String> codeIssues, List<String> bestPractices,
+                              int complexity, int maintainability, boolean hasTests, double testCoverage) {
+            this.codeScore = codeScore;
+            this.languageStats = languageStats;
+            this.codeIssues = codeIssues;
+            this.bestPractices = bestPractices;
+            this.complexity = complexity;
+            this.maintainability = maintainability;
+            this.hasTests = hasTests;
+            this.testCoverage = testCoverage;
+        }
+
+        // Getters
+        public int getCodeScore() { return codeScore; }
+        public Map<String, Integer> getLanguageStats() { return languageStats; }
+        public List<String> getCodeIssues() { return codeIssues; }
+        public List<String> getBestPractices() { return bestPractices; }
+        public int getComplexity() { return complexity; }
+        public int getMaintainability() { return maintainability; }
+        public boolean hasTests() { return hasTests; }
+        public double getTestCoverage() { return testCoverage; }
+    }
+
+    /**
+     * 文档检查结果
+     */
+    class DocumentationCheck {
+        private final int documentationScore;
+        private final boolean hasReadme;
+        private final boolean hasLicense;
+        private final boolean hasChangelog;
+        private final boolean hasContributing;
+        private final boolean hasApiDocs;
+        private final List<String> missingDocs;
+        private final List<String> documentationIssues;
+        private final String readmeQuality;
+
+        public DocumentationCheck(int documentationScore, boolean hasReadme, boolean hasLicense,
+                                boolean hasChangelog, boolean hasContributing, boolean hasApiDocs,
+                                List<String> missingDocs, List<String> documentationIssues, String readmeQuality) {
+            this.documentationScore = documentationScore;
+            this.hasReadme = hasReadme;
+            this.hasLicense = hasLicense;
+            this.hasChangelog = hasChangelog;
+            this.hasContributing = hasContributing;
+            this.hasApiDocs = hasApiDocs;
+            this.missingDocs = missingDocs;
+            this.documentationIssues = documentationIssues;
+            this.readmeQuality = readmeQuality;
+        }
+
+        // Getters
+        public int getDocumentationScore() { return documentationScore; }
+        public boolean hasReadme() { return hasReadme; }
+        public boolean hasLicense() { return hasLicense; }
+        public boolean hasChangelog() { return hasChangelog; }
+        public boolean hasContributing() { return hasContributing; }
+        public boolean hasApiDocs() { return hasApiDocs; }
+        public List<String> getMissingDocs() { return missingDocs; }
+        public List<String> getDocumentationIssues() { return documentationIssues; }
+        public String getReadmeQuality() { return readmeQuality; }
+    }
+
+    /**
+     * 配置检查结果
+     */
+    class ConfigurationCheck {
+        private final int configScore;
+        private final Map<String, Boolean> configFiles;
+        private final List<String> configIssues;
+        private final boolean hasValidBuildConfig;
+        private final boolean hasDependencyManagement;
+        private final boolean hasEnvironmentConfig;
+        private final List<String> securityConfigIssues;
+        private final String buildTool;
+
+        public ConfigurationCheck(int configScore, Map<String, Boolean> configFiles,
+                                List<String> configIssues, boolean hasValidBuildConfig,
+                                boolean hasDependencyManagement, boolean hasEnvironmentConfig,
+                                List<String> securityConfigIssues, String buildTool) {
+            this.configScore = configScore;
+            this.configFiles = configFiles;
+            this.configIssues = configIssues;
+            this.hasValidBuildConfig = hasValidBuildConfig;
+            this.hasDependencyManagement = hasDependencyManagement;
+            this.hasEnvironmentConfig = hasEnvironmentConfig;
+            this.securityConfigIssues = securityConfigIssues;
+            this.buildTool = buildTool;
+        }
+
+        // Getters
+        public int getConfigScore() { return configScore; }
+        public Map<String, Boolean> getConfigFiles() { return configFiles; }
+        public List<String> getConfigIssues() { return configIssues; }
+        public boolean hasValidBuildConfig() { return hasValidBuildConfig; }
+        public boolean hasDependencyManagement() { return hasDependencyManagement; }
+        public boolean hasEnvironmentConfig() { return hasEnvironmentConfig; }
+        public List<String> getSecurityConfigIssues() { return securityConfigIssues; }
+        public String getBuildTool() { return buildTool; }
     }
 }

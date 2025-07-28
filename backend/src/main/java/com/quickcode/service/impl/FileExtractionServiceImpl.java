@@ -15,6 +15,7 @@ import java.security.MessageDigest;
 import java.util.*;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicReference;
+import java.util.stream.Collectors;
 import java.util.stream.Stream;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipInputStream;
@@ -1048,5 +1049,902 @@ public class FileExtractionServiceImpl implements FileExtractionService {
         public List<String> getSecurityIssues() { return securityIssues; }
         public boolean hasSecurityIssues() { return !securityIssues.isEmpty(); }
         public boolean isCritical() { return isCritical; }
+    }
+
+    @Override
+    public QualityAssessmentResult performQualityAssessment(String extractedPath) {
+        log.info("开始执行全面项目质量评估: path={}", extractedPath);
+
+        try {
+            // 1. 代码质量检查
+            CodeQualityCheck codeQuality = checkCodeQuality(extractedPath);
+
+            // 2. 文档检查
+            DocumentationCheck documentation = checkDocumentation(extractedPath);
+
+            // 3. 配置检查
+            ConfigurationCheck configuration = checkConfiguration(extractedPath);
+
+            // 4. 项目完整性检查
+            ProjectIntegrityCheck integrity = checkProjectIntegrity(extractedPath);
+
+            // 5. 计算综合评分
+            int overallScore = calculateOverallScore(codeQuality, documentation, configuration, integrity);
+
+            // 6. 确定质量等级
+            String qualityLevel = determineQualityLevel(overallScore);
+
+            // 7. 生成建议和关键问题
+            List<String> recommendations = generateRecommendations(codeQuality, documentation, configuration, integrity);
+            List<String> criticalIssues = identifyCriticalIssues(codeQuality, documentation, configuration, integrity);
+
+            return new QualityAssessmentResult(overallScore, qualityLevel, codeQuality,
+                documentation, configuration, integrity, recommendations, criticalIssues);
+
+        } catch (Exception e) {
+            log.error("执行项目质量评估时发生异常: path={}", extractedPath, e);
+            // 返回默认的低质量评估结果
+            return createDefaultQualityAssessment(e.getMessage());
+        }
+    }
+
+    @Override
+    public CodeQualityCheck checkCodeQuality(String extractedPath) {
+        log.info("开始检查代码质量: path={}", extractedPath);
+
+        try {
+            Path rootPath = Paths.get(extractedPath);
+            Map<String, Integer> languageStats = new HashMap<>();
+            List<String> codeIssues = new ArrayList<>();
+            List<String> bestPractices = new ArrayList<>();
+            int codeScore = 100;
+
+            // 1. 统计编程语言
+            analyzeLanguageDistribution(rootPath, languageStats);
+
+            // 2. 检查代码结构
+            if (!hasGoodCodeStructure(rootPath)) {
+                codeIssues.add("代码结构不规范");
+                codeScore -= 15;
+            }
+
+            // 3. 检查命名规范
+            if (!hasGoodNamingConventions(rootPath)) {
+                codeIssues.add("命名规范不一致");
+                codeScore -= 10;
+            }
+
+            // 4. 检查代码复杂度
+            int complexity = calculateCodeComplexity(rootPath);
+            if (complexity > 80) {
+                codeIssues.add("代码复杂度过高");
+                codeScore -= 20;
+            }
+
+            // 5. 检查可维护性
+            int maintainability = calculateMaintainability(rootPath);
+            if (maintainability < 60) {
+                codeIssues.add("代码可维护性较低");
+                codeScore -= 15;
+            }
+
+            // 6. 检查测试覆盖率
+            boolean hasTests = hasTestFiles(rootPath);
+            double testCoverage = estimateTestCoverage(rootPath);
+
+            if (!hasTests) {
+                codeIssues.add("缺少测试文件");
+                codeScore -= 25;
+            } else if (testCoverage < 50) {
+                codeIssues.add("测试覆盖率较低");
+                codeScore -= 15;
+            }
+
+            // 7. 检查最佳实践
+            checkBestPractices(rootPath, bestPractices);
+
+            codeScore = Math.max(0, codeScore);
+
+            return new CodeQualityCheck(codeScore, languageStats, codeIssues, bestPractices,
+                complexity, maintainability, hasTests, testCoverage);
+
+        } catch (Exception e) {
+            log.error("检查代码质量时发生异常: path={}", extractedPath, e);
+            return new CodeQualityCheck(0, new HashMap<>(),
+                Arrays.asList("代码质量检查失败: " + e.getMessage()),
+                new ArrayList<>(), 100, 0, false, 0.0);
+        }
+    }
+
+    @Override
+    public DocumentationCheck checkDocumentation(String extractedPath) {
+        log.info("开始检查文档完整性: path={}", extractedPath);
+
+        try {
+            Path rootPath = Paths.get(extractedPath);
+            List<String> missingDocs = new ArrayList<>();
+            List<String> documentationIssues = new ArrayList<>();
+            int documentationScore = 100;
+
+            // 1. 检查基本文档文件
+            boolean hasReadme = hasReadmeFile(rootPath);
+            boolean hasLicense = hasLicenseFile(rootPath);
+            boolean hasChangelog = hasChangelogFile(rootPath);
+            boolean hasContributing = hasContributingFile(rootPath);
+            boolean hasApiDocs = hasApiDocumentation(rootPath);
+
+            if (!hasReadme) {
+                missingDocs.add("README文件");
+                documentationScore -= 30;
+            }
+
+            if (!hasLicense) {
+                missingDocs.add("LICENSE文件");
+                documentationScore -= 15;
+            }
+
+            if (!hasChangelog) {
+                missingDocs.add("CHANGELOG文件");
+                documentationScore -= 10;
+            }
+
+            if (!hasContributing) {
+                missingDocs.add("CONTRIBUTING文件");
+                documentationScore -= 10;
+            }
+
+            if (!hasApiDocs) {
+                missingDocs.add("API文档");
+                documentationScore -= 15;
+            }
+
+            // 2. 评估README质量
+            String readmeQuality = evaluateReadmeQuality(rootPath);
+            if ("POOR".equals(readmeQuality)) {
+                documentationIssues.add("README内容质量较低");
+                documentationScore -= 20;
+            } else if ("FAIR".equals(readmeQuality)) {
+                documentationIssues.add("README内容可以改进");
+                documentationScore -= 10;
+            }
+
+            // 3. 检查文档一致性
+            if (!hasConsistentDocumentation(rootPath)) {
+                documentationIssues.add("文档内容不一致");
+                documentationScore -= 10;
+            }
+
+            documentationScore = Math.max(0, documentationScore);
+
+            return new DocumentationCheck(documentationScore, hasReadme, hasLicense,
+                hasChangelog, hasContributing, hasApiDocs, missingDocs,
+                documentationIssues, readmeQuality);
+
+        } catch (Exception e) {
+            log.error("检查文档完整性时发生异常: path={}", extractedPath, e);
+            return new DocumentationCheck(0, false, false, false, false, false,
+                Arrays.asList("文档检查失败"), Arrays.asList(e.getMessage()), "UNKNOWN");
+        }
+    }
+
+    @Override
+    public ConfigurationCheck checkConfiguration(String extractedPath) {
+        log.info("开始检查项目配置: path={}", extractedPath);
+
+        try {
+            Path rootPath = Paths.get(extractedPath);
+            Map<String, Boolean> configFiles = new HashMap<>();
+            List<String> configIssues = new ArrayList<>();
+            List<String> securityConfigIssues = new ArrayList<>();
+            int configScore = 100;
+
+            // 1. 检查构建配置文件
+            boolean hasValidBuildConfig = false;
+            String buildTool = "UNKNOWN";
+
+            // Maven
+            if (Files.exists(rootPath.resolve("pom.xml"))) {
+                configFiles.put("pom.xml", true);
+                hasValidBuildConfig = true;
+                buildTool = "Maven";
+            }
+
+            // Gradle
+            if (Files.exists(rootPath.resolve("build.gradle")) || Files.exists(rootPath.resolve("build.gradle.kts"))) {
+                configFiles.put("build.gradle", true);
+                hasValidBuildConfig = true;
+                buildTool = "Gradle";
+            }
+
+            // NPM
+            if (Files.exists(rootPath.resolve("package.json"))) {
+                configFiles.put("package.json", true);
+                hasValidBuildConfig = true;
+                buildTool = "NPM";
+            }
+
+            // 其他构建工具
+            if (Files.exists(rootPath.resolve("Makefile"))) {
+                configFiles.put("Makefile", true);
+                if (!hasValidBuildConfig) {
+                    hasValidBuildConfig = true;
+                    buildTool = "Make";
+                }
+            }
+
+            if (!hasValidBuildConfig) {
+                configIssues.add("缺少构建配置文件");
+                configScore -= 30;
+            }
+
+            // 2. 检查依赖管理
+            boolean hasDependencyManagement = checkDependencyManagement(rootPath, buildTool);
+            if (!hasDependencyManagement) {
+                configIssues.add("依赖管理配置不完整");
+                configScore -= 20;
+            }
+
+            // 3. 检查环境配置
+            boolean hasEnvironmentConfig = checkEnvironmentConfig(rootPath);
+            configFiles.put("environment_config", hasEnvironmentConfig);
+            if (!hasEnvironmentConfig) {
+                configIssues.add("缺少环境配置文件");
+                configScore -= 15;
+            }
+
+            // 4. 检查安全配置
+            checkSecurityConfiguration(rootPath, securityConfigIssues);
+            if (!securityConfigIssues.isEmpty()) {
+                configScore -= securityConfigIssues.size() * 10;
+            }
+
+            // 5. 检查其他重要配置文件
+            checkOtherConfigFiles(rootPath, configFiles, configIssues);
+
+            configScore = Math.max(0, configScore);
+
+            return new ConfigurationCheck(configScore, configFiles, configIssues,
+                hasValidBuildConfig, hasDependencyManagement, hasEnvironmentConfig,
+                securityConfigIssues, buildTool);
+
+        } catch (Exception e) {
+            log.error("检查项目配置时发生异常: path={}", extractedPath, e);
+            return new ConfigurationCheck(0, new HashMap<>(),
+                Arrays.asList("配置检查失败: " + e.getMessage()),
+                false, false, false, Arrays.asList("检查异常"), "UNKNOWN");
+        }
+    }
+
+    // ==================== 质量评估辅助方法 ====================
+
+    /**
+     * 计算综合评分
+     */
+    private int calculateOverallScore(CodeQualityCheck codeQuality, DocumentationCheck documentation,
+                                    ConfigurationCheck configuration, ProjectIntegrityCheck integrity) {
+        // 权重分配：代码质量40%，文档20%，配置20%，完整性20%
+        double score = codeQuality.getCodeScore() * 0.4 +
+                      documentation.getDocumentationScore() * 0.2 +
+                      configuration.getConfigScore() * 0.2 +
+                      integrity.getQualityScore() * 0.2;
+
+        return (int) Math.round(score);
+    }
+
+    /**
+     * 确定质量等级
+     */
+    private String determineQualityLevel(int overallScore) {
+        if (overallScore >= 90) {
+            return "EXCELLENT";
+        } else if (overallScore >= 80) {
+            return "GOOD";
+        } else if (overallScore >= 70) {
+            return "FAIR";
+        } else if (overallScore >= 60) {
+            return "POOR";
+        } else {
+            return "VERY_POOR";
+        }
+    }
+
+    /**
+     * 生成改进建议
+     */
+    private List<String> generateRecommendations(CodeQualityCheck codeQuality, DocumentationCheck documentation,
+                                               ConfigurationCheck configuration, ProjectIntegrityCheck integrity) {
+        List<String> recommendations = new ArrayList<>();
+
+        // 代码质量建议
+        if (codeQuality.getCodeScore() < 80) {
+            recommendations.add("改进代码结构和命名规范");
+        }
+        if (!codeQuality.hasTests()) {
+            recommendations.add("添加单元测试和集成测试");
+        }
+        if (codeQuality.getComplexity() > 70) {
+            recommendations.add("降低代码复杂度，拆分大型函数和类");
+        }
+
+        // 文档建议
+        if (!documentation.hasReadme()) {
+            recommendations.add("添加详细的README文件");
+        }
+        if (!documentation.hasLicense()) {
+            recommendations.add("添加开源许可证文件");
+        }
+        if (documentation.getDocumentationScore() < 70) {
+            recommendations.add("完善项目文档和API文档");
+        }
+
+        // 配置建议
+        if (!configuration.hasValidBuildConfig()) {
+            recommendations.add("添加标准的构建配置文件");
+        }
+        if (!configuration.hasDependencyManagement()) {
+            recommendations.add("完善依赖管理配置");
+        }
+        if (!configuration.getSecurityConfigIssues().isEmpty()) {
+            recommendations.add("修复安全配置问题");
+        }
+
+        // 完整性建议
+        if (integrity.getQualityScore() < 80) {
+            recommendations.add("完善项目结构和基础文件");
+        }
+
+        return recommendations;
+    }
+
+    /**
+     * 识别关键问题
+     */
+    private List<String> identifyCriticalIssues(CodeQualityCheck codeQuality, DocumentationCheck documentation,
+                                               ConfigurationCheck configuration, ProjectIntegrityCheck integrity) {
+        List<String> criticalIssues = new ArrayList<>();
+
+        // 代码关键问题
+        if (codeQuality.getCodeScore() < 50) {
+            criticalIssues.add("代码质量严重不达标");
+        }
+        if (codeQuality.getComplexity() > 90) {
+            criticalIssues.add("代码复杂度过高，难以维护");
+        }
+
+        // 安全关键问题
+        if (!configuration.getSecurityConfigIssues().isEmpty()) {
+            criticalIssues.addAll(configuration.getSecurityConfigIssues());
+        }
+
+        // 构建关键问题
+        if (!configuration.hasValidBuildConfig()) {
+            criticalIssues.add("缺少构建配置，无法正常构建项目");
+        }
+
+        return criticalIssues;
+    }
+
+    /**
+     * 创建默认质量评估结果
+     */
+    private QualityAssessmentResult createDefaultQualityAssessment(String errorMessage) {
+        CodeQualityCheck codeQuality = new CodeQualityCheck(0, new HashMap<>(),
+            Arrays.asList("代码质量检查失败"), new ArrayList<>(), 100, 0, false, 0.0);
+
+        DocumentationCheck documentation = new DocumentationCheck(0, false, false, false, false, false,
+            Arrays.asList("文档检查失败"), Arrays.asList(errorMessage), "UNKNOWN");
+
+        ConfigurationCheck configuration = new ConfigurationCheck(0, new HashMap<>(),
+            Arrays.asList("配置检查失败"), false, false, false, Arrays.asList(errorMessage), "UNKNOWN");
+
+        ProjectIntegrityCheck integrity = new ProjectIntegrityCheck(false,
+            Arrays.asList("完整性检查失败"), Arrays.asList(errorMessage), 0);
+
+        return new QualityAssessmentResult(0, "VERY_POOR", codeQuality, documentation,
+            configuration, integrity, Arrays.asList("修复系统错误后重新评估"),
+            Arrays.asList("系统错误: " + errorMessage));
+    }
+
+    /**
+     * 分析编程语言分布
+     */
+    private void analyzeLanguageDistribution(Path rootPath, Map<String, Integer> languageStats) {
+        try (Stream<Path> paths = Files.walk(rootPath)) {
+            paths.filter(Files::isRegularFile)
+                 .forEach(path -> {
+                     String fileName = path.getFileName().toString().toLowerCase();
+                     String language = detectLanguage(fileName);
+                     if (language != null) {
+                         languageStats.merge(language, 1, Integer::sum);
+                     }
+                 });
+        } catch (IOException e) {
+            log.warn("分析编程语言分布失败", e);
+        }
+    }
+
+    /**
+     * 检测编程语言
+     */
+    private String detectLanguage(String fileName) {
+        if (fileName.endsWith(".java")) return "Java";
+        if (fileName.endsWith(".js") || fileName.endsWith(".ts")) return "JavaScript/TypeScript";
+        if (fileName.endsWith(".py")) return "Python";
+        if (fileName.endsWith(".cpp") || fileName.endsWith(".c") || fileName.endsWith(".h")) return "C/C++";
+        if (fileName.endsWith(".cs")) return "C#";
+        if (fileName.endsWith(".php")) return "PHP";
+        if (fileName.endsWith(".rb")) return "Ruby";
+        if (fileName.endsWith(".go")) return "Go";
+        if (fileName.endsWith(".rs")) return "Rust";
+        if (fileName.endsWith(".kt")) return "Kotlin";
+        if (fileName.endsWith(".swift")) return "Swift";
+        if (fileName.endsWith(".html") || fileName.endsWith(".css")) return "Web";
+        if (fileName.endsWith(".sql")) return "SQL";
+        if (fileName.endsWith(".sh") || fileName.endsWith(".bash")) return "Shell";
+        return null;
+    }
+
+    /**
+     * 检查代码结构
+     */
+    private boolean hasGoodCodeStructure(Path rootPath) {
+        try {
+            // 检查是否有合理的目录结构
+            boolean hasSourceDir = Files.exists(rootPath.resolve("src")) ||
+                                  Files.exists(rootPath.resolve("lib")) ||
+                                  Files.exists(rootPath.resolve("app"));
+
+            // 检查文件组织
+            long totalFiles = Files.walk(rootPath)
+                .filter(Files::isRegularFile)
+                .count();
+
+            long rootLevelFiles = Files.list(rootPath)
+                .filter(Files::isRegularFile)
+                .count();
+
+            // 如果根目录文件过多，认为结构不好
+            return hasSourceDir && (rootLevelFiles < totalFiles * 0.3);
+
+        } catch (IOException e) {
+            return false;
+        }
+    }
+
+    /**
+     * 检查命名规范
+     */
+    private boolean hasGoodNamingConventions(Path rootPath) {
+        try (Stream<Path> paths = Files.walk(rootPath)) {
+            long totalFiles = paths.filter(Files::isRegularFile).count();
+
+            try (Stream<Path> paths2 = Files.walk(rootPath)) {
+                long goodNamedFiles = paths2.filter(Files::isRegularFile)
+                    .filter(this::hasGoodFileName)
+                    .count();
+
+                return goodNamedFiles > totalFiles * 0.8; // 80%以上文件命名规范
+            }
+        } catch (IOException e) {
+            return false;
+        }
+    }
+
+    /**
+     * 检查文件名是否规范
+     */
+    private boolean hasGoodFileName(Path filePath) {
+        String fileName = filePath.getFileName().toString();
+
+        // 检查是否包含特殊字符
+        if (fileName.matches(".*[\\s\\u4e00-\\u9fa5].*")) {
+            return false; // 包含空格或中文
+        }
+
+        // 检查命名风格一致性
+        boolean isCamelCase = fileName.matches("^[a-z][a-zA-Z0-9]*\\.[a-z]+$");
+        boolean isSnakeCase = fileName.matches("^[a-z][a-z0-9_]*\\.[a-z]+$");
+        boolean isKebabCase = fileName.matches("^[a-z][a-z0-9-]*\\.[a-z]+$");
+
+        return isCamelCase || isSnakeCase || isKebabCase;
+    }
+
+    /**
+     * 计算代码复杂度
+     */
+    private int calculateCodeComplexity(Path rootPath) {
+        // 简化的复杂度计算，基于文件数量和嵌套深度
+        try (Stream<Path> paths = Files.walk(rootPath)) {
+            long fileCount = paths.filter(Files::isRegularFile).count();
+            int maxDepth = getMaxDirectoryDepth(rootPath);
+
+            // 复杂度 = 文件数量 + 目录深度 * 10
+            return (int) (fileCount + maxDepth * 10);
+
+        } catch (IOException e) {
+            return 100; // 默认高复杂度
+        }
+    }
+
+    /**
+     * 获取最大目录深度
+     */
+    private int getMaxDirectoryDepth(Path rootPath) {
+        try (Stream<Path> paths = Files.walk(rootPath)) {
+            return paths.mapToInt(path -> path.getNameCount() - rootPath.getNameCount())
+                       .max()
+                       .orElse(0);
+        } catch (IOException e) {
+            return 0;
+        }
+    }
+
+    /**
+     * 计算可维护性
+     */
+    private int calculateMaintainability(Path rootPath) {
+        int score = 100;
+
+        try {
+            // 基于文件大小分布计算可维护性
+            try (Stream<Path> paths = Files.walk(rootPath)) {
+                List<Long> fileSizes = paths.filter(Files::isRegularFile)
+                    .mapToLong(path -> {
+                        try {
+                            return Files.size(path);
+                        } catch (IOException e) {
+                            return 0;
+                        }
+                    })
+                    .boxed()
+                    .collect(Collectors.toList());
+
+                // 如果有过大的文件，降低可维护性分数
+                long largeFiles = fileSizes.stream()
+                    .filter(size -> size > 100 * 1024) // 大于100KB
+                    .count();
+
+                score -= largeFiles * 5;
+            }
+
+        } catch (IOException e) {
+            score = 50; // 默认中等可维护性
+        }
+
+        return Math.max(0, score);
+    }
+
+    /**
+     * 检查是否有测试文件
+     */
+    private boolean hasTestFiles(Path rootPath) {
+        try (Stream<Path> paths = Files.walk(rootPath)) {
+            return paths.filter(Files::isRegularFile)
+                       .anyMatch(this::isTestFile);
+        } catch (IOException e) {
+            return false;
+        }
+    }
+
+    /**
+     * 判断是否为测试文件
+     */
+    private boolean isTestFile(Path filePath) {
+        String fileName = filePath.getFileName().toString().toLowerCase();
+        String pathStr = filePath.toString().toLowerCase();
+
+        return fileName.contains("test") ||
+               fileName.contains("spec") ||
+               pathStr.contains("/test/") ||
+               pathStr.contains("/tests/") ||
+               pathStr.contains("/spec/") ||
+               pathStr.contains("__tests__");
+    }
+
+    /**
+     * 估算测试覆盖率
+     */
+    private double estimateTestCoverage(Path rootPath) {
+        try (Stream<Path> paths = Files.walk(rootPath)) {
+            long totalCodeFiles = paths.filter(Files::isRegularFile)
+                                     .filter(this::isCodeFile)
+                                     .count();
+
+            try (Stream<Path> paths2 = Files.walk(rootPath)) {
+                long testFiles = paths2.filter(Files::isRegularFile)
+                                      .filter(this::isTestFile)
+                                      .count();
+
+                if (totalCodeFiles == 0) return 0.0;
+
+                // 简化的覆盖率估算：测试文件数 / 代码文件数 * 100
+                return Math.min(100.0, (double) testFiles / totalCodeFiles * 100);
+            }
+        } catch (IOException e) {
+            return 0.0;
+        }
+    }
+
+    /**
+     * 判断是否为代码文件
+     */
+    private boolean isCodeFile(Path filePath) {
+        String fileName = filePath.getFileName().toString().toLowerCase();
+        return fileName.endsWith(".java") || fileName.endsWith(".js") || fileName.endsWith(".ts") ||
+               fileName.endsWith(".py") || fileName.endsWith(".cpp") || fileName.endsWith(".c") ||
+               fileName.endsWith(".cs") || fileName.endsWith(".php") || fileName.endsWith(".rb") ||
+               fileName.endsWith(".go") || fileName.endsWith(".rs") || fileName.endsWith(".kt");
+    }
+
+    /**
+     * 检查最佳实践
+     */
+    private void checkBestPractices(Path rootPath, List<String> bestPractices) {
+        // 检查是否有版本控制
+        if (Files.exists(rootPath.resolve(".git"))) {
+            bestPractices.add("使用Git版本控制");
+        }
+
+        // 检查是否有CI配置
+        if (Files.exists(rootPath.resolve(".github/workflows")) ||
+            Files.exists(rootPath.resolve(".gitlab-ci.yml")) ||
+            Files.exists(rootPath.resolve("Jenkinsfile"))) {
+            bestPractices.add("配置了持续集成");
+        }
+
+        // 检查是否有代码格式化配置
+        if (Files.exists(rootPath.resolve(".editorconfig")) ||
+            Files.exists(rootPath.resolve(".prettierrc")) ||
+            Files.exists(rootPath.resolve(".eslintrc"))) {
+            bestPractices.add("配置了代码格式化");
+        }
+
+        // 检查是否有依赖锁定文件
+        if (Files.exists(rootPath.resolve("package-lock.json")) ||
+            Files.exists(rootPath.resolve("yarn.lock")) ||
+            Files.exists(rootPath.resolve("Pipfile.lock"))) {
+            bestPractices.add("锁定了依赖版本");
+        }
+    }
+
+    /**
+     * 检查是否有变更日志文件
+     */
+    private boolean hasChangelogFile(Path rootPath) {
+        return Files.exists(rootPath.resolve("CHANGELOG.md")) ||
+               Files.exists(rootPath.resolve("CHANGELOG.txt")) ||
+               Files.exists(rootPath.resolve("HISTORY.md")) ||
+               Files.exists(rootPath.resolve("RELEASES.md"));
+    }
+
+    /**
+     * 检查是否有贡献指南文件
+     */
+    private boolean hasContributingFile(Path rootPath) {
+        return Files.exists(rootPath.resolve("CONTRIBUTING.md")) ||
+               Files.exists(rootPath.resolve("CONTRIBUTING.txt")) ||
+               Files.exists(rootPath.resolve(".github/CONTRIBUTING.md"));
+    }
+
+    /**
+     * 检查是否有API文档
+     */
+    private boolean hasApiDocumentation(Path rootPath) {
+        return Files.exists(rootPath.resolve("docs")) ||
+               Files.exists(rootPath.resolve("doc")) ||
+               Files.exists(rootPath.resolve("documentation")) ||
+               Files.exists(rootPath.resolve("api-docs"));
+    }
+
+    /**
+     * 评估README质量
+     */
+    private String evaluateReadmeQuality(Path rootPath) {
+        try {
+            Path readmePath = null;
+            if (Files.exists(rootPath.resolve("README.md"))) {
+                readmePath = rootPath.resolve("README.md");
+            } else if (Files.exists(rootPath.resolve("README.txt"))) {
+                readmePath = rootPath.resolve("README.txt");
+            } else if (Files.exists(rootPath.resolve("README"))) {
+                readmePath = rootPath.resolve("README");
+            }
+
+            if (readmePath == null) {
+                return "NONE";
+            }
+
+            String content = Files.readString(readmePath);
+            int score = 0;
+
+            // 检查内容长度
+            if (content.length() > 500) score += 20;
+            if (content.length() > 1000) score += 10;
+
+            // 检查关键部分
+            if (content.toLowerCase().contains("installation")) score += 15;
+            if (content.toLowerCase().contains("usage")) score += 15;
+            if (content.toLowerCase().contains("example")) score += 10;
+            if (content.toLowerCase().contains("license")) score += 10;
+            if (content.toLowerCase().contains("contribute")) score += 10;
+            if (content.toLowerCase().contains("api")) score += 10;
+
+            // 检查格式
+            if (content.contains("#")) score += 10; // 有标题
+
+            if (score >= 80) return "EXCELLENT";
+            if (score >= 60) return "GOOD";
+            if (score >= 40) return "FAIR";
+            if (score >= 20) return "POOR";
+            return "VERY_POOR";
+
+        } catch (IOException e) {
+            return "UNKNOWN";
+        }
+    }
+
+    /**
+     * 检查文档一致性
+     */
+    private boolean hasConsistentDocumentation(Path rootPath) {
+        // 简化检查：如果有多个文档文件，检查它们是否都存在
+        int docCount = 0;
+        if (hasReadmeFile(rootPath)) docCount++;
+        if (hasLicenseFile(rootPath)) docCount++;
+        if (hasChangelogFile(rootPath)) docCount++;
+        if (hasContributingFile(rootPath)) docCount++;
+
+        // 如果有3个以上文档文件，认为文档比较完整一致
+        return docCount >= 3;
+    }
+
+    /**
+     * 检查依赖管理
+     */
+    private boolean checkDependencyManagement(Path rootPath, String buildTool) {
+        switch (buildTool) {
+            case "Maven":
+                return checkMavenDependencies(rootPath);
+            case "Gradle":
+                return checkGradleDependencies(rootPath);
+            case "NPM":
+                return checkNpmDependencies(rootPath);
+            default:
+                return false;
+        }
+    }
+
+    /**
+     * 检查Maven依赖
+     */
+    private boolean checkMavenDependencies(Path rootPath) {
+        try {
+            Path pomPath = rootPath.resolve("pom.xml");
+            if (!Files.exists(pomPath)) return false;
+
+            String content = Files.readString(pomPath);
+            return content.contains("<dependencies>") && content.contains("<dependency>");
+        } catch (IOException e) {
+            return false;
+        }
+    }
+
+    /**
+     * 检查Gradle依赖
+     */
+    private boolean checkGradleDependencies(Path rootPath) {
+        try {
+            Path gradlePath = rootPath.resolve("build.gradle");
+            if (!Files.exists(gradlePath)) {
+                gradlePath = rootPath.resolve("build.gradle.kts");
+            }
+            if (!Files.exists(gradlePath)) return false;
+
+            String content = Files.readString(gradlePath);
+            return content.contains("dependencies") &&
+                   (content.contains("implementation") || content.contains("compile"));
+        } catch (IOException e) {
+            return false;
+        }
+    }
+
+    /**
+     * 检查NPM依赖
+     */
+    private boolean checkNpmDependencies(Path rootPath) {
+        try {
+            Path packagePath = rootPath.resolve("package.json");
+            if (!Files.exists(packagePath)) return false;
+
+            String content = Files.readString(packagePath);
+            return content.contains("\"dependencies\"") || content.contains("\"devDependencies\"");
+        } catch (IOException e) {
+            return false;
+        }
+    }
+
+    /**
+     * 检查环境配置
+     */
+    private boolean checkEnvironmentConfig(Path rootPath) {
+        return Files.exists(rootPath.resolve(".env")) ||
+               Files.exists(rootPath.resolve(".env.example")) ||
+               Files.exists(rootPath.resolve("config")) ||
+               Files.exists(rootPath.resolve("application.properties")) ||
+               Files.exists(rootPath.resolve("application.yml")) ||
+               Files.exists(rootPath.resolve("application.yaml"));
+    }
+
+    /**
+     * 检查安全配置
+     */
+    private void checkSecurityConfiguration(Path rootPath, List<String> securityIssues) {
+        // 检查是否有敏感文件
+        if (Files.exists(rootPath.resolve(".env")) && !Files.exists(rootPath.resolve(".env.example"))) {
+            securityIssues.add("包含.env文件但缺少.env.example模板");
+        }
+
+        // 检查是否有.gitignore
+        if (!Files.exists(rootPath.resolve(".gitignore"))) {
+            securityIssues.add("缺少.gitignore文件");
+        } else {
+            try {
+                String gitignoreContent = Files.readString(rootPath.resolve(".gitignore"));
+                if (!gitignoreContent.contains(".env")) {
+                    securityIssues.add(".gitignore未忽略环境配置文件");
+                }
+                if (!gitignoreContent.contains("node_modules") && Files.exists(rootPath.resolve("package.json"))) {
+                    securityIssues.add(".gitignore未忽略node_modules");
+                }
+            } catch (IOException e) {
+                securityIssues.add("无法读取.gitignore文件");
+            }
+        }
+
+        // 检查是否有密钥文件
+        try (Stream<Path> paths = Files.walk(rootPath)) {
+            boolean hasKeyFiles = paths.filter(Files::isRegularFile)
+                .anyMatch(path -> {
+                    String fileName = path.getFileName().toString().toLowerCase();
+                    return fileName.contains("key") || fileName.contains("secret") ||
+                           fileName.contains("password") || fileName.endsWith(".pem") ||
+                           fileName.endsWith(".p12") || fileName.endsWith(".jks");
+                });
+
+            if (hasKeyFiles) {
+                securityIssues.add("检测到可能的密钥或证书文件");
+            }
+        } catch (IOException e) {
+            securityIssues.add("安全检查过程中发生错误");
+        }
+    }
+
+    /**
+     * 检查其他配置文件
+     */
+    private void checkOtherConfigFiles(Path rootPath, Map<String, Boolean> configFiles, List<String> configIssues) {
+        // Docker配置
+        configFiles.put("Dockerfile", Files.exists(rootPath.resolve("Dockerfile")));
+        configFiles.put("docker-compose.yml", Files.exists(rootPath.resolve("docker-compose.yml")));
+
+        // CI/CD配置
+        configFiles.put("github_actions", Files.exists(rootPath.resolve(".github/workflows")));
+        configFiles.put("gitlab_ci", Files.exists(rootPath.resolve(".gitlab-ci.yml")));
+        configFiles.put("jenkins", Files.exists(rootPath.resolve("Jenkinsfile")));
+
+        // 代码质量配置
+        configFiles.put("eslint", Files.exists(rootPath.resolve(".eslintrc")) ||
+                                 Files.exists(rootPath.resolve(".eslintrc.json")));
+        configFiles.put("prettier", Files.exists(rootPath.resolve(".prettierrc")));
+        configFiles.put("editorconfig", Files.exists(rootPath.resolve(".editorconfig")));
+
+        // 检查配置完整性
+        if (!configFiles.get("Dockerfile") && !configFiles.get("docker-compose.yml")) {
+            configIssues.add("缺少Docker配置，不利于部署");
+        }
+
+        if (!configFiles.get("github_actions") && !configFiles.get("gitlab_ci") && !configFiles.get("jenkins")) {
+            configIssues.add("缺少CI/CD配置");
+        }
     }
 }
