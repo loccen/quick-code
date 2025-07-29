@@ -55,7 +55,7 @@ const DEFAULT_OPTIONS: Required<ImageLoadOptions> = {
 function loadSingleImage(src: string, timeout: number): Promise<boolean> {
   return new Promise((resolve) => {
     const img = new Image()
-    let timeoutId: NodeJS.Timeout | null = null
+    let timeoutId: number | null = null
     
     const cleanup = () => {
       if (timeoutId) {
@@ -77,7 +77,7 @@ function loadSingleImage(src: string, timeout: number): Promise<boolean> {
     }
     
     // 设置超时
-    timeoutId = setTimeout(() => {
+    timeoutId = window.setTimeout(() => {
       cleanup()
       resolve(false)
     }, timeout)

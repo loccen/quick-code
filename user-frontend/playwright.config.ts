@@ -7,7 +7,6 @@ import { defineConfig, devices } from '@playwright/test'
  * 从环境变量读取配置
  */
 const baseURL = process.env.PLAYWRIGHT_BASE_URL || 'http://localhost:3000'
-const headless = process.env.PLAYWRIGHT_HEADLESS !== 'false'
 const workers = process.env.CI ? 1 : undefined
 
 export default defineConfig({
