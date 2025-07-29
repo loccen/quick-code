@@ -129,7 +129,7 @@
             <div class="order-header">
               <div class="order-info">
                 <span class="order-no">订单号：{{ order.orderNo }}</span>
-                <span class="order-date">{{ order.createdAt }}</span>
+                <span class="order-date">{{ formatDate(order.createdTime) }}</span>
               </div>
               <div class="order-status">
                 <el-tag :type="getStatusType(order.status)">
@@ -207,7 +207,7 @@
 <script setup lang="ts">
 import { Search, ShoppingCart, CreditCard, Clock, Check } from '@element-plus/icons-vue'
 import { ElMessage, ElMessageBox } from 'element-plus'
-import { computed, onMounted, ref } from 'vue'
+import { onMounted, ref } from 'vue'
 import { useRouter } from 'vue-router'
 import PageLayout from '@/components/common/PageLayout.vue'
 import PageHeader from '@/components/common/PageHeader.vue'
@@ -215,6 +215,7 @@ import StatsGrid from '@/components/common/StatsGrid.vue'
 import StatCard from '@/components/common/StatCard.vue'
 import ContentContainer from '@/components/common/ContentContainer.vue'
 import TabHeader from '@/components/common/TabHeader.vue'
+import { orderApi } from '@/api/modules/order'
 
 const router = useRouter()
 
@@ -236,8 +237,6 @@ const stats = ref({
   pendingOrders: 0,
   completedOrders: 0
 })
-
-const totalPages = computed(() => Math.ceil(totalElements.value / pageSize.value))
 
 /**
  * 获取订单状态类型
@@ -266,6 +265,21 @@ const getStatusText = (status: string) => {
 }
 
 /**
+ * 格式化日期
+ */
+const formatDate = (dateString: string) => {
+  if (!dateString) return ''
+  const date = new Date(dateString)
+  return date.toLocaleString('zh-CN', {
+    year: 'numeric',
+    month: '2-digit',
+    day: '2-digit',
+    hour: '2-digit',
+    minute: '2-digit'
+  })
+}
+
+/**
  * 查看项目详情
  */
 const handleViewProject = (project: any) => {
@@ -275,8 +289,34 @@ const handleViewProject = (project: any) => {
 /**
  * 支付订单
  */
-const handlePayOrder = (_order: any) => {
-  ElMessage.info('支付功能开发中...')
+const handlePayOrder = async (order: any) => {
+  try {
+    await ElMessageBox.confirm(
+      `确定要支付订单"${order.orderNo}"吗？需要消费 ${order.amount} 积分。`,
+      '确认支付',
+      {
+        type: 'warning',
+        confirmButtonText: '确认支付',
+        cancelButtonText: '取消'
+      }
+    )
+
+    const response = await orderApi.payOrder(order.orderNo, {
+      paymentMethod: 'POINTS' // 使用积分支付
+    })
+    if (response && response.code === 200) {
+      ElMessage.success('支付成功')
+      loadOrders() // 重新加载订单列表
+      loadOrderStatistics() // 重新加载统计数据
+    } else {
+      throw new Error(response?.message || '支付失败')
+    }
+  } catch (error: any) {
+    if (error !== 'cancel') {
+      console.error('支付订单失败:', error)
+      ElMessage.error(error.response?.data?.message || error.message || '支付失败')
+    }
+  }
 }
 
 /**
@@ -311,34 +351,79 @@ const handlePageChange = () => {
 }
 
 /**
+ * 加载用户订单统计数据
+ */
+const loadOrderStatistics = async () => {
+  try {
+    const response = await orderApi.getUserOrderStatistics()
+    if (response && response.code === 200 && response.data) {
+      stats.value = {
+        totalOrders: response.data.totalOrders || 0,
+        totalAmount: response.data.totalAmount || 0,
+        pendingOrders: response.data.pendingOrders || 0,
+        completedOrders: response.data.completedOrders || 0
+      }
+    }
+  } catch (error: any) {
+    console.error('加载订单统计数据失败:', error)
+    // 统计数据加载失败不显示错误消息，保持默认值0
+  }
+}
+
+/**
  * 加载订单数据
  */
 const loadOrders = async () => {
   loading.value = true
   try {
-    // 模拟API调用
-    await new Promise(resolve => setTimeout(resolve, 1000))
-
-    // 模拟数据
-    orders.value = []
-
-    totalElements.value = orders.value.length
-
-    // 更新统计数据
-    stats.value = {
-      totalOrders: 12,
-      totalAmount: 2580,
-      pendingOrders: 2,
-      completedOrders: 8
+    const params: any = {
+      page: currentPage.value - 1, // 后端页码从0开始
+      size: pageSize.value,
+      sortBy: 'createdTime',
+      sortDirection: 'DESC'
     }
-  } catch (error) {
-    ElMessage.error('加载订单数据失败')
+
+    // 添加状态筛选
+    if (activeStatus.value !== 'all') {
+      const statusMap: Record<string, string> = {
+        pending: 'PENDING',
+        paid: 'PAID',
+        cancelled: 'CANCELLED',
+        refunded: 'REFUNDED'
+      }
+      params.status = statusMap[activeStatus.value]
+    }
+
+    // 添加搜索关键词
+    if (searchKeyword.value.trim()) {
+      params.keyword = searchKeyword.value.trim()
+    }
+
+    // 添加日期范围
+    if (dateRange.value && dateRange.value.length === 2) {
+      params.startDate = dateRange.value[0].toISOString().split('T')[0]
+      params.endDate = dateRange.value[1].toISOString().split('T')[0]
+    }
+
+    const response = await orderApi.getUserPurchaseOrders(params)
+    if (response && response.code === 200 && response.data) {
+      orders.value = response.data.content || []
+      totalElements.value = response.data.total || 0
+    } else {
+      throw new Error(response?.message || '获取订单列表失败')
+    }
+  } catch (error: any) {
+    console.error('加载订单数据失败:', error)
+    ElMessage.error(error.response?.data?.message || error.message || '加载订单数据失败')
+    orders.value = []
+    totalElements.value = 0
   } finally {
     loading.value = false
   }
 }
 
 onMounted(() => {
+  loadOrderStatistics()
   loadOrders()
 })
 </script>

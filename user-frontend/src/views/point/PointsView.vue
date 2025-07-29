@@ -202,6 +202,7 @@ import StatsGrid from '@/components/common/StatsGrid.vue'
 import StatCard from '@/components/common/StatCard.vue'
 import ContentContainer from '@/components/common/ContentContainer.vue'
 import TabHeader from '@/components/common/TabHeader.vue'
+import { pointApi } from '@/api/modules/point'
 
 const router = useRouter()
 
@@ -281,8 +282,39 @@ const getStatusText = (status: string) => {
 /**
  * 充值积分
  */
-const handleRecharge = () => {
-  ElMessage.info('充值功能开发中...')
+const handleRecharge = async () => {
+  try {
+    const { value: amount } = await ElMessageBox.prompt(
+      '请输入充值金额（元）',
+      '积分充值',
+      {
+        confirmButtonText: '确定',
+        cancelButtonText: '取消',
+        inputPattern: /^\d+(\.\d{1,2})?$/,
+        inputErrorMessage: '请输入有效的金额'
+      }
+    )
+
+    if (amount) {
+      const response = await pointApi.rechargePoints({
+        amount: parseFloat(amount),
+        paymentMethod: 'ALIPAY' // 默认使用支付宝
+      })
+
+      if (response && response.code === 200) {
+        ElMessage.success('充值成功')
+        loadPointAccount() // 重新加载账户信息
+        loadTransactions() // 重新加载交易记录
+      } else {
+        throw new Error(response?.message || '充值失败')
+      }
+    }
+  } catch (error: any) {
+    if (error !== 'cancel') {
+      console.error('充值失败:', error)
+      ElMessage.error(error.response?.data?.message || error.message || '充值失败')
+    }
+  }
 }
 
 /**
@@ -295,10 +327,10 @@ const handleViewDetail = (_transaction: any) => {
 /**
  * 申请退款
  */
-const handleRequestRefund = async (_transaction: any) => {
+const handleRequestRefund = async (transaction: any) => {
   try {
     await ElMessageBox.confirm(
-      '确定要申请退款吗？',
+      `确定要申请退款 ${transaction.amount} 积分吗？`,
       '申请退款',
       {
         confirmButtonText: '确定',
@@ -306,10 +338,23 @@ const handleRequestRefund = async (_transaction: any) => {
         type: 'warning'
       }
     )
-    ElMessage.success('退款申请已提交')
-    await loadTransactions()
-  } catch {
-    // 用户取消操作
+
+    // 这里需要根据实际业务逻辑调用相应的退款API
+    // 如果是订单退款，应该调用订单退款API
+    // 如果是积分转账退款，应该调用积分退款API
+    ElMessage.info('退款功能需要根据具体业务场景实现')
+
+    // 示例：如果有通用的退款API
+    // const response = await pointApi.requestRefund(transaction.id, '用户申请退款')
+    // if (response && response.code === 200) {
+    //   ElMessage.success('退款申请已提交')
+    //   await loadTransactions()
+    // }
+  } catch (error: any) {
+    if (error !== 'cancel') {
+      console.error('申请退款失败:', error)
+      ElMessage.error(error.response?.data?.message || error.message || '申请退款失败')
+    }
   }
 }
 
@@ -345,34 +390,77 @@ const handlePageChange = () => {
 }
 
 /**
+ * 加载积分账户信息
+ */
+const loadPointAccount = async () => {
+  try {
+    const response = await pointApi.getPointAccount()
+    if (response && response.code === 200 && response.data) {
+      stats.value = {
+        currentBalance: response.data.balance || 0,
+        totalEarned: response.data.totalRecharge || 0,
+        totalSpent: response.data.totalConsumption || 0,
+        recentTransactions: 0 // 需要单独计算本月交易
+      }
+    }
+  } catch (error: any) {
+    console.error('加载积分账户信息失败:', error)
+    // 账户信息加载失败不显示错误消息，保持默认值
+  }
+}
+
+/**
  * 加载交易记录数据
  */
 const loadTransactions = async () => {
   loading.value = true
   try {
-    // 模拟API调用
-    await new Promise(resolve => setTimeout(resolve, 1000))
-    
-    // 模拟数据
-    transactions.value = []
-    
-    totalElements.value = transactions.value.length
-    
-    // 更新统计数据
-    stats.value = {
-      currentBalance: 1580,
-      totalEarned: 5000,
-      totalSpent: 3420,
-      recentTransactions: 8
+    const params: any = {
+      page: currentPage.value - 1, // 后端页码从0开始
+      size: pageSize.value,
+      sortBy: 'createdTime',
+      sortDirection: 'DESC'
     }
-  } catch (error) {
-    ElMessage.error('加载交易记录失败')
+
+    // 添加交易类型筛选
+    if (transactionType.value) {
+      params.type = transactionType.value
+    }
+
+    // 添加日期范围
+    if (dateRange.value && dateRange.value.length === 2) {
+      params.startDate = dateRange.value[0].toISOString().split('T')[0]
+      params.endDate = dateRange.value[1].toISOString().split('T')[0]
+    }
+
+    // 根据标签页筛选
+    if (activeTab.value === 'income') {
+      // 收入记录：充值、退款、奖励
+      params.type = 'RECHARGE,REFUND,REWARD'
+    } else if (activeTab.value === 'expense') {
+      // 支出记录：消费
+      params.type = 'PURCHASE'
+    }
+
+    const response = await pointApi.getPointTransactions(params)
+    if (response && response.code === 200 && response.data) {
+      transactions.value = response.data.content || []
+      totalElements.value = response.data.total || 0
+    } else {
+      throw new Error(response?.message || '获取交易记录失败')
+    }
+  } catch (error: any) {
+    console.error('加载交易记录失败:', error)
+    ElMessage.error(error.response?.data?.message || error.message || '加载交易记录失败')
+    transactions.value = []
+    totalElements.value = 0
   } finally {
     loading.value = false
   }
 }
 
 onMounted(() => {
+  loadPointAccount()
   loadTransactions()
 })
 </script>

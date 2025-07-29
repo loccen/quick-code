@@ -210,6 +210,8 @@ import StatsGrid from '@/components/common/StatsGrid.vue'
 import StatCard from '@/components/common/StatCard.vue'
 import ContentContainer from '@/components/common/ContentContainer.vue'
 import TabHeader from '@/components/common/TabHeader.vue'
+import { orderApi } from '@/api/modules/order'
+import { projectApi, projectDownloadApi } from '@/api/modules/project'
 
 const router = useRouter()
 
@@ -242,16 +244,71 @@ const handleViewProject = (project: any) => {
 /**
  * 下载项目
  */
-const handleDownload = (_project: any) => {
-  ElMessage.success('开始下载项目...')
+const handleDownload = async (project: any) => {
+  try {
+    ElMessage.info('正在准备下载...')
+
+    // 生成下载令牌
+    const tokenResponse = await projectDownloadApi.generateDownloadToken(project.id)
+    if (tokenResponse && tokenResponse.code === 200) {
+      // 直接下载项目文件
+      const blob = await projectDownloadApi.downloadProject(project.id)
+
+      // 创建下载链接
+      const url = window.URL.createObjectURL(blob)
+      const link = document.createElement('a')
+      link.href = url
+      link.download = `${project.title}.zip`
+      document.body.appendChild(link)
+      link.click()
+      document.body.removeChild(link)
+      window.URL.revokeObjectURL(url)
+
+      ElMessage.success('下载成功')
+
+      // 重新加载购买记录以更新下载次数
+      loadPurchases()
+    } else {
+      throw new Error(tokenResponse?.message || '生成下载令牌失败')
+    }
+  } catch (error: any) {
+    console.error('下载项目失败:', error)
+    ElMessage.error(error.response?.data?.message || error.message || '下载失败')
+  }
 }
 
 /**
  * 切换收藏状态
  */
-const handleToggleFavorite = (purchase: any) => {
-  purchase.isFavorite = !purchase.isFavorite
-  ElMessage.success(purchase.isFavorite ? '已添加到收藏' : '已取消收藏')
+const handleToggleFavorite = async (purchase: any) => {
+  try {
+    const project = purchase.project
+    if (purchase.isFavorite) {
+      // 取消收藏
+      const response = await projectApi.unfavoriteProject(project.id)
+      if (response && response.code === 200) {
+        purchase.isFavorite = false
+        ElMessage.success('已取消收藏')
+      } else {
+        throw new Error(response?.message || '取消收藏失败')
+      }
+    } else {
+      // 添加收藏
+      const response = await projectApi.favoriteProject(project.id)
+      if (response && response.code === 200) {
+        purchase.isFavorite = true
+        ElMessage.success('已添加到收藏')
+      } else {
+        throw new Error(response?.message || '添加收藏失败')
+      }
+    }
+
+    // 重新加载统计数据
+    loadPurchaseStatistics()
+  } catch (error: any) {
+    console.error('切换收藏状态失败:', error)
+    ElMessage.error(error.response?.data?.message || error.message || '操作失败')
+  }
 }
 
 /**
@@ -286,34 +343,94 @@ const handlePageChange = () => {
 }
 
 /**
+ * 加载购买统计数据
+ */
+const loadPurchaseStatistics = async () => {
+  try {
+    const response = await orderApi.getUserPurchaseStatistics()
+    if (response && response.code === 200 && response.data) {
+      // 使用OrderStatistics类型的字段
+      stats.value = {
+        totalPurchases: response.data.totalOrders || 0,
+        totalSpent: response.data.totalAmount || 0,
+        totalDownloads: 0, // 这个字段需要从其他API获取
+        favoriteProjects: 0 // 这个字段需要从其他API获取
+      }
+    }
+  } catch (error: any) {
+    console.error('加载购买统计数据失败:', error)
+    // 统计数据加载失败不显示错误消息，保持默认值0
+  }
+}
+
+/**
  * 加载购买记录数据
  */
 const loadPurchases = async () => {
   loading.value = true
   try {
-    // 模拟API调用
-    await new Promise(resolve => setTimeout(resolve, 1000))
-    
-    // 模拟数据
-    purchases.value = []
-    
-    totalElements.value = purchases.value.length
-    
-    // 更新统计数据
-    stats.value = {
-      totalPurchases: 15,
-      totalSpent: 4580,
-      totalDownloads: 42,
-      favoriteProjects: 8
+    const params: any = {
+      page: currentPage.value - 1, // 后端页码从0开始
+      size: pageSize.value,
+      sortBy: 'createdTime',
+      sortDirection: 'DESC'
     }
-  } catch (error) {
-    ElMessage.error('加载购买记录失败')
+
+    // 添加搜索关键词
+    if (searchKeyword.value.trim()) {
+      params.keyword = searchKeyword.value.trim()
+    }
+
+    // 添加日期范围
+    if (dateRange.value && dateRange.value.length === 2) {
+      params.startDate = dateRange.value[0].toISOString().split('T')[0]
+      params.endDate = dateRange.value[1].toISOString().split('T')[0]
+    }
+
+    // 根据标签页筛选
+    if (activeTab.value === 'recent') {
+      // 最近购买：只获取最近30天的记录
+      const thirtyDaysAgo = new Date()
+      thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30)
+      params.startDate = thirtyDaysAgo.toISOString().split('T')[0]
+    } else if (activeTab.value === 'favorites') {
+      // 收藏项目：通过收藏API获取
+      const response = await projectApi.getFavoriteProjects(params)
+      if (response && response.code === 200 && response.data) {
+        // 转换收藏项目为购买记录格式
+        purchases.value = response.data.content?.map((project: any) => ({
+          id: `fav-${project.id}`,
+          project: project,
+          purchaseDate: project.createdTime,
+          orderNo: `FAV-${project.id}`,
+          amount: project.price || 0,
+          downloadCount: 0,
+          isFavorite: true
+        })) || []
+        totalElements.value = response.data.total || 0
+      }
+      return
+    }
+
+    const response = await orderApi.getUserPurchaseOrders(params)
+    if (response && response.code === 200 && response.data) {
+      purchases.value = response.data.content || []
+      totalElements.value = response.data.total || 0
+    } else {
+      throw new Error(response?.message || '获取购买记录失败')
+    }
+  } catch (error: any) {
+    console.error('加载购买记录失败:', error)
+    ElMessage.error(error.response?.data?.message || error.message || '加载购买记录失败')
+    purchases.value = []
+    totalElements.value = 0
   } finally {
     loading.value = false
   }
 }
 
 onMounted(() => {
+  loadPurchaseStatistics()
   loadPurchases()
 })
 </script>

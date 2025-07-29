@@ -88,8 +88,6 @@
             @project-demo="handleProjectDemo"
             @project-edit="handleProjectEdit"
             @project-delete="handleProjectDelete"
-            @project-publish="handleProjectPublish"
-            @project-unpublish="handleProjectUnpublish"
           />
         </el-tab-pane>
 
@@ -166,6 +164,7 @@ import {
 } from '@element-plus/icons-vue'
 import ProjectList from '@/components/project/ProjectList.vue'
 import { projectApi } from '@/api/modules/project'
+import { orderApi } from '@/api/modules/order'
 import type { ProjectManagement } from '@/types/project'
 
 // 路由
@@ -255,14 +254,34 @@ const loadUploadedProjects = async () => {
 const loadPurchasedProjects = async () => {
   purchasedLoading.value = true
   try {
-    // TODO: 实现购买项目API调用
-    // 暂时使用空数据
-    purchasedProjects.value = []
-    purchasedTotal.value = 0
-    purchasedCount.value = 0
+    const params = {
+      page: purchasedParams.value.page - 1, // 后端页码从0开始
+      size: purchasedParams.value.size,
+      keyword: purchasedParams.value.keyword,
+      sortBy: purchasedParams.value.sortBy,
+      sortDir: purchasedParams.value.sortDir,
+      status: 'PAID' // 只获取已支付的订单
+    }
+
+    // 通过订单API获取购买的项目
+    const response = await orderApi.getUserPurchaseOrders(params)
+    if (response && response.code === 200 && response.data) {
+      // 从订单中提取项目信息
+      const orders = response.data.content || []
+      purchasedProjects.value = orders.map((order: any) => ({
+        ...order.project,
+        purchaseDate: order.createdTime,
+        orderNo: order.orderNo,
+        purchaseAmount: order.amount
+      }))
+      purchasedTotal.value = response.data.total || 0
+      purchasedCount.value = response.data.total || 0
+    } else {
+      throw new Error(response?.message || '获取购买项目列表失败')
+    }
   } catch (error: any) {
     console.error('加载购买项目失败:', error)
-    ElMessage.error('加载购买项目失败')
+    ElMessage.error(error.response?.data?.message || error.message || '加载购买项目失败')
     purchasedProjects.value = []
     purchasedTotal.value = 0
     purchasedCount.value = 0
@@ -275,16 +294,22 @@ const loadPurchasedProjects = async () => {
 const loadFavoriteProjects = async () => {
   favoritesLoading.value = true
   try {
-    // 模拟API调用
-    await new Promise(resolve => setTimeout(resolve, 1000))
+    // TODO: 收藏功能待后端实现，暂时使用空数据
+    console.log('收藏功能待后端实现')
 
-    // 模拟数据
-    const mockData: ProjectManagement[] = []
-    favoriteProjects.value = mockData
-    favoritesTotal.value = mockData.length
-    favoritesCount.value = mockData.length
-  } catch (error) {
+    favoriteProjects.value = []
+    favoritesTotal.value = 0
+    favoritesCount.value = 0
+
+    // 显示提示信息
+    if (favoriteProjects.value.length === 0) {
+      console.info('收藏功能即将上线，敬请期待！')
+    }
+  } catch (error: any) {
     console.error('加载收藏项目失败:', error)
+    favoriteProjects.value = []
+    favoritesTotal.value = 0
+    favoritesCount.value = 0
   } finally {
     favoritesLoading.value = false
   }
@@ -422,64 +447,70 @@ const handleProjectPurchase = (project: ProjectManagement) => {
   router.push(`/market/project/${project.id}`)
 }
 
-const handleProjectDownload = (project: ProjectManagement) => {
-  // 下载已购买的项目
-  console.log('下载项目:', project.title)
-  ElMessage.info('下载功能开发中')
-  // TODO: 实现项目下载功能
+const handleProjectDownload = async (project: ProjectManagement) => {
+  try {
+    // 使用项目下载API
+    const { projectDownloadApi } = await import('@/api/modules/project')
+
+    ElMessage.info('正在准备下载...')
+
+    // 生成下载令牌
+    const tokenResponse = await projectDownloadApi.generateDownloadToken(project.id)
+    if (tokenResponse && tokenResponse.code === 200) {
+      // 直接下载项目文件
+      const blob = await projectDownloadApi.downloadProject(project.id)
+
+      // 创建下载链接
+      const url = window.URL.createObjectURL(blob)
+      const link = document.createElement('a')
+      link.href = url
+      link.download = `${project.title}.zip`
+      document.body.appendChild(link)
+      link.click()
+      document.body.removeChild(link)
+      window.URL.revokeObjectURL(url)
+
+      ElMessage.success('下载成功')
+    } else {
+      throw new Error(tokenResponse?.message || '生成下载令牌失败')
+    }
+  } catch (error: any) {
+    console.error('下载项目失败:', error)
+    ElMessage.error(error.response?.data?.message || error.message || '下载失败')
+  }
 }
 
 const handleProjectUnfavorite = async (project: ProjectManagement) => {
-  try {
-    // TODO: 调用取消收藏API
-    // await projectApi.unfavoriteProject(project.id)
-
-    console.log('取消收藏项目:', project.title)
-    ElMessage.success('已取消收藏')
-    loadFavoriteProjects()
-  } catch (error: any) {
-    ElMessage.error(error.response?.data?.message || '取消收藏失败')
-  }
+  // TODO: 收藏功能待后端实现
+  ElMessage.info('收藏功能即将上线，敬请期待！')
+  console.log('取消收藏项目:', project.title, '- 功能待实现')
 }
 
-const handleProjectPublish = async (project: ProjectManagement) => {
-  try {
-    // TODO: 调用发布API
-    // await projectApi.publishProject(project.id)
+// 项目发布和下架功能已移除
+// 这些功能应该由管理员在后台管理系统中处理
 
-    console.log('发布项目:', project.title)
-    ElMessage.success('项目发布成功')
-    loadUploadedProjects()
+// 加载用户项目统计数据
+const loadUserProjectStats = async () => {
+  try {
+    // TODO: 用户项目统计API待后端实现，暂时使用基础统计
+    console.log('用户项目统计API待后端实现')
+
+    // 可以通过现有API获取部分统计数据
+    // uploadedCount 通过上传项目列表长度获取
+    // purchasedCount 通过购买项目列表长度获取
+    // favoritesCount 暂时为0
+    // totalEarnings 暂时为0
+
+    // 保持默认值，等待后端API实现
   } catch (error: any) {
-    ElMessage.error(error.response?.data?.message || '发布失败')
-  }
-}
-
-const handleProjectUnpublish = async (project: ProjectManagement) => {
-  try {
-    await ElMessageBox.confirm(
-      `确定要下架项目"${project.title}"吗？`,
-      '确认下架',
-      {
-        type: 'warning',
-        confirmButtonText: '确定下架',
-        cancelButtonText: '取消'
-      }
-    )
-
-    // TODO: 调用下架API
-    // await projectApi.unpublishProject(project.id)
-
-    ElMessage.success('项目下架成功')
-    loadUploadedProjects()
-  } catch (error) {
-    // 用户取消下架
-    console.log('下架操作取消:', error)
+    console.error('加载用户统计数据失败:', error)
+    // 统计数据加载失败不显示错误消息，保持默认值0
   }
 }
 
 // 页面初始化
 onMounted(() => {
+  loadUserProjectStats()
   loadUploadedProjects()
   loadPurchasedProjects()
   loadFavoriteProjects()

@@ -94,6 +94,46 @@ export const projectApi = {
    */
   getProjectStats(id: number): Promise<ApiResponse<any>> {
     return request.get(`/projects/${id}/stats`)
+  },
+
+  /**
+   * 收藏项目
+   */
+  favoriteProject(id: number): Promise<ApiResponse<void>> {
+    return request.post(`/projects/${id}/favorite`)
+  },
+
+  /**
+   * 取消收藏项目
+   */
+  unfavoriteProject(id: number): Promise<ApiResponse<void>> {
+    return request.delete(`/projects/${id}/favorite`)
+  },
+
+  /**
+   * 获取收藏的项目列表
+   */
+  getFavoriteProjects(params: ProjectQueryParams = {}): Promise<ApiResponse<PageResponse<ProjectManagement>>> {
+    return request.get('/projects/favorites', { params })
+  },
+
+  /**
+   * 获取购买的项目列表
+   */
+  getPurchasedProjects(params: ProjectQueryParams = {}): Promise<ApiResponse<PageResponse<ProjectManagement>>> {
+    return request.get('/projects/purchased', { params })
+  },
+
+  /**
+   * 获取用户项目统计信息
+   */
+  getUserProjectStats(): Promise<ApiResponse<{
+    uploadedCount: number
+    purchasedCount: number
+    favoritesCount: number
+    totalEarnings: number
+  }>> {
+    return request.get('/projects/user/stats')
   }
 }
 

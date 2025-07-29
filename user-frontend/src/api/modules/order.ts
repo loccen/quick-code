@@ -198,7 +198,20 @@ export const orderApi = {
    */
   getProjectSalesStatistics(projectId: number): Promise<ApiResponse<OrderStatistics>> {
     return request.get(`/orders/statistics/project/${projectId}`)
-  }
+  },
+
+  /**
+   * 获取用户订单统计信息
+   */
+  getUserOrderStatistics(): Promise<ApiResponse<{
+    totalOrders: number
+    totalAmount: number
+    pendingOrders: number
+    completedOrders: number
+  }>> {
+    return request.get('/orders/statistics/user')
+  },
+
 }
 
 /**

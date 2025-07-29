@@ -220,6 +220,8 @@ import StatsGrid from '@/components/common/StatsGrid.vue'
 import StatCard from '@/components/common/StatCard.vue'
 import ContentContainer from '@/components/common/ContentContainer.vue'
 import TabHeader from '@/components/common/TabHeader.vue'
+import { downloadApi } from '@/api/modules/download'
+import { projectDownloadApi } from '@/api/modules/project'
 
 const router = useRouter()
 
@@ -278,8 +280,37 @@ const handleViewProject = (project: any) => {
 /**
  * 重新下载
  */
-const handleRedownload = (_download: any) => {
-  ElMessage.success('开始重新下载...')
+const handleRedownload = async (download: any) => {
+  try {
+    ElMessage.info('正在准备重新下载...')
+
+    // 生成下载令牌
+    const tokenResponse = await projectDownloadApi.generateDownloadToken(download.project.id)
+    if (tokenResponse && tokenResponse.code === 200) {
+      // 直接下载项目文件
+      const blob = await projectDownloadApi.downloadProject(download.project.id)
+
+      // 创建下载链接
+      const url = window.URL.createObjectURL(blob)
+      const link = document.createElement('a')
+      link.href = url
+      link.download = `${download.project.title}.zip`
+      document.body.appendChild(link)
+      link.click()
+      document.body.removeChild(link)
+      window.URL.revokeObjectURL(url)
+
+      ElMessage.success('重新下载成功')
+
+      // 重新加载下载记录
+      loadDownloads()
+    } else {
+      throw new Error(tokenResponse?.message || '生成下载令牌失败')
+    }
+  } catch (error: any) {
+    console.error('重新下载失败:', error)
+    ElMessage.error(error.response?.data?.message || error.message || '重新下载失败')
+  }
 }
 
 /**
@@ -303,10 +334,20 @@ const handleDeleteRecord = async (download: any) => {
         type: 'warning'
       }
     )
-    ElMessage.success('下载记录已删除')
-    await loadDownloads()
-  } catch {
-    // 用户取消操作
+
+    const response = await downloadApi.deleteDownloadRecord(download.id)
+    if (response && response.code === 200) {
+      ElMessage.success('下载记录已删除')
+      await loadDownloads()
+      await loadDownloadStatistics() // 重新加载统计数据
+    } else {
+      throw new Error(response?.message || '删除下载记录失败')
+    }
+  } catch (error: any) {
+    if (error !== 'cancel') {
+      console.error('删除下载记录失败:', error)
+      ElMessage.error(error.response?.data?.message || error.message || '删除下载记录失败')
+    }
   }
 }
 
@@ -342,34 +383,91 @@ const handlePageChange = () => {
 }
 
 /**
+ * 加载下载统计数据
+ */
+const loadDownloadStatistics = async () => {
+  try {
+    const response = await downloadApi.getUserDownloadStatistics()
+    if (response && response.code === 200 && response.data) {
+      stats.value = {
+        totalDownloads: response.data.totalDownloads || 0,
+        downloadedProjects: response.data.successfulDownloads || 0,
+        recentDownloads: 0, // 需要单独计算本月下载
+        totalSize: formatFileSize(response.data.totalSize || 0)
+      }
+    }
+  } catch (error: any) {
+    console.error('加载下载统计数据失败:', error)
+    // 统计数据加载失败不显示错误消息，保持默认值
+  }
+}
+
+/**
+ * 格式化文件大小
+ */
+const formatFileSize = (bytes: number): string => {
+  if (bytes === 0) return '0 B'
+  const k = 1024
+  const sizes = ['B', 'KB', 'MB', 'GB', 'TB']
+  const i = Math.floor(Math.log(bytes) / Math.log(k))
+  return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i]
+}
+
+/**
  * 加载下载记录数据
  */
 const loadDownloads = async () => {
   loading.value = true
   try {
-    // 模拟API调用
-    await new Promise(resolve => setTimeout(resolve, 1000))
-    
-    // 模拟数据
-    downloads.value = []
-    
-    totalElements.value = downloads.value.length
-    
-    // 更新统计数据
-    stats.value = {
-      totalDownloads: 28,
-      downloadedProjects: 12,
-      recentDownloads: 5,
-      totalSize: '2.3 GB'
+    const params: any = {
+      page: currentPage.value - 1, // 后端页码从0开始
+      size: pageSize.value,
+      sortBy: 'createdTime',
+      sortDirection: 'DESC'
     }
-  } catch (error) {
-    ElMessage.error('加载下载记录失败')
+
+    // 添加搜索关键词
+    if (searchKeyword.value.trim()) {
+      params.keyword = searchKeyword.value.trim()
+    }
+
+    // 添加日期范围
+    if (dateRange.value && dateRange.value.length === 2) {
+      params.startDate = dateRange.value[0].toISOString().split('T')[0]
+      params.endDate = dateRange.value[1].toISOString().split('T')[0]
+    }
+
+    // 根据标签页筛选
+    if (activeTab.value === 'recent') {
+      // 最近下载：只获取最近7天的记录
+      const sevenDaysAgo = new Date()
+      sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7)
+      params.startDate = sevenDaysAgo.toISOString().split('T')[0]
+    } else if (activeTab.value === 'frequent') {
+      // 常用项目：按下载次数排序
+      params.sortBy = 'downloadCount'
+      params.sortDirection = 'DESC'
+    }
+
+    const response = await downloadApi.getUserDownloadRecords(params)
+    if (response && response.code === 200 && response.data) {
+      downloads.value = response.data.content || []
+      totalElements.value = response.data.total || 0
+    } else {
+      throw new Error(response?.message || '获取下载记录失败')
+    }
+  } catch (error: any) {
+    console.error('加载下载记录失败:', error)
+    ElMessage.error(error.response?.data?.message || error.message || '加载下载记录失败')
+    downloads.value = []
+    totalElements.value = 0
   } finally {
     loading.value = false
   }
 }
 
 onMounted(() => {
+  loadDownloadStatistics()
   loadDownloads()
 })
 </script>

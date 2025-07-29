@@ -188,6 +188,13 @@ export const downloadApi = {
    */
   recordDownloadFailed(recordId: number, reason: string): Promise<ApiResponse<boolean>> {
     return request.post(`/downloads/record/${recordId}/failed`, { reason })
+  },
+
+  /**
+   * 删除下载记录
+   */
+  deleteDownloadRecord(recordId: number): Promise<ApiResponse<boolean>> {
+    return request.delete(`/downloads/record/${recordId}`)
   }
 }
 
