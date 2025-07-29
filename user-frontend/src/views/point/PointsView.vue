@@ -1,9 +1,10 @@
 <template>
   <div class="points-view">
-    <div class="page-header">
-      <h1 class="page-title">积分管理</h1>
-      <p class="page-subtitle">管理您的积分余额和交易记录</p>
-    </div>
+    <div class="container">
+      <div class="page-header">
+        <h1 class="page-title">积分管理</h1>
+        <p class="page-subtitle">管理您的积分余额和交易记录</p>
+      </div>
 
     <!-- 积分概览 -->
     <div class="points-overview">
@@ -133,6 +134,7 @@
           @current-change="handlePageChange"
         />
       </div>
+    </div>
     </div>
   </div>
 </template>
@@ -328,18 +330,39 @@ onMounted(() => {
 @use '@/styles/mixins' as *;
 
 .points-view {
+  min-height: 100vh;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  padding: $spacing-xl 0;
+
+  .container {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 0 $spacing-lg;
+  }
+
   .page-header {
     margin-bottom: $spacing-xl;
+    padding: 32px;
+    @include glass-effect();
+    border-radius: $radius-xl;
+    color: white;
+    background: linear-gradient(135deg, rgba(102, 126, 234, 0.8) 0%, rgba(118, 75, 162, 0.8) 100%);
+    backdrop-filter: $glass-blur;
+    box-shadow: $shadow-layered-md;
+    border: 1px solid rgba(255, 255, 255, 0.2);
 
     .page-title {
       font-size: $font-size-3xl;
       font-weight: $font-weight-bold;
-      color: var(--text-primary);
+      color: white;
       margin: 0 0 $spacing-xs 0;
+      display: flex;
+      align-items: center;
+      gap: 12px;
     }
 
     .page-subtitle {
-      color: var(--text-secondary);
+      color: rgba(255, 255, 255, 0.9);
       margin: 0;
     }
   }
@@ -348,12 +371,27 @@ onMounted(() => {
     margin-bottom: $spacing-3xl;
 
     .balance-card {
-      background: linear-gradient(135deg, var(--primary-color) 0%, var(--primary-color-hover) 100%);
+      @include glass-effect();
+      background: linear-gradient(135deg, rgba(102, 126, 234, 0.8) 0%, rgba(118, 75, 162, 0.8) 100%);
       color: white;
-      border-radius: $border-radius-lg;
+      border-radius: $radius-xl;
       padding: $spacing-xl;
       margin-bottom: $spacing-lg;
       @include flex-between();
+      backdrop-filter: $glass-blur;
+      box-shadow: $shadow-layered-md;
+      border: 1px solid rgba(255, 255, 255, 0.2);
+      position: relative;
+
+      &::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        height: 1px;
+        background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.8), transparent);
+      }
 
       .balance-info {
         .balance-amount {
@@ -398,20 +436,41 @@ onMounted(() => {
       gap: $spacing-lg;
 
       .stat-card {
-        background: var(--bg-primary);
-        border: 1px solid var(--border-color);
-        border-radius: $border-radius-lg;
+        @include glass-effect();
+        border: 1px solid rgba(255, 255, 255, 0.2);
+        border-radius: $radius-xl;
         padding: $spacing-lg;
         @include flex-start();
         gap: $spacing-md;
+        backdrop-filter: $glass-blur-sm;
+        box-shadow: $shadow-layered-sm;
+        transition: all $transition-base;
+        position: relative;
+
+        &::before {
+          content: '';
+          position: absolute;
+          top: 0;
+          left: 0;
+          right: 0;
+          height: 1px;
+          background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.8), transparent);
+        }
+
+        &:hover {
+          transform: translateY(-2px);
+          box-shadow: $shadow-layered-md;
+          border-color: rgba(255, 255, 255, 0.3);
+        }
 
         .stat-icon {
           width: 48px;
           height: 48px;
-          background: var(--bg-secondary);
+          background: rgba(255, 255, 255, 0.2);
           border-radius: 50%;
           @include flex-center();
-          color: var(--primary-color);
+          color: white;
+          box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
 
           .el-icon {
             font-size: 24px;
@@ -422,12 +481,14 @@ onMounted(() => {
           .stat-number {
             font-size: $font-size-2xl;
             font-weight: $font-weight-bold;
-            color: var(--text-primary);
+            color: rgba(255, 255, 255, 0.95);
+            text-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
           }
 
           .stat-label {
-            color: var(--text-secondary);
+            color: rgba(255, 255, 255, 0.8);
             font-size: $font-size-sm;
+            font-weight: $font-weight-medium;
           }
         }
       }
@@ -438,11 +499,17 @@ onMounted(() => {
     .section-header {
       @include flex-between();
       margin-bottom: $spacing-lg;
+      padding: 24px;
+      @include glass-effect();
+      border-radius: $radius-xl;
+      box-shadow: $shadow-layered-sm;
+      border: 1px solid rgba(255, 255, 255, 0.2);
+      backdrop-filter: $glass-blur-sm;
 
       .section-title {
         font-size: $font-size-2xl;
         font-weight: $font-weight-bold;
-        color: var(--text-primary);
+        color: rgba(255, 255, 255, 0.95);
         margin: 0;
       }
 
@@ -457,19 +524,37 @@ onMounted(() => {
     }
 
     .transactions-list {
-      background: var(--bg-primary);
-      border: 1px solid var(--border-color);
-      border-radius: $border-radius-lg;
+      @include glass-effect();
+      border: 1px solid rgba(255, 255, 255, 0.2);
+      border-radius: $radius-xl;
       overflow: hidden;
+      backdrop-filter: $glass-blur;
+      box-shadow: $shadow-layered-md;
+      position: relative;
+
+      &::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        height: 1px;
+        background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.8), transparent);
+      }
 
       .transaction-item {
         @include flex-start();
         gap: $spacing-md;
         padding: $spacing-lg;
-        border-bottom: 1px solid var(--border-color);
+        border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+        transition: all $transition-base;
 
         &:last-child {
           border-bottom: none;
+        }
+
+        &:hover {
+          background: rgba(255, 255, 255, 0.05);
         }
 
         .transaction-icon {

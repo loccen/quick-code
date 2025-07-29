@@ -1,0 +1,79 @@
+<svg width="200" height="200" viewBox="0 0 200 200" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <!-- 毛玻璃效果渐变 -->
+    <radialGradient id="glassGradient" cx="30%" cy="30%" r="70%">
+      <stop offset="0%" style="stop-color:rgba(255,255,255,0.3);stop-opacity:1" />
+      <stop offset="50%" style="stop-color:rgba(255,255,255,0.15);stop-opacity:1" />
+      <stop offset="100%" style="stop-color:rgba(255,255,255,0.05);stop-opacity:1" />
+    </radialGradient>
+    
+    <!-- 背景渐变 -->
+    <linearGradient id="backgroundGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#667eea;stop-opacity:0.8" />
+      <stop offset="50%" style="stop-color:#764ba2;stop-opacity:0.6" />
+      <stop offset="100%" style="stop-color:#f093fb;stop-opacity:0.4" />
+    </linearGradient>
+    
+    <!-- 用户图标渐变 -->
+    <linearGradient id="iconGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:rgba(255,255,255,0.9);stop-opacity:1" />
+      <stop offset="100%" style="stop-color:rgba(255,255,255,0.6);stop-opacity:1" />
+    </linearGradient>
+    
+    <!-- 阴影滤镜 -->
+    <filter id="shadow" x="-50%" y="-50%" width="200%" height="200%">
+      <feDropShadow dx="0" dy="4" stdDeviation="8" flood-color="rgba(0,0,0,0.1)"/>
+      <feDropShadow dx="0" dy="2" stdDeviation="4" flood-color="rgba(0,0,0,0.1)"/>
+    </filter>
+    
+    <!-- 内阴影效果 -->
+    <filter id="innerShadow" x="-50%" y="-50%" width="200%" height="200%">
+      <feOffset dx="0" dy="2"/>
+      <feGaussianBlur stdDeviation="3" result="offset-blur"/>
+      <feFlood flood-color="rgba(0,0,0,0.1)"/>
+      <feComposite in2="offset-blur" operator="in"/>
+    </filter>
+  </defs>
+  
+  <!-- 外层圆形背景 -->
+  <circle cx="100" cy="100" r="98" 
+          fill="url(#backgroundGradient)" 
+          filter="url(#shadow)"
+          stroke="rgba(255,255,255,0.2)" 
+          stroke-width="2"/>
+  
+  <!-- 毛玻璃效果层 -->
+  <circle cx="100" cy="100" r="96" 
+          fill="url(#glassGradient)" 
+          opacity="0.8"/>
+  
+  <!-- 用户图标 -->
+  <g transform="translate(100, 100)" fill="url(#iconGradient)">
+    <!-- 头部 -->
+    <circle cx="0" cy="-15" r="25" opacity="0.9"/>
+    
+    <!-- 身体 -->
+    <path d="M -45 35 
+             Q -45 10 -35 5
+             Q -25 0 -15 0
+             L 15 0
+             Q 25 0 35 5
+             Q 45 10 45 35
+             L 45 50
+             L -45 50 Z" 
+          opacity="0.9"/>
+  </g>
+  
+  <!-- 高光效果 -->
+  <ellipse cx="75" cy="75" rx="20" ry="15" 
+           fill="rgba(255,255,255,0.3)" 
+           opacity="0.6"
+           transform="rotate(-20 75 75)"/>
+  
+  <!-- 边框高光 -->
+  <circle cx="100" cy="100" r="96" 
+          fill="none" 
+          stroke="rgba(255,255,255,0.4)" 
+          stroke-width="1" 
+          opacity="0.8"/>
+</svg>

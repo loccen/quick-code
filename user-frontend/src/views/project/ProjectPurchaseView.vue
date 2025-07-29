@@ -62,7 +62,7 @@
                 <div class="author-info">
                   <div class="author-avatar">
                     <img
-                      :src="project.userAvatar || '/images/default-avatar.png'"
+                      :src="project.userAvatar || '/images/default-avatar.svg'"
                       :alt="project.authorName || project.username || project.author"
                       class="avatar-image"
                     />
@@ -174,6 +174,23 @@
                 />
               </div>
 
+              <!-- 已购买提示 -->
+              <div v-else-if="hasPurchased" class="already-purchased-notice">
+                <el-alert
+                  title="您已购买此项目"
+                  type="success"
+                  description="您已成功购买此项目，可以直接下载使用"
+                  show-icon
+                  :closable="false"
+                />
+                <div class="download-hint">
+                  <el-button type="success" size="small" @click="goToDownloads">
+                    <el-icon><Download /></el-icon>
+                    查看下载记录
+                  </el-button>
+                </div>
+              </div>
+
               <!-- 余额不足提示 -->
               <div v-else-if="!hasEnoughBalance" class="insufficient-balance">
                 <el-alert
@@ -209,7 +226,12 @@
                   class="purchase-btn"
                 >
                   <el-icon v-if="!purchasing"><Check /></el-icon>
-                  {{ purchasing ? '处理中...' : (isOwnProject ? '这是您的项目' : '确认购买') }}
+                  {{
+                    purchasing ? '处理中...' :
+                    isOwnProject ? '这是您的项目' :
+                    hasPurchased ? '已购买' :
+                    '确认购买'
+                  }}
                 </el-button>
               </div>
             </div>
@@ -230,7 +252,8 @@ import {
   CreditCard,
   Picture,
   Plus,
-  Check
+  Check,
+  Download
 } from '@element-plus/icons-vue'
 import { useUserStore } from '@/stores/user'
 import { projectApi } from '@/api/modules/project'
@@ -250,6 +273,8 @@ const userBalance = ref({
   points: 0,
   balance: 0
 })
+const hasPurchased = ref(false)
+const checkingPurchaseStatus = ref(false)
 
 // 支付表单
 const paymentForm = ref({
@@ -270,7 +295,7 @@ const isOwnProject = computed(() => {
 })
 
 const canPurchase = computed(() => {
-  return hasEnoughBalance.value && !purchasing.value && project.value && !isOwnProject.value
+  return hasEnoughBalance.value && !purchasing.value && project.value && !isOwnProject.value && !hasPurchased.value
 })
 
 // 方法
@@ -280,6 +305,8 @@ const loadProjectInfo = async () => {
     if (response.success) {
       project.value = response.data
       paymentForm.value.pointsAmount = response.data.price
+      // 检查购买状态
+      await checkPurchaseStatus()
     } else {
       ElMessage.error('加载项目信息失败')
       goBack()
@@ -288,6 +315,22 @@ const loadProjectInfo = async () => {
     console.error('加载项目信息失败:', error)
     ElMessage.error('加载项目信息失败')
     goBack()
+  }
+}
+
+const checkPurchaseStatus = async () => {
+  if (!userStore.isLoggedIn || !projectId.value) return
+
+  try {
+    checkingPurchaseStatus.value = true
+    const response = await orderApi.hasUserPurchasedProject(projectId.value)
+    if (response.success) {
+      hasPurchased.value = response.data
+    }
+  } catch (error) {
+    console.error('检查购买状态失败:', error)
+  } finally {
+    checkingPurchaseStatus.value = false
   }
 }
 
@@ -373,6 +416,10 @@ const goBack = () => {
 
 const goToRecharge = () => {
   router.push('/user/points')
+}
+
+const goToDownloads = () => {
+  router.push('/user/downloads')
 }
 
 // 生命周期
@@ -739,6 +786,15 @@ onMounted(async () => {
 
 .own-project-notice {
   margin-bottom: 1.5rem;
+}
+
+.already-purchased-notice {
+  margin-bottom: 1.5rem;
+}
+
+.download-hint {
+  margin-top: 0.75rem;
+  text-align: center;
 }
 
 .insufficient-balance {

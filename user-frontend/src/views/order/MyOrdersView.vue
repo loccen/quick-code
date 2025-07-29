@@ -366,22 +366,39 @@ onMounted(() => {
 
   .page-header {
     margin-bottom: $spacing-xl;
+    padding: 32px;
+    @include glass-effect();
+    border-radius: $radius-xl;
+    color: white;
+    background: linear-gradient(135deg, rgba(102, 126, 234, 0.8) 0%, rgba(118, 75, 162, 0.8) 100%);
+    backdrop-filter: $glass-blur;
+    box-shadow: $shadow-layered-md;
+    border: 1px solid rgba(255, 255, 255, 0.2);
 
     .page-title {
       font-size: $font-size-3xl;
       font-weight: $font-weight-bold;
-      color: var(--text-primary);
+      color: white;
       margin: 0 0 $spacing-xs 0;
+      display: flex;
+      align-items: center;
+      gap: 12px;
     }
 
     .page-subtitle {
-      color: var(--text-secondary);
+      color: rgba(255, 255, 255, 0.9);
       margin: 0;
     }
   }
 
   .filter-section {
     margin-bottom: $spacing-xl;
+    padding: 24px;
+    @include glass-effect();
+    border-radius: $radius-xl;
+    box-shadow: $shadow-layered-sm;
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    backdrop-filter: $glass-blur-sm;
 
     .filter-actions {
       @include flex-end();
@@ -400,17 +417,38 @@ onMounted(() => {
 
   .orders-list {
     .order-item {
-      background: var(--bg-primary);
-      border: 1px solid var(--border-color);
-      border-radius: $border-radius-lg;
+      @include glass-effect();
+      border: 1px solid rgba(255, 255, 255, 0.2);
+      border-radius: $radius-xl;
       margin-bottom: $spacing-lg;
       overflow: hidden;
+      backdrop-filter: $glass-blur;
+      box-shadow: $shadow-layered-sm;
+      transition: all $transition-base;
+      position: relative;
+
+      &::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        height: 1px;
+        background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.8), transparent);
+      }
+
+      &:hover {
+        transform: translateY(-2px);
+        box-shadow: $shadow-layered-md;
+        border-color: rgba(255, 255, 255, 0.3);
+      }
 
       .order-header {
         @include flex-between();
         padding: $spacing-md $spacing-lg;
-        background: var(--bg-secondary);
-        border-bottom: 1px solid var(--border-color);
+        background: rgba(255, 255, 255, 0.1);
+        border-bottom: 1px solid rgba(255, 255, 255, 0.2);
+        backdrop-filter: blur(10px);
 
         .order-info {
           @include flex-start();
@@ -418,11 +456,11 @@ onMounted(() => {
 
           .order-no {
             font-weight: $font-weight-medium;
-            color: var(--text-primary);
+            color: rgba(255, 255, 255, 0.95);
           }
 
           .order-date {
-            color: var(--text-secondary);
+            color: rgba(255, 255, 255, 0.8);
             font-size: $font-size-sm;
           }
         }
@@ -441,8 +479,9 @@ onMounted(() => {
           .project-thumbnail {
             width: 80px;
             height: 60px;
-            border-radius: $border-radius-md;
+            border-radius: $radius-lg;
             overflow: hidden;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
 
             img {
               width: 100%;
@@ -457,12 +496,12 @@ onMounted(() => {
             .project-title {
               font-size: $font-size-lg;
               font-weight: $font-weight-medium;
-              color: var(--text-primary);
+              color: rgba(255, 255, 255, 0.95);
               margin: 0 0 $spacing-xs 0;
             }
 
             .project-description {
-              color: var(--text-secondary);
+              color: rgba(255, 255, 255, 0.8);
               font-size: $font-size-sm;
               margin: 0 0 $spacing-sm 0;
               @include text-ellipsis;
@@ -473,7 +512,7 @@ onMounted(() => {
               gap: $spacing-md;
 
               span {
-                color: var(--text-secondary);
+                color: rgba(255, 255, 255, 0.7);
                 font-size: $font-size-xs;
               }
             }
@@ -487,11 +526,12 @@ onMounted(() => {
             .amount {
               font-size: $font-size-xl;
               font-weight: $font-weight-bold;
-              color: var(--primary-color);
+              color: #43e97b;
+              text-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
             }
 
             .unit {
-              color: var(--text-secondary);
+              color: rgba(255, 255, 255, 0.8);
               font-size: $font-size-sm;
               margin-left: $spacing-xs;
             }

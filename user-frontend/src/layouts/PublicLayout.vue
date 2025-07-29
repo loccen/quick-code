@@ -61,10 +61,6 @@
                       <el-icon><FolderOpened /></el-icon>
                       我的项目
                     </el-dropdown-item>
-                    <el-dropdown-item command="upload-project">
-                      <el-icon><Upload /></el-icon>
-                      上传项目
-                    </el-dropdown-item>
                     <el-dropdown-item command="my-orders">
                       <el-icon><ShoppingCart /></el-icon>
                       我的订单
@@ -163,9 +159,6 @@ const handleUserCommand = (command: string) => {
       break
     case 'my-projects':
       router.push('/user/my-projects')
-      break
-    case 'upload-project':
-      router.push('/user/project/upload')
       break
     case 'my-orders':
       router.push('/user/my-orders')
