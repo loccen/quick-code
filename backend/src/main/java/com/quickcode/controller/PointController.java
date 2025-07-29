@@ -2,6 +2,7 @@ package com.quickcode.controller;
 
 import com.quickcode.common.response.ApiResponse;
 import com.quickcode.common.response.PageResponse;
+import com.quickcode.dto.point.PointAccountDTO;
 import com.quickcode.entity.PointAccount;
 import com.quickcode.entity.PointTransaction;
 import com.quickcode.service.PointService;
@@ -40,13 +41,27 @@ public class PointController extends BaseController {
      */
     @GetMapping("/account")
     @PreAuthorize("hasRole('USER')")
-    public ApiResponse<PointAccount> getPointAccount() {
+    public ApiResponse<PointAccountDTO> getPointAccount() {
         log.info("获取用户积分账户信息");
 
         try {
             Long userId = getCurrentUserId();
             PointAccount account = pointService.getOrCreatePointAccount(userId);
-            return success(account);
+
+            // 转换为DTO避免序列化问题
+            PointAccountDTO dto = PointAccountDTO.builder()
+                    .id(account.getId())
+                    .userId(account.getUserId())
+                    .totalPoints(account.getTotalPoints())
+                    .availablePoints(account.getAvailablePoints())
+                    .frozenPoints(account.getFrozenPoints())
+                    .totalEarned(account.getTotalEarned())
+                    .totalSpent(account.getTotalSpent())
+                    .createdTime(account.getCreatedTime())
+                    .updatedTime(account.getUpdatedTime())
+                    .build();
+
+            return success(dto);
         } catch (Exception e) {
             log.error("获取积分账户信息失败", e);
             return error("获取积分账户信息失败: " + e.getMessage());

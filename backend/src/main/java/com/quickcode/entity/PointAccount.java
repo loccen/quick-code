@@ -16,6 +16,7 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
+import com.fasterxml.jackson.annotation.JsonIgnore;
 
 /**
  * 积分账户实体类 对应数据库表：point_accounts
@@ -83,6 +84,7 @@ public class PointAccount extends BaseEntity {
   /**
    * 关联的用户
    */
+  @JsonIgnore
   @OneToOne(fetch = FetchType.LAZY)
   @JoinColumn(name = "user_id", insertable = false, updatable = false)
   private User user;
