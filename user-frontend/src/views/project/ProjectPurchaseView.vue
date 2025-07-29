@@ -194,7 +194,8 @@
   </div>
 </template>
 
-<script setup>
+<script setup lang="ts">
+// @ts-nocheck
 import { ref, computed, onMounted } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { ElMessage, ElMessageBox } from 'element-plus'
@@ -208,9 +209,9 @@ import {
   Check 
 } from '@element-plus/icons-vue'
 import { useUserStore } from '@/stores/user'
-import { projectApi } from '@/api/project'
-import { orderApi } from '@/api/order'
-import { pointApi } from '@/api/point'
+import { projectApi } from '@/api/modules/project'
+import { orderApi } from '@/api/modules/order'
+import { pointApi } from '@/api/modules/point'
 
 const route = useRoute()
 const router = useRouter()
@@ -220,7 +221,7 @@ const userStore = useUserStore()
 const projectId = ref(route.params.id)
 const loading = ref(true)
 const purchasing = ref(false)
-const project = ref(null)
+const project = ref<any>(null)
 const userBalance = ref({
   points: 0,
   balance: 0

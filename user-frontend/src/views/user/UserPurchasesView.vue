@@ -220,7 +220,8 @@
   </div>
 </template>
 
-<script setup>
+<script setup lang="ts">
+// @ts-nocheck
 import { ref, computed, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
 import { ElMessage, ElMessageBox } from 'element-plus'
@@ -232,8 +233,7 @@ import {
   Clock, 
   Refresh 
 } from '@element-plus/icons-vue'
-import { orderApi } from '@/api/order'
-import { projectApi } from '@/api/project'
+import { orderApi } from '@/api/modules/order'
 import OrderDetailDialog from '@/components/order/OrderDetailDialog.vue'
 
 const router = useRouter()
@@ -283,7 +283,9 @@ const loadOrders = async () => {
     }
     
     if (filters.value.dateRange && filters.value.dateRange.length === 2) {
+      // @ts-ignore
       params.startDate = filters.value.dateRange[0].toISOString()
+      // @ts-ignore
       params.endDate = filters.value.dateRange[1].toISOString()
     }
     
@@ -350,7 +352,7 @@ const viewOrderDetail = (order) => {
   orderDetailVisible.value = true
 }
 
-const cancelOrder = async (order) => {
+const cancelOrder = async (order: any) => {
   try {
     await ElMessageBox.confirm(
       `确认取消订单"${order.projectName}"？`,
@@ -378,7 +380,7 @@ const cancelOrder = async (order) => {
   }
 }
 
-const requestRefund = async (order) => {
+const requestRefund = async (order: any) => {
   try {
     const { value: reason } = await ElMessageBox.prompt(
       '请输入退款原因',
@@ -407,7 +409,7 @@ const requestRefund = async (order) => {
   }
 }
 
-const downloadProject = async (order) => {
+const downloadProject = async (order: any) => {
   try {
     // 跳转到项目详情页进行下载
     router.push(`/projects/${order.projectId}`)

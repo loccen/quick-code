@@ -228,7 +228,8 @@
   </div>
 </template>
 
-<script setup>
+<script setup lang="ts">
+// @ts-nocheck
 import { ref, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
 import { ElMessage, ElMessageBox } from 'element-plus'
@@ -239,18 +240,18 @@ import {
   Key, 
   Refresh 
 } from '@element-plus/icons-vue'
-import { downloadApi } from '@/api/download'
+import { downloadApi } from '@/api/modules/download'
 
 const router = useRouter()
 
 // 响应式数据
 const loading = ref(true)
-const downloads = ref([])
-const statistics = ref({})
-const activeTokens = ref([])
+const downloads = ref<any[]>([])
+const statistics = ref<any>({})
+const activeTokens = ref<any[]>([])
 
 // 筛选器
-const filters = ref({
+const filters = ref<any>({
   status: '',
   dateRange: null
 })
@@ -325,18 +326,18 @@ const handleFilterChange = () => {
   loadDownloads()
 }
 
-const handlePageChange = (page) => {
+const handlePageChange = (page: any) => {
   pagination.value.page = page
   loadDownloads()
 }
 
-const handleSizeChange = (size) => {
+const handleSizeChange = (size: any) => {
   pagination.value.size = size
   pagination.value.page = 1
   loadDownloads()
 }
 
-const getStatusType = (status) => {
+const getStatusType = (status: any) => {
   const statusMap = {
     1: 'success',   // 成功
     0: 'warning',   // 进行中

@@ -157,7 +157,7 @@
 import { computed } from 'vue'
 import { useRouter } from 'vue-router'
 import { ElMessage, ElMessageBox } from 'element-plus'
-import { orderApi } from '@/api/order'
+import { orderApi } from '@/api/modules/order'
 
 const router = useRouter()
 

@@ -80,7 +80,7 @@
                     <span>下载链接将在1小时后过期，请及时下载</span>
                   </div>
                   <div class="info-item">
-                    <el-icon><Shield /></el-icon>
+                    <el-icon><CircleCheck /></el-icon>
                     <span>项目已通过安全检查，可放心使用</span>
                   </div>
                 </div>
@@ -92,7 +92,7 @@
           <div class="download-section">
             <div class="glass-card">
               <h2 class="section-title">
-                <el-icon><CloudDownload /></el-icon>
+                <el-icon><Download /></el-icon>
                 下载操作
               </h2>
               
@@ -193,18 +193,16 @@
 import { ref, computed, onMounted } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { ElMessage, ElMessageBox } from 'element-plus'
-import { 
-  Download, 
-  CloudDownload, 
-  InfoFilled, 
-  Lock, 
-  Shield, 
-  CircleCheck, 
-  CircleClose 
+import {
+  Download,
+  InfoFilled,
+  Lock,
+  CircleCheck,
+  CircleClose
 } from '@element-plus/icons-vue'
 import { useUserStore } from '@/stores/user'
-import { projectApi } from '@/api/project'
-import { downloadApi } from '@/api/download'
+import { projectApi } from '@/api/modules/project'
+import { downloadApi } from '@/api/modules/download'
 
 const route = useRoute()
 const router = useRouter()
@@ -244,7 +242,7 @@ const canDownload = computed(() => {
 // 方法
 const loadProjectInfo = async () => {
   try {
-    const response = await projectApi.getProjectById(projectId.value)
+    const response = await projectApi.getProject(projectId.value)
     if (response.success) {
       project.value = response.data
     } else {
