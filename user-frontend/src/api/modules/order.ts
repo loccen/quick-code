@@ -90,49 +90,49 @@ export const orderApi = {
    * 创建订单
    */
   createOrder(data: CreateOrderRequest): Promise<ApiResponse<Order>> {
-    return request.post('/api/orders', data)
+    return request.post('/orders', data)
   },
 
   /**
    * 支付订单
    */
   payOrder(orderNo: string, data: PayOrderRequest): Promise<ApiResponse<Order>> {
-    return request.post(`/api/orders/${orderNo}/pay`, data)
+    return request.post(`/orders/${orderNo}/pay`, data)
   },
 
   /**
    * 取消订单
    */
   cancelOrder(orderNo: string, reason?: string): Promise<ApiResponse<Order>> {
-    return request.post(`/api/orders/${orderNo}/cancel`, { reason })
+    return request.post(`/orders/${orderNo}/cancel`, { reason })
   },
 
   /**
    * 完成订单
    */
   completeOrder(orderNo: string): Promise<ApiResponse<Order>> {
-    return request.post(`/api/orders/${orderNo}/complete`)
+    return request.post(`/orders/${orderNo}/complete`)
   },
 
   /**
    * 申请退款
    */
   requestRefund(orderNo: string, reason?: string): Promise<ApiResponse<Order>> {
-    return request.post(`/api/orders/${orderNo}/refund`, { reason })
+    return request.post(`/orders/${orderNo}/refund`, { reason })
   },
 
   /**
    * 根据订单号获取订单详情
    */
   getOrderByOrderNo(orderNo: string): Promise<ApiResponse<Order>> {
-    return request.get(`/api/orders/${orderNo}`)
+    return request.get(`/orders/${orderNo}`)
   },
 
   /**
    * 获取用户购买订单列表
    */
   getUserPurchaseOrders(params: OrderQueryParams = {}): Promise<ApiResponse<PageResponse<Order>>> {
-    return request.get('/api/orders/purchases', {
+    return request.get('/orders/purchases', {
       params: {
         page: 0,
         size: 10,
@@ -147,7 +147,7 @@ export const orderApi = {
    * 获取用户销售订单列表
    */
   getUserSalesOrders(params: OrderQueryParams = {}): Promise<ApiResponse<PageResponse<Order>>> {
-    return request.get('/api/orders/sales', {
+    return request.get('/orders/sales', {
       params: {
         page: 0,
         size: 10,
@@ -162,42 +162,42 @@ export const orderApi = {
    * 获取用户最近订单
    */
   getUserRecentOrders(limit: number = 5): Promise<ApiResponse<Order[]>> {
-    return request.get('/api/orders/recent', { params: { limit } })
+    return request.get('/orders/recent', { params: { limit } })
   },
 
   /**
    * 检查用户是否可以购买项目
    */
   canUserPurchaseProject(projectId: number): Promise<ApiResponse<boolean>> {
-    return request.get(`/api/orders/check-purchase/${projectId}`)
+    return request.get(`/orders/check-purchase/${projectId}`)
   },
 
   /**
    * 检查用户是否已购买项目
    */
   hasUserPurchasedProject(projectId: number): Promise<ApiResponse<boolean>> {
-    return request.get(`/api/orders/check-purchased/${projectId}`)
+    return request.get(`/orders/check-purchased/${projectId}`)
   },
 
   /**
    * 获取用户购买统计
    */
   getUserPurchaseStatistics(): Promise<ApiResponse<OrderStatistics>> {
-    return request.get('/api/orders/statistics/purchases')
+    return request.get('/orders/statistics/purchases')
   },
 
   /**
    * 获取用户销售统计
    */
   getUserSalesStatistics(): Promise<ApiResponse<OrderStatistics>> {
-    return request.get('/api/orders/statistics/sales')
+    return request.get('/orders/statistics/sales')
   },
 
   /**
    * 获取项目销售统计
    */
   getProjectSalesStatistics(projectId: number): Promise<ApiResponse<OrderStatistics>> {
-    return request.get(`/api/orders/statistics/project/${projectId}`)
+    return request.get(`/orders/statistics/project/${projectId}`)
   }
 }
 
@@ -209,20 +209,20 @@ export const adminOrderApi = {
    * 搜索所有订单（管理员）
    */
   searchAllOrders(searchData: any): Promise<ApiResponse<PageResponse<Order>>> {
-    return request.post('/api/orders/admin/search', searchData)
+    return request.post('/orders/admin/search', searchData)
   },
 
   /**
    * 处理超时订单（管理员）
    */
   handleTimeoutOrders(timeoutMinutes: number = 30): Promise<ApiResponse<any>> {
-    return request.post('/api/orders/admin/handle-timeout', { timeoutMinutes })
+    return request.post('/orders/admin/handle-timeout', { timeoutMinutes })
   },
 
   /**
    * 自动完成订单（管理员）
    */
   autoCompleteOrders(autoCompleteDays: number = 7): Promise<ApiResponse<any>> {
-    return request.post('/api/orders/admin/auto-complete', { autoCompleteDays })
+    return request.post('/orders/admin/auto-complete', { autoCompleteDays })
   }
 }

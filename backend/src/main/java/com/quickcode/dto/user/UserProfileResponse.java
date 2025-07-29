@@ -6,7 +6,6 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
-import java.math.BigDecimal;
 import java.time.LocalDateTime;
 
 /**
@@ -71,10 +70,7 @@ public class UserProfileResponse {
      */
     private LocalDateTime lastLoginTime;
 
-    /**
-     * 用户积分余额
-     */
-    private BigDecimal points;
+
 
     /**
      * 是否为VIP
@@ -126,7 +122,6 @@ public class UserProfileResponse {
                 .emailVerified(user.getEmailVerified())
                 .twoFactorEnabled(user.getTwoFactorEnabled())
                 .lastLoginTime(user.getLastLoginTime())
-                .points(user.getPoints())
                 .isVip(user.getIsVip())
                 .vipExpiresAt(user.getVipExpiresAt())
                 .bio(user.getBio())

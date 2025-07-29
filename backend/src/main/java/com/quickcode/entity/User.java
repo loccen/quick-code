@@ -1,6 +1,5 @@
 package com.quickcode.entity;
 
-import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
@@ -130,12 +129,7 @@ public class User extends BaseEntity {
   @Column(name = "locked_until")
   private LocalDateTime lockedUntil;
 
-  /**
-   * 用户积分余额
-   */
-  @Builder.Default
-  @Column(name = "points", nullable = false, precision = 10, scale = 2)
-  private BigDecimal points = BigDecimal.ZERO;
+
 
   /**
    * 是否为永久会员
@@ -337,26 +331,7 @@ public class User extends BaseEntity {
     this.passwordResetExpiresAt = null;
   }
 
-  /**
-   * 增加积分
-   */
-  public void addPoints(BigDecimal amount) {
-    if (amount != null && amount.compareTo(BigDecimal.ZERO) > 0) {
-      this.points = this.points.add(amount);
-    }
-  }
 
-  /**
-   * 扣除积分
-   */
-  public boolean deductPoints(BigDecimal amount) {
-    if (amount != null && amount.compareTo(BigDecimal.ZERO) > 0
-        && this.points.compareTo(amount) >= 0) {
-      this.points = this.points.subtract(amount);
-      return true;
-    }
-    return false;
-  }
 
   /**
    * 设置VIP会员
