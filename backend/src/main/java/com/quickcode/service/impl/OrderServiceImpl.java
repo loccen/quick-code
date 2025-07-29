@@ -5,6 +5,7 @@ import com.quickcode.dto.order.OrderCreateRequest;
 import com.quickcode.dto.order.OrderDTO;
 import com.quickcode.dto.order.OrderSearchRequest;
 import com.quickcode.dto.order.PaymentRequest;
+import com.quickcode.dto.order.UserOrderStats;
 import com.quickcode.entity.Order;
 import com.quickcode.entity.PointAccount;
 import com.quickcode.entity.Project;
@@ -744,5 +745,73 @@ public class OrderServiceImpl implements OrderService {
         // TODO: 实现混合支付的退款逻辑
         // 需要记录原始支付的积分和余额比例
         log.info("混合支付退款: orderNo={}, amount={}", order.getOrderNo(), totalAmount);
+    }
+
+    @Override
+    public UserOrderStats getUserOrderStatistics(Long userId) {
+        log.debug("获取用户订单统计信息: userId={}", userId);
+
+        try {
+            // 统计订单总数
+            long totalOrders = orderRepository.countByBuyerId(userId);
+
+            // 统计订单总金额
+            BigDecimal totalAmount = orderRepository.sumAmountByBuyerId(userId);
+            if (totalAmount == null) {
+                totalAmount = BigDecimal.ZERO;
+            }
+
+            // 统计各状态订单数量
+            long pendingOrders = orderRepository.countByBuyerIdAndStatus(userId, "PENDING");
+            long completedOrders = orderRepository.countByBuyerIdAndStatus(userId, "PAID");
+            long cancelledOrders = orderRepository.countByBuyerIdAndStatus(userId, "CANCELLED");
+            long refundedOrders = orderRepository.countByBuyerIdAndStatus(userId, "REFUNDED");
+
+            // 统计本月订单数据
+            LocalDateTime monthStart = LocalDateTime.now().withDayOfMonth(1).withHour(0).withMinute(0).withSecond(0);
+            LocalDateTime monthEnd = monthStart.plusMonths(1);
+
+            long monthlyOrders = orderRepository.countByBuyerIdAndCreatedTimeBetween(userId, monthStart, monthEnd);
+            BigDecimal monthlyAmount = orderRepository.sumAmountByBuyerIdAndCreatedTimeBetween(userId, monthStart, monthEnd);
+            if (monthlyAmount == null) {
+                monthlyAmount = BigDecimal.ZERO;
+            }
+
+            // 获取最近订单时间
+            LocalDateTime lastOrderTime = orderRepository.findTopByBuyerIdOrderByCreatedTimeDesc(userId)
+                    .map(Order::getCreatedTime)
+                    .orElse(null);
+
+            // 获取最大和最小订单金额
+            BigDecimal maxOrderAmount = orderRepository.findMaxAmountByBuyerId(userId);
+            BigDecimal minOrderAmount = orderRepository.findMinAmountByBuyerId(userId);
+            if (maxOrderAmount == null) maxOrderAmount = BigDecimal.ZERO;
+            if (minOrderAmount == null) minOrderAmount = BigDecimal.ZERO;
+
+            // 构建统计数据
+            UserOrderStats stats = UserOrderStats.builder()
+                    .totalOrders(totalOrders)
+                    .totalAmount(totalAmount)
+                    .pendingOrders(pendingOrders)
+                    .completedOrders(completedOrders)
+                    .cancelledOrders(cancelledOrders)
+                    .refundedOrders(refundedOrders)
+                    .monthlyOrders(monthlyOrders)
+                    .monthlyAmount(monthlyAmount)
+                    .lastOrderTime(lastOrderTime)
+                    .maxOrderAmount(maxOrderAmount)
+                    .minOrderAmount(minOrderAmount)
+                    .build();
+
+            // 计算平均订单金额
+            stats.calculateAverageOrderAmount();
+
+            log.info("获取用户订单统计成功: userId={}, stats={}", userId, stats);
+            return stats;
+
+        } catch (Exception e) {
+            log.error("获取用户订单统计失败: userId={}", userId, e);
+            return UserOrderStats.empty();
+        }
     }
 }

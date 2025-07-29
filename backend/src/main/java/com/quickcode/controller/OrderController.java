@@ -6,6 +6,7 @@ import com.quickcode.dto.order.OrderCreateRequest;
 import com.quickcode.dto.order.OrderDTO;
 import com.quickcode.dto.order.OrderSearchRequest;
 import com.quickcode.dto.order.PaymentRequest;
+import com.quickcode.dto.order.UserOrderStats;
 import com.quickcode.service.OrderService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -256,6 +257,24 @@ public class OrderController extends BaseController {
         } catch (Exception e) {
             log.error("获取用户最近订单失败: user={}", authentication.getName(), e);
             return error("获取最近订单失败: " + e.getMessage());
+        }
+    }
+
+    /**
+     * 获取用户订单统计信息
+     */
+    @GetMapping("/statistics/user")
+    @PreAuthorize("hasRole('USER')")
+    public ApiResponse<UserOrderStats> getUserOrderStatistics() {
+        log.info("获取用户订单统计信息");
+
+        try {
+            Long userId = getCurrentUserId();
+            UserOrderStats stats = orderService.getUserOrderStatistics(userId);
+            return success(stats);
+        } catch (Exception e) {
+            log.error("获取用户订单统计信息失败", e);
+            return error("获取订单统计信息失败: " + e.getMessage());
         }
     }
 

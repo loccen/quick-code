@@ -237,6 +237,52 @@ public interface OrderRepository extends BaseRepository<Order, Long> {
      * 统计每日订单金额
      */
     @Query("SELECT DATE(o.createdTime) as orderDate, COALESCE(SUM(o.amount), 0) as totalAmount FROM Order o WHERE o.createdTime BETWEEN :startTime AND :endTime AND o.status IN (1, 2) GROUP BY DATE(o.createdTime) ORDER BY orderDate")
-    List<Object[]> sumDailyOrderAmount(@Param("startTime") LocalDateTime startTime, 
+    List<Object[]> sumDailyOrderAmount(@Param("startTime") LocalDateTime startTime,
                                       @Param("endTime") LocalDateTime endTime);
+
+    /**
+     * 统计用户订单总数
+     */
+    long countByBuyerId(Long buyerId);
+
+    /**
+     * 统计用户订单总金额
+     */
+    @Query("SELECT SUM(o.amount) FROM Order o WHERE o.buyerId = :buyerId")
+    BigDecimal sumAmountByBuyerId(@Param("buyerId") Long buyerId);
+
+    /**
+     * 统计用户指定状态的订单数量
+     */
+    long countByBuyerIdAndStatus(Long buyerId, String status);
+
+    /**
+     * 统计用户指定时间范围内的订单数量
+     */
+    long countByBuyerIdAndCreatedTimeBetween(Long buyerId, LocalDateTime startTime, LocalDateTime endTime);
+
+    /**
+     * 统计用户指定时间范围内的订单金额
+     */
+    @Query("SELECT SUM(o.amount) FROM Order o WHERE o.buyerId = :buyerId AND o.createdTime BETWEEN :startTime AND :endTime")
+    BigDecimal sumAmountByBuyerIdAndCreatedTimeBetween(@Param("buyerId") Long buyerId,
+                                                       @Param("startTime") LocalDateTime startTime,
+                                                       @Param("endTime") LocalDateTime endTime);
+
+    /**
+     * 获取用户最近的订单
+     */
+    Optional<Order> findTopByBuyerIdOrderByCreatedTimeDesc(Long buyerId);
+
+    /**
+     * 获取用户最大订单金额
+     */
+    @Query("SELECT MAX(o.amount) FROM Order o WHERE o.buyerId = :buyerId")
+    BigDecimal findMaxAmountByBuyerId(@Param("buyerId") Long buyerId);
+
+    /**
+     * 获取用户最小订单金额
+     */
+    @Query("SELECT MIN(o.amount) FROM Order o WHERE o.buyerId = :buyerId")
+    BigDecimal findMinAmountByBuyerId(@Param("buyerId") Long buyerId);
 }

@@ -5,6 +5,7 @@ import com.quickcode.dto.order.OrderCreateRequest;
 import com.quickcode.dto.order.OrderDTO;
 import com.quickcode.dto.order.OrderSearchRequest;
 import com.quickcode.dto.order.PaymentRequest;
+import com.quickcode.dto.order.UserOrderStats;
 import com.quickcode.entity.Order;
 import org.springframework.data.domain.Pageable;
 
@@ -252,4 +253,12 @@ public interface OrderService extends BaseService<Order, Long> {
         public String getOrderNo() { return orderNo; }
         public BigDecimal getPaidAmount() { return paidAmount; }
     }
+
+    /**
+     * 获取用户订单统计信息
+     *
+     * @param userId 用户ID
+     * @return 用户订单统计信息
+     */
+    UserOrderStats getUserOrderStatistics(Long userId);
 }
