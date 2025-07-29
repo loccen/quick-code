@@ -122,6 +122,22 @@
                   <el-icon><ShoppingCart /></el-icon>
                   我的订单
                 </el-dropdown-item>
+                <el-dropdown-item command="purchases">
+                  <el-icon><ShoppingBag /></el-icon>
+                  购买记录
+                </el-dropdown-item>
+                <el-dropdown-item command="downloads">
+                  <el-icon><Download /></el-icon>
+                  下载记录
+                </el-dropdown-item>
+                <el-dropdown-item command="points">
+                  <el-icon><Coin /></el-icon>
+                  积分管理
+                </el-dropdown-item>
+                <el-dropdown-item command="settings">
+                  <el-icon><Setting /></el-icon>
+                  系统设置
+                </el-dropdown-item>
                 <el-dropdown-item divided command="logout">
                   <el-icon><SwitchButton /></el-icon>
                   退出登录
@@ -216,10 +232,13 @@ import { useUserStore } from '@/stores/user'
 import { getRouteBreadcrumb } from '@/utils/breadcrumb'
 import {
     ArrowDown,
+    Coin,
+    Download,
     FolderOpened,
     Menu,
     Moon, MoreFilled,
     Setting,
+    ShoppingBag,
     ShoppingCart,
     Sunny,
     SwitchButton,
@@ -275,6 +294,18 @@ const handleUserCommand = async (command: string) => {
       break
     case 'my-orders':
       router.push('/user/my-orders')
+      break
+    case 'purchases':
+      router.push('/user/purchases')
+      break
+    case 'downloads':
+      router.push('/user/downloads')
+      break
+    case 'points':
+      router.push('/user/points')
+      break
+    case 'settings':
+      router.push('/user/settings')
       break
     case 'logout':
       try {
