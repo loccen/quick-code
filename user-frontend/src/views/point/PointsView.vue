@@ -1,221 +1,324 @@
 <template>
-  <div class="points-view">
-    <div class="container">
-      <div class="page-header">
-        <h1 class="page-title">积分管理</h1>
-        <p class="page-subtitle">管理您的积分余额和交易记录</p>
-      </div>
+  <PageLayout>
+    <!-- 页面头部 -->
+    <PageHeader
+      title="积分管理"
+      description="管理您的积分余额和查看交易记录"
+      :icon="CreditCard"
+    >
+      <template #actions>
+        <el-button type="primary" @click="handleRecharge">
+          <el-icon><Plus /></el-icon>
+          充值积分
+        </el-button>
+      </template>
+    </PageHeader>
 
-    <!-- 积分概览 -->
-    <div class="points-overview">
-      <div class="balance-card">
-        <div class="balance-info">
-          <div class="balance-amount">
-            <span class="amount">{{ pointAccount.balance }}</span>
-            <span class="unit">积分</span>
-          </div>
-          <div class="balance-label">当前余额</div>
-        </div>
-        <div class="balance-actions">
-          <el-button type="primary" @click="handleRecharge">
-            <el-icon><Plus /></el-icon>
-            充值积分
-          </el-button>
-          <el-button @click="handleWithdraw">
-            <el-icon><Minus /></el-icon>
-            提现
-          </el-button>
-        </div>
-      </div>
+    <!-- 统计卡片 -->
+    <StatsGrid>
+      <StatCard
+        :icon="CreditCard"
+        icon-class="points"
+        :value="stats.currentBalance"
+        label="当前余额"
+      />
+      <StatCard
+        :icon="TrendCharts"
+        icon-class="earnings"
+        :value="stats.totalEarned"
+        label="累计获得"
+      />
+      <StatCard
+        :icon="ShoppingCart"
+        icon-class="purchased"
+        :value="stats.totalSpent"
+        label="累计消费"
+      />
+      <StatCard
+        :icon="Clock"
+        icon-class="transactions"
+        :value="stats.recentTransactions"
+        label="本月交易"
+      />
+    </StatsGrid>
 
-      <div class="stats-grid">
-        <div class="stat-card">
-          <div class="stat-icon">
-            <el-icon><TrendCharts /></el-icon>
-          </div>
-          <div class="stat-info">
-            <div class="stat-number">{{ pointAccount.totalEarned }}</div>
-            <div class="stat-label">累计收入</div>
-          </div>
-        </div>
-        
-        <div class="stat-card">
-          <div class="stat-icon">
-            <el-icon><ShoppingCart /></el-icon>
-          </div>
-          <div class="stat-info">
-            <div class="stat-number">{{ pointAccount.totalSpent }}</div>
-            <div class="stat-label">累计支出</div>
-          </div>
-        </div>
-        
-        <div class="stat-card">
-          <div class="stat-icon">
-            <el-icon><Lock /></el-icon>
-          </div>
-          <div class="stat-info">
-            <div class="stat-number">{{ pointAccount.frozenAmount }}</div>
-            <div class="stat-label">冻结金额</div>
-          </div>
-        </div>
-      </div>
-    </div>
-
-    <!-- 交易记录 -->
-    <div class="transactions-section">
-      <div class="section-header">
-        <h2 class="section-title">交易记录</h2>
-        
-        <div class="section-filters">
-          <el-select v-model="filterType" placeholder="交易类型" @change="handleFilterChange">
-            <el-option label="全部" value="" />
-            <el-option label="收入" value="EARN" />
-            <el-option label="支出" value="SPEND" />
-            <el-option label="退款" value="REFUND" />
-            <el-option label="冻结" value="FREEZE" />
-            <el-option label="解冻" value="UNFREEZE" />
-          </el-select>
+    <!-- 积分管理 -->
+    <ContentContainer>
+      <div class="points-tabs">
+        <el-tabs v-model="activeTab" @tab-change="handleTabChange">
+          <el-tab-pane label="全部记录" name="all">
+            <TabHeader title="全部交易记录">
+              <template #actions>
+                <el-select
+                  v-model="transactionType"
+                  placeholder="交易类型"
+                  clearable
+                  @change="handleFilterChange"
+                >
+                  <el-option label="全部类型" value="" />
+                  <el-option label="充值" value="RECHARGE" />
+                  <el-option label="消费" value="PURCHASE" />
+                  <el-option label="退款" value="REFUND" />
+                  <el-option label="奖励" value="REWARD" />
+                </el-select>
+                <el-date-picker
+                  v-model="dateRange"
+                  type="daterange"
+                  range-separator="至"
+                  start-placeholder="开始日期"
+                  end-placeholder="结束日期"
+                  @change="handleDateChange"
+                />
+              </template>
+            </TabHeader>
+          </el-tab-pane>
           
-          <el-date-picker
-            v-model="dateRange"
-            type="daterange"
-            range-separator="至"
-            start-placeholder="开始日期"
-            end-placeholder="结束日期"
-            @change="handleDateChange"
+          <el-tab-pane label="收入记录" name="income">
+            <TabHeader title="收入记录">
+              <template #actions>
+                <el-date-picker
+                  v-model="dateRange"
+                  type="daterange"
+                  range-separator="至"
+                  start-placeholder="开始日期"
+                  end-placeholder="结束日期"
+                  @change="handleDateChange"
+                />
+              </template>
+            </TabHeader>
+          </el-tab-pane>
+          
+          <el-tab-pane label="支出记录" name="expense">
+            <TabHeader title="支出记录">
+              <template #actions>
+                <el-date-picker
+                  v-model="dateRange"
+                  type="daterange"
+                  range-separator="至"
+                  start-placeholder="开始日期"
+                  end-placeholder="结束日期"
+                  @change="handleDateChange"
+                />
+              </template>
+            </TabHeader>
+          </el-tab-pane>
+        </el-tabs>
+
+        <!-- 加载状态 -->
+        <div v-if="loading" class="loading-container">
+          <el-skeleton :rows="4" animated />
+        </div>
+
+        <!-- 交易记录列表 -->
+        <div v-else-if="transactions.length > 0" class="transactions-list">
+          <div
+            v-for="transaction in transactions"
+            :key="transaction.id"
+            class="transaction-item"
+          >
+            <div class="transaction-header">
+              <div class="transaction-info">
+                <span class="transaction-date">{{ transaction.createdAt }}</span>
+                <span class="transaction-id">交易号：{{ transaction.transactionId }}</span>
+              </div>
+              <div class="transaction-amount" :class="getAmountClass(transaction.type)">
+                <span class="amount">{{ getAmountText(transaction) }}</span>
+                <span class="unit">积分</span>
+              </div>
+            </div>
+
+            <div class="transaction-content">
+              <div class="transaction-details">
+                <div class="transaction-type">
+                  <el-tag :type="getTypeColor(transaction.type)">
+                    {{ getTypeText(transaction.type) }}
+                  </el-tag>
+                </div>
+                <div class="transaction-description">
+                  <h4 class="description-title">{{ transaction.description }}</h4>
+                  <p v-if="transaction.remark" class="description-remark">{{ transaction.remark }}</p>
+                  <div class="transaction-meta">
+                    <span v-if="transaction.relatedProject" class="related-project">
+                      相关项目：{{ transaction.relatedProject }}
+                    </span>
+                    <span class="transaction-status">
+                      状态：{{ getStatusText(transaction.status) }}
+                    </span>
+                  </div>
+                </div>
+              </div>
+
+              <div class="transaction-actions">
+                <el-button
+                  size="small"
+                  @click="handleViewDetail(transaction)"
+                >
+                  <el-icon><View /></el-icon>
+                  查看详情
+                </el-button>
+                
+                <el-button
+                  v-if="transaction.canRefund"
+                  type="warning"
+                  size="small"
+                  @click="handleRequestRefund(transaction)"
+                >
+                  <el-icon><RefreshLeft /></el-icon>
+                  申请退款
+                </el-button>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- 分页 -->
+        <div v-if="transactions.length > 0" class="pagination-container">
+          <el-pagination
+            v-model:current-page="currentPage"
+            v-model:page-size="pageSize"
+            :total="totalElements"
+            layout="total, prev, pager, next"
+            @current-change="handlePageChange"
           />
         </div>
-      </div>
 
-      <!-- 加载状态 -->
-      <div v-if="loading" class="loading-container">
-        <el-skeleton :rows="5" animated />
-      </div>
-
-      <!-- 交易列表 -->
-      <div v-else-if="transactions.length > 0" class="transactions-list">
-        <div
-          v-for="transaction in transactions"
-          :key="transaction.id"
-          class="transaction-item"
-        >
-          <div class="transaction-icon">
-            <el-icon :class="getTransactionIconClass(transaction.type)">
-              <component :is="getTransactionIcon(transaction.type)" />
-            </el-icon>
-          </div>
-          
-          <div class="transaction-info">
-            <div class="transaction-description">{{ transaction.description }}</div>
-            <div class="transaction-time">{{ transaction.createdAt }}</div>
-          </div>
-          
-          <div class="transaction-amount">
-            <span :class="getAmountClass(transaction.type)">
-              {{ getAmountPrefix(transaction.type) }}{{ transaction.amount }}
-            </span>
-            <div class="transaction-balance">余额：{{ transaction.balance }}</div>
-          </div>
+        <!-- 空状态 -->
+        <div v-else-if="!loading" class="empty-state">
+          <el-empty description="暂无交易记录" />
         </div>
       </div>
-
-      <!-- 空状态 -->
-      <div v-else class="empty-state">
-        <el-empty description="暂无交易记录" />
-      </div>
-
-      <!-- 分页 -->
-      <div v-if="totalPages > 1" class="pagination-container">
-        <el-pagination
-          v-model:current-page="currentPage"
-          v-model:page-size="pageSize"
-          :total="totalElements"
-          layout="total, prev, pager, next"
-          @current-change="handlePageChange"
-        />
-      </div>
-    </div>
-    </div>
-  </div>
+    </ContentContainer>
+  </PageLayout>
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted, computed } from 'vue'
-import { ElMessage } from 'element-plus'
-import { 
-  Plus, 
-  Minus, 
-  TrendCharts, 
-  ShoppingCart, 
-  Lock,
-  ArrowUp,
-  ArrowDown,
-  RefreshRight,
-  Lock as LockIcon,
-  Unlock
-} from '@element-plus/icons-vue'
+import { CreditCard, TrendCharts, ShoppingCart, Clock, Plus, View, RefreshLeft } from '@element-plus/icons-vue'
+import { ElMessage, ElMessageBox } from 'element-plus'
+import { onMounted, ref } from 'vue'
+import { useRouter } from 'vue-router'
+import PageLayout from '@/components/common/PageLayout.vue'
+import PageHeader from '@/components/common/PageHeader.vue'
+import StatsGrid from '@/components/common/StatsGrid.vue'
+import StatCard from '@/components/common/StatCard.vue'
+import ContentContainer from '@/components/common/ContentContainer.vue'
+import TabHeader from '@/components/common/TabHeader.vue'
+
+const router = useRouter()
 
 // 响应式数据
 const loading = ref(false)
-const filterType = ref('')
+const activeTab = ref('all')
+const transactionType = ref('')
 const dateRange = ref<[Date, Date] | null>(null)
 const currentPage = ref(1)
 const pageSize = ref(10)
 const totalElements = ref(0)
 
-const pointAccount = ref({
-  balance: 8500,
-  frozenAmount: 200,
-  totalEarned: 15000,
-  totalSpent: 6700
-})
-
 const transactions = ref<any[]>([])
 
-const totalPages = computed(() => Math.ceil(totalElements.value / pageSize.value))
+// 统计数据
+const stats = ref({
+  currentBalance: 0,
+  totalEarned: 0,
+  totalSpent: 0,
+  recentTransactions: 0
+})
 
 /**
- * 获取交易类型图标
+ * 获取交易类型颜色
  */
-const getTransactionIcon = (type: string) => {
-  const iconMap: Record<string, any> = {
-    'EARN': ArrowUp,
-    'SPEND': ArrowDown,
-    'REFUND': RefreshRight,
-    'FREEZE': LockIcon,
-    'UNFREEZE': Unlock
+const getTypeColor = (type: string) => {
+  const colorMap: Record<string, string> = {
+    RECHARGE: 'success',
+    PURCHASE: 'warning',
+    REFUND: 'info',
+    REWARD: 'primary'
   }
-  return iconMap[type] || ArrowUp
+  return colorMap[type] || 'default'
 }
 
 /**
- * 获取交易图标样式类
+ * 获取交易类型文本
  */
-const getTransactionIconClass = (type: string) => {
-  const classMap: Record<string, string> = {
-    'EARN': 'icon-earn',
-    'SPEND': 'icon-spend',
-    'REFUND': 'icon-refund',
-    'FREEZE': 'icon-freeze',
-    'UNFREEZE': 'icon-unfreeze'
+const getTypeText = (type: string) => {
+  const textMap: Record<string, string> = {
+    RECHARGE: '充值',
+    PURCHASE: '消费',
+    REFUND: '退款',
+    REWARD: '奖励'
   }
-  return classMap[type] || 'icon-earn'
+  return textMap[type] || '未知'
 }
 
 /**
  * 获取金额样式类
  */
 const getAmountClass = (type: string) => {
-  return type === 'EARN' || type === 'REFUND' || type === 'UNFREEZE' 
-    ? 'amount-positive' 
-    : 'amount-negative'
+  return type === 'RECHARGE' || type === 'REFUND' || type === 'REWARD' ? 'income' : 'expense'
 }
 
 /**
- * 获取金额前缀
+ * 获取金额文本
  */
-const getAmountPrefix = (type: string) => {
-  return type === 'EARN' || type === 'REFUND' || type === 'UNFREEZE' ? '+' : '-'
+const getAmountText = (transaction: any) => {
+  const prefix = getAmountClass(transaction.type) === 'income' ? '+' : '-'
+  return `${prefix}${transaction.amount}`
+}
+
+/**
+ * 获取状态文本
+ */
+const getStatusText = (status: string) => {
+  const statusMap: Record<string, string> = {
+    SUCCESS: '成功',
+    PENDING: '处理中',
+    FAILED: '失败',
+    CANCELLED: '已取消'
+  }
+  return statusMap[status] || '未知'
+}
+
+/**
+ * 充值积分
+ */
+const handleRecharge = () => {
+  ElMessage.info('充值功能开发中...')
+}
+
+/**
+ * 查看交易详情
+ */
+const handleViewDetail = (_transaction: any) => {
+  ElMessage.info('查看详情功能开发中...')
+}
+
+/**
+ * 申请退款
+ */
+const handleRequestRefund = async (_transaction: any) => {
+  try {
+    await ElMessageBox.confirm(
+      '确定要申请退款吗？',
+      '申请退款',
+      {
+        confirmButtonText: '确定',
+        cancelButtonText: '取消',
+        type: 'warning'
+      }
+    )
+    ElMessage.success('退款申请已提交')
+    await loadTransactions()
+  } catch {
+    // 用户取消操作
+  }
+}
+
+/**
+ * 处理标签页变化
+ */
+const handleTabChange = () => {
+  currentPage.value = 1
+  loadTransactions()
 }
 
 /**
@@ -223,447 +326,188 @@ const getAmountPrefix = (type: string) => {
  */
 const handleFilterChange = () => {
   currentPage.value = 1
-  fetchTransactions()
+  loadTransactions()
 }
 
 /**
- * 处理日期范围变化
+ * 处理日期变化
  */
 const handleDateChange = () => {
   currentPage.value = 1
-  fetchTransactions()
+  loadTransactions()
 }
 
 /**
- * 处理页码变化
+ * 处理分页变化
  */
-const handlePageChange = (page: number) => {
-  currentPage.value = page
-  fetchTransactions()
+const handlePageChange = () => {
+  loadTransactions()
 }
 
 /**
- * 获取交易记录
+ * 加载交易记录数据
  */
-const fetchTransactions = async () => {
+const loadTransactions = async () => {
   loading.value = true
   try {
     // 模拟API调用
     await new Promise(resolve => setTimeout(resolve, 1000))
     
     // 模拟数据
-    const mockTransactions = [
-      {
-        id: 1,
-        type: 'EARN',
-        amount: 299,
-        balance: 8500,
-        description: '项目销售收入 - Vue3管理后台模板',
-        createdAt: '2024-01-15 14:30:00'
-      },
-      {
-        id: 2,
-        type: 'SPEND',
-        amount: 199,
-        balance: 8201,
-        description: '购买项目 - React Native电商App',
-        createdAt: '2024-01-14 10:20:00'
-      },
-      {
-        id: 3,
-        type: 'EARN',
-        amount: 599,
-        balance: 8400,
-        description: '项目销售收入 - Spring Boot微服务架构',
-        createdAt: '2024-01-13 16:45:00'
-      },
-      {
-        id: 4,
-        type: 'REFUND',
-        amount: 299,
-        balance: 7801,
-        description: '订单退款 - 项目质量问题',
-        createdAt: '2024-01-12 09:15:00'
-      },
-      {
-        id: 5,
-        type: 'FREEZE',
-        amount: 200,
-        balance: 7502,
-        description: '资金冻结 - 争议处理中',
-        createdAt: '2024-01-11 11:30:00'
-      }
-    ]
+    transactions.value = []
     
-    transactions.value = mockTransactions
-    totalElements.value = mockTransactions.length
+    totalElements.value = transactions.value.length
+    
+    // 更新统计数据
+    stats.value = {
+      currentBalance: 1580,
+      totalEarned: 5000,
+      totalSpent: 3420,
+      recentTransactions: 8
+    }
   } catch (error) {
-    console.error('获取交易记录失败:', error)
-    ElMessage.error('获取交易记录失败')
+    ElMessage.error('加载交易记录失败')
   } finally {
     loading.value = false
   }
 }
 
-/**
- * 处理充值
- */
-const handleRecharge = () => {
-  ElMessage.info('充值功能开发中...')
-}
-
-/**
- * 处理提现
- */
-const handleWithdraw = () => {
-  ElMessage.info('提现功能开发中...')
-}
-
-// 生命周期
 onMounted(() => {
-  fetchTransactions()
+  loadTransactions()
 })
 </script>
 
-<style lang="scss" scoped>
-@use '@/styles/variables' as *;
-@use '@/styles/mixins' as *;
-
-.points-view {
-  min-height: 100vh;
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-  padding: $spacing-xl 0;
-
-  .container {
-    max-width: 1200px;
-    margin: 0 auto;
-    padding: 0 $spacing-lg;
-  }
-
-  .page-header {
-    margin-bottom: $spacing-xl;
-    padding: 32px;
-    @include glass-effect();
-    border-radius: $radius-xl;
-    color: white;
-    background: linear-gradient(135deg, rgba(102, 126, 234, 0.8) 0%, rgba(118, 75, 162, 0.8) 100%);
-    backdrop-filter: $glass-blur;
-    box-shadow: $shadow-layered-md;
-    border: 1px solid rgba(255, 255, 255, 0.2);
-
-    .page-title {
-      font-size: $font-size-3xl;
-      font-weight: $font-weight-bold;
-      color: white;
-      margin: 0 0 $spacing-xs 0;
-      display: flex;
-      align-items: center;
-      gap: 12px;
-    }
-
-    .page-subtitle {
-      color: rgba(255, 255, 255, 0.9);
-      margin: 0;
-    }
-  }
-
-  .points-overview {
-    margin-bottom: $spacing-3xl;
-
-    .balance-card {
-      @include glass-effect();
-      background: linear-gradient(135deg, rgba(102, 126, 234, 0.8) 0%, rgba(118, 75, 162, 0.8) 100%);
-      color: white;
-      border-radius: $radius-xl;
-      padding: $spacing-xl;
-      margin-bottom: $spacing-lg;
-      @include flex-between();
-      backdrop-filter: $glass-blur;
-      box-shadow: $shadow-layered-md;
-      border: 1px solid rgba(255, 255, 255, 0.2);
-      position: relative;
-
-      &::before {
-        content: '';
-        position: absolute;
-        top: 0;
-        left: 0;
-        right: 0;
-        height: 1px;
-        background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.8), transparent);
-      }
-
-      .balance-info {
-        .balance-amount {
-          .amount {
-            font-size: $font-size-5xl;
-            font-weight: $font-weight-bold;
-          }
-
-          .unit {
-            font-size: $font-size-lg;
-            margin-left: $spacing-sm;
-            opacity: 0.9;
-          }
-        }
-
-        .balance-label {
-          font-size: $font-size-lg;
-          margin-top: $spacing-sm;
-          opacity: 0.8;
-        }
-      }
-
-      .balance-actions {
-        @include flex-center();
-        gap: $spacing-md;
-
-        .el-button {
-          background: rgba(255, 255, 255, 0.2);
-          border-color: rgba(255, 255, 255, 0.3);
-          color: white;
-
-          &:hover {
-            background: rgba(255, 255, 255, 0.3);
-          }
-        }
-      }
-    }
-
-    .stats-grid {
-      display: grid;
-      grid-template-columns: repeat(3, 1fr);
-      gap: $spacing-lg;
-
-      .stat-card {
-        @include glass-effect();
-        border: 1px solid rgba(255, 255, 255, 0.2);
-        border-radius: $radius-xl;
-        padding: $spacing-lg;
-        @include flex-start();
-        gap: $spacing-md;
-        backdrop-filter: $glass-blur-sm;
-        box-shadow: $shadow-layered-sm;
-        transition: all $transition-base;
-        position: relative;
-
-        &::before {
-          content: '';
-          position: absolute;
-          top: 0;
-          left: 0;
-          right: 0;
-          height: 1px;
-          background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.8), transparent);
-        }
-
-        &:hover {
-          transform: translateY(-2px);
-          box-shadow: $shadow-layered-md;
-          border-color: rgba(255, 255, 255, 0.3);
-        }
-
-        .stat-icon {
-          width: 48px;
-          height: 48px;
-          background: rgba(255, 255, 255, 0.2);
-          border-radius: 50%;
-          @include flex-center();
-          color: white;
-          box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
-
-          .el-icon {
-            font-size: 24px;
-          }
-        }
-
-        .stat-info {
-          .stat-number {
-            font-size: $font-size-2xl;
-            font-weight: $font-weight-bold;
-            color: rgba(255, 255, 255, 0.95);
-            text-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
-          }
-
-          .stat-label {
-            color: rgba(255, 255, 255, 0.8);
-            font-size: $font-size-sm;
-            font-weight: $font-weight-medium;
-          }
-        }
-      }
-    }
-  }
-
-  .transactions-section {
-    .section-header {
-      @include flex-between();
-      margin-bottom: $spacing-lg;
-      padding: 24px;
-      @include glass-effect();
-      border-radius: $radius-xl;
-      box-shadow: $shadow-layered-sm;
-      border: 1px solid rgba(255, 255, 255, 0.2);
-      backdrop-filter: $glass-blur-sm;
-
-      .section-title {
-        font-size: $font-size-2xl;
-        font-weight: $font-weight-bold;
-        color: rgba(255, 255, 255, 0.95);
-        margin: 0;
-      }
-
-      .section-filters {
-        @include flex-center();
-        gap: $spacing-md;
-      }
-    }
-
-    .loading-container {
-      padding: $spacing-xl;
-    }
-
-    .transactions-list {
-      @include glass-effect();
-      border: 1px solid rgba(255, 255, 255, 0.2);
-      border-radius: $radius-xl;
-      overflow: hidden;
-      backdrop-filter: $glass-blur;
-      box-shadow: $shadow-layered-md;
-      position: relative;
-
-      &::before {
-        content: '';
-        position: absolute;
-        top: 0;
-        left: 0;
-        right: 0;
-        height: 1px;
-        background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.8), transparent);
-      }
-
-      .transaction-item {
-        @include flex-start();
-        gap: $spacing-md;
-        padding: $spacing-lg;
-        border-bottom: 1px solid rgba(255, 255, 255, 0.1);
-        transition: all $transition-base;
-
-        &:last-child {
-          border-bottom: none;
-        }
-
-        &:hover {
-          background: rgba(255, 255, 255, 0.05);
-        }
-
-        .transaction-icon {
-          width: 40px;
-          height: 40px;
-          border-radius: 50%;
-          @include flex-center();
-
-          &.icon-earn {
-            background: rgba(var(--success-color-rgb), 0.1);
-            color: var(--success-color);
-          }
-
-          &.icon-spend {
-            background: rgba(var(--danger-color-rgb), 0.1);
-            color: var(--danger-color);
-          }
-
-          &.icon-refund {
-            background: rgba(var(--warning-color-rgb), 0.1);
-            color: var(--warning-color);
-          }
-
-          &.icon-freeze,
-          &.icon-unfreeze {
-            background: rgba(var(--info-color-rgb), 0.1);
-            color: var(--info-color);
-          }
-        }
-
-        .transaction-info {
-          flex: 1;
-
-          .transaction-description {
-            font-weight: $font-weight-medium;
-            color: var(--text-primary);
-            margin-bottom: $spacing-xs;
-          }
-
-          .transaction-time {
-            color: var(--text-secondary);
-            font-size: $font-size-sm;
-          }
-        }
-
-        .transaction-amount {
-          text-align: right;
-
-          .amount-positive {
-            color: var(--success-color);
-            font-weight: $font-weight-bold;
-            font-size: $font-size-lg;
-          }
-
-          .amount-negative {
-            color: var(--danger-color);
-            font-weight: $font-weight-bold;
-            font-size: $font-size-lg;
-          }
-
-          .transaction-balance {
-            color: var(--text-secondary);
-            font-size: $font-size-sm;
-            margin-top: $spacing-xs;
-          }
-        }
-      }
-    }
-
-    .empty-state {
-      padding: $spacing-3xl;
-      text-align: center;
-    }
-
-    .pagination-container {
-      @include flex-center();
-      justify-content: center;
-      padding-top: $spacing-xl;
-    }
-  }
+<style scoped>
+.points-tabs {
+  padding: 0 24px;
 }
 
-// 响应式设计
-@media (max-width: 768px) {
-  .points-view {
-    .points-overview {
-      .balance-card {
-        flex-direction: column;
-        gap: $spacing-lg;
-        text-align: center;
-      }
+.loading-container {
+  padding: 24px;
+}
 
-      .stats-grid {
-        grid-template-columns: 1fr;
-      }
-    }
+.transactions-list {
+  padding: 0 24px 24px;
+}
 
-    .transactions-section {
-      .section-header {
-        flex-direction: column;
-        gap: $spacing-md;
-        align-items: stretch;
+.transaction-item {
+  background: white;
+  border: 1px solid #e4e7ed;
+  border-radius: 12px;
+  margin-bottom: 16px;
+  overflow: hidden;
+  transition: all 0.3s ease;
+}
 
-        .section-filters {
-          justify-content: stretch;
-          flex-direction: column;
-        }
-      }
-    }
-  }
+.transaction-item:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.15);
+}
+
+.transaction-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 16px 24px;
+  background: #f5f7fa;
+  border-bottom: 1px solid #e4e7ed;
+}
+
+.transaction-info {
+  display: flex;
+  gap: 24px;
+}
+
+.transaction-date {
+  font-weight: 600;
+  color: #303133;
+}
+
+.transaction-id {
+  color: #909399;
+  font-size: 14px;
+}
+
+.transaction-amount {
+  text-align: right;
+}
+
+.transaction-amount.income .amount {
+  color: #67c23a;
+}
+
+.transaction-amount.expense .amount {
+  color: #f56c6c;
+}
+
+.amount {
+  font-size: 18px;
+  font-weight: 700;
+}
+
+.unit {
+  color: #909399;
+  font-size: 14px;
+  margin-left: 4px;
+}
+
+.transaction-content {
+  padding: 24px;
+  display: flex;
+  justify-content: space-between;
+  gap: 24px;
+}
+
+.transaction-details {
+  display: flex;
+  gap: 16px;
+  flex: 1;
+}
+
+.transaction-type {
+  flex-shrink: 0;
+}
+
+.transaction-description {
+  flex: 1;
+}
+
+.description-title {
+  font-size: 16px;
+  font-weight: 600;
+  color: #303133;
+  margin: 0 0 8px 0;
+}
+
+.description-remark {
+  color: #606266;
+  font-size: 14px;
+  margin: 0 0 12px 0;
+}
+
+.transaction-meta {
+  display: flex;
+  gap: 16px;
+}
+
+.transaction-meta span {
+  color: #909399;
+  font-size: 12px;
+}
+
+.transaction-actions {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.pagination-container {
+  display: flex;
+  justify-content: center;
+  padding: 24px;
+}
+
+.empty-state {
+  padding: 48px 24px;
 }
 </style>

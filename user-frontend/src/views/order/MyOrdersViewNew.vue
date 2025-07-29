@@ -2,14 +2,14 @@
   <PageLayout>
     <!-- 页面头部 -->
     <PageHeader
-      title="下载记录"
-      description="查看您的项目下载历史和管理下载文件"
-      :icon="Download"
+      title="我的订单"
+      description="查看您的购买记录和订单状态"
+      :icon="ShoppingCart"
     >
       <template #actions>
-        <el-button @click="$router.push('/user/purchases')">
-          <el-icon><ShoppingBag /></el-icon>
-          查看购买记录
+        <el-button @click="$router.push('/market')">
+          <el-icon><ShoppingCart /></el-icon>
+          浏览项目市场
         </el-button>
       </template>
     </PageHeader>
@@ -17,37 +17,37 @@
     <!-- 统计卡片 -->
     <StatsGrid>
       <StatCard
-        :icon="Download"
-        icon-class="downloads"
-        :value="stats.totalDownloads"
-        label="总下载次数"
+        :icon="ShoppingCart"
+        icon-class="orders"
+        :value="stats.totalOrders"
+        label="总订单数"
       />
       <StatCard
-        :icon="Folder"
-        icon-class="purchased"
-        :value="stats.downloadedProjects"
-        label="已下载项目"
+        :icon="CreditCard"
+        icon-class="earnings"
+        :value="stats.totalAmount"
+        label="总消费（积分）"
       />
       <StatCard
         :icon="Clock"
-        icon-class="transactions"
-        :value="stats.recentDownloads"
-        label="本月下载"
+        icon-class="purchased"
+        :value="stats.pendingOrders"
+        label="待支付订单"
       />
       <StatCard
-        :icon="Folder"
-        icon-class="points"
-        :value="stats.totalSize"
-        label="下载大小"
+        :icon="Check"
+        icon-class="favorites"
+        :value="stats.completedOrders"
+        label="已完成订单"
       />
     </StatsGrid>
 
-    <!-- 下载记录管理 -->
+    <!-- 订单管理 -->
     <ContentContainer>
-      <div class="downloads-tabs">
-        <el-tabs v-model="activeTab" @tab-change="handleTabChange">
-          <el-tab-pane label="全部下载" name="all">
-            <TabHeader title="全部下载记录">
+      <div class="orders-tabs">
+        <el-tabs v-model="activeStatus" @tab-change="handleStatusChange">
+          <el-tab-pane label="全部" name="all">
+            <TabHeader title="全部订单">
               <template #actions>
                 <el-date-picker
                   v-model="dateRange"
@@ -59,7 +59,7 @@
                 />
                 <el-input
                   v-model="searchKeyword"
-                  placeholder="搜索项目名称..."
+                  placeholder="搜索订单号或项目名称..."
                   clearable
                   @input="handleSearch"
                 >
@@ -71,12 +71,12 @@
             </TabHeader>
           </el-tab-pane>
           
-          <el-tab-pane label="最近下载" name="recent">
-            <TabHeader title="最近下载">
+          <el-tab-pane label="待支付" name="pending">
+            <TabHeader title="待支付订单">
               <template #actions>
                 <el-input
                   v-model="searchKeyword"
-                  placeholder="搜索项目名称..."
+                  placeholder="搜索订单号或项目名称..."
                   clearable
                   @input="handleSearch"
                 >
@@ -88,12 +88,12 @@
             </TabHeader>
           </el-tab-pane>
           
-          <el-tab-pane label="常用项目" name="frequent">
-            <TabHeader title="常用项目">
+          <el-tab-pane label="已支付" name="paid">
+            <TabHeader title="已支付订单">
               <template #actions>
                 <el-input
                   v-model="searchKeyword"
-                  placeholder="搜索项目名称..."
+                  placeholder="搜索订单号或项目名称..."
                   clearable
                   @input="handleSearch"
                 >
@@ -103,6 +103,14 @@
                 </el-input>
               </template>
             </TabHeader>
+          </el-tab-pane>
+          
+          <el-tab-pane label="已取消" name="cancelled">
+            <TabHeader title="已取消订单" />
+          </el-tab-pane>
+          
+          <el-tab-pane label="已退款" name="refunded">
+            <TabHeader title="已退款订单" />
           </el-tab-pane>
         </el-tabs>
 
@@ -111,78 +119,90 @@
           <el-skeleton :rows="4" animated />
         </div>
 
-        <!-- 下载记录列表 -->
-        <div v-else-if="downloads.length > 0" class="downloads-list">
+        <!-- 订单列表 -->
+        <div v-else-if="orders.length > 0" class="orders-list">
           <div
-            v-for="download in downloads"
-            :key="download.id"
-            class="download-item"
+            v-for="order in orders"
+            :key="order.id"
+            class="order-item"
           >
-            <div class="download-header">
-              <div class="download-info">
-                <span class="download-date">下载时间：{{ download.downloadDate }}</span>
-                <span class="download-version">版本：{{ download.version }}</span>
+            <div class="order-header">
+              <div class="order-info">
+                <span class="order-no">订单号：{{ order.orderNo }}</span>
+                <span class="order-date">{{ order.createdAt }}</span>
               </div>
-              <div class="download-status">
-                <el-tag :type="getStatusType(download.status)">
-                  {{ getStatusText(download.status) }}
+              <div class="order-status">
+                <el-tag :type="getStatusType(order.status)">
+                  {{ getStatusText(order.status) }}
                 </el-tag>
               </div>
             </div>
 
-            <div class="download-content">
+            <div class="order-content">
               <div class="project-info">
                 <div class="project-thumbnail">
                   <img
-                    :src="download.project.thumbnail || '/images/default-project.jpg'"
-                    :alt="download.project.title"
+                    :src="order.project.thumbnail || '/images/default-project.jpg'"
+                    :alt="order.project.title"
                   />
                 </div>
                 <div class="project-details">
-                  <h3 class="project-title">{{ download.project.title }}</h3>
-                  <p class="project-description">{{ download.project.description }}</p>
+                  <h3 class="project-title">{{ order.project.title }}</h3>
+                  <p class="project-description">{{ order.project.description }}</p>
                   <div class="project-meta">
-                    <span class="project-author">作者：{{ download.project.author }}</span>
-                    <span class="project-size">大小：{{ download.fileSize }}</span>
-                    <span class="download-count">下载次数：{{ download.downloadCount }}</span>
+                    <span class="project-author">作者：{{ order.project.author }}</span>
+                    <span class="project-category">分类：{{ order.project.category }}</span>
                   </div>
                 </div>
               </div>
 
-              <div class="download-actions">
+              <div class="order-amount">
+                <div class="amount-info">
+                  <span class="amount">{{ order.amount }}</span>
+                  <span class="unit">积分</span>
+                </div>
+              </div>
+
+              <div class="order-actions">
                 <el-button
+                  size="small"
+                  @click="handleViewProject(order.project)"
+                >
+                  查看项目
+                </el-button>
+
+                <el-button
+                  v-if="order.status === 'PENDING'"
                   type="primary"
                   size="small"
-                  @click="handleRedownload(download)"
+                  @click="handlePayOrder(order)"
                 >
-                  <el-icon><Download /></el-icon>
-                  重新下载
+                  立即支付
                 </el-button>
-                
+
                 <el-button
+                  v-if="order.status === 'PENDING'"
                   size="small"
-                  @click="handleViewProject(download.project)"
+                  @click="handleCancelOrder(order)"
                 >
-                  <el-icon><View /></el-icon>
-                  查看详情
+                  取消订单
                 </el-button>
-                
+
                 <el-button
+                  v-if="order.status === 'PAID'"
+                  type="success"
                   size="small"
-                  @click="handleViewHistory(download)"
+                  @click="handleDownloadProject(order.project)"
                 >
-                  <el-icon><Clock /></el-icon>
-                  下载历史
+                  下载项目
                 </el-button>
-                
+
                 <el-button
-                  v-if="download.canDelete"
-                  type="danger"
+                  v-if="order.status === 'PAID'"
                   size="small"
-                  @click="handleDeleteRecord(download)"
+                  @click="handleRequestRefund(order)"
                 >
-                  <el-icon><Delete /></el-icon>
-                  删除记录
+                  申请退款
                 </el-button>
               </div>
             </div>
@@ -190,7 +210,7 @@
         </div>
 
         <!-- 分页 -->
-        <div v-if="downloads.length > 0" class="pagination-container">
+        <div v-if="orders.length > 0" class="pagination-container">
           <el-pagination
             v-model:current-page="currentPage"
             v-model:page-size="pageSize"
@@ -202,7 +222,7 @@
 
         <!-- 空状态 -->
         <div v-else-if="!loading" class="empty-state">
-          <el-empty description="暂无下载记录" />
+          <el-empty description="暂无订单数据" />
         </div>
       </div>
     </ContentContainer>
@@ -210,9 +230,9 @@
 </template>
 
 <script setup lang="ts">
-import { Search, Download, ShoppingBag, Folder, Clock, View, Delete } from '@element-plus/icons-vue'
+import { Search, ShoppingCart, CreditCard, Clock, Check } from '@element-plus/icons-vue'
 import { ElMessage, ElMessageBox } from 'element-plus'
-import { onMounted, ref } from 'vue'
+import { computed, onMounted, ref } from 'vue'
 import { useRouter } from 'vue-router'
 import PageLayout from '@/components/common/PageLayout.vue'
 import PageHeader from '@/components/common/PageHeader.vue'
@@ -225,45 +245,47 @@ const router = useRouter()
 
 // 响应式数据
 const loading = ref(false)
-const activeTab = ref('all')
+const activeStatus = ref('all')
 const dateRange = ref<[Date, Date] | null>(null)
 const searchKeyword = ref('')
 const currentPage = ref(1)
 const pageSize = ref(10)
 const totalElements = ref(0)
 
-const downloads = ref<any[]>([])
+const orders = ref<any[]>([])
 
 // 统计数据
 const stats = ref({
-  totalDownloads: 0,
-  downloadedProjects: 0,
-  recentDownloads: 0,
-  totalSize: '0 MB'
+  totalOrders: 0,
+  totalAmount: 0,
+  pendingOrders: 0,
+  completedOrders: 0
 })
 
+const totalPages = computed(() => Math.ceil(totalElements.value / pageSize.value))
+
 /**
- * 获取下载状态类型
+ * 获取订单状态类型
  */
 const getStatusType = (status: string) => {
   const statusMap: Record<string, string> = {
-    SUCCESS: 'success',
-    FAILED: 'danger',
-    DOWNLOADING: 'warning',
-    EXPIRED: 'info'
+    PENDING: 'warning',
+    PAID: 'success',
+    CANCELLED: 'info',
+    REFUNDED: 'danger'
   }
   return statusMap[status] || 'info'
 }
 
 /**
- * 获取下载状态文本
+ * 获取订单状态文本
  */
 const getStatusText = (status: string) => {
   const statusMap: Record<string, string> = {
-    SUCCESS: '下载成功',
-    FAILED: '下载失败',
-    DOWNLOADING: '下载中',
-    EXPIRED: '链接过期'
+    PENDING: '待支付',
+    PAID: '已支付',
+    CANCELLED: '已取消',
+    REFUNDED: '已退款'
   }
   return statusMap[status] || '未知'
 }
@@ -276,46 +298,67 @@ const handleViewProject = (project: any) => {
 }
 
 /**
- * 重新下载
+ * 支付订单
  */
-const handleRedownload = (_download: any) => {
-  ElMessage.success('开始重新下载...')
+const handlePayOrder = (_order: any) => {
+  ElMessage.info('支付功能开发中...')
 }
 
 /**
- * 查看下载历史
+ * 取消订单
  */
-const handleViewHistory = (_download: any) => {
-  ElMessage.info('查看下载历史功能开发中...')
-}
-
-/**
- * 删除下载记录
- */
-const handleDeleteRecord = async (download: any) => {
+const handleCancelOrder = async (_order: any) => {
   try {
     await ElMessageBox.confirm(
-      '确定要删除这条下载记录吗？',
-      '删除记录',
+      '确定要取消这个订单吗？',
+      '取消订单',
       {
         confirmButtonText: '确定',
         cancelButtonText: '取消',
         type: 'warning'
       }
     )
-    ElMessage.success('下载记录已删除')
-    await loadDownloads()
+    ElMessage.success('订单已取消')
+    await loadOrders()
   } catch {
     // 用户取消操作
   }
 }
 
 /**
- * 处理标签页变化
+ * 下载项目
  */
-const handleTabChange = () => {
+const handleDownloadProject = (_project: any) => {
+  ElMessage.info('下载功能开发中...')
+}
+
+/**
+ * 申请退款
+ */
+const handleRequestRefund = async (_order: any) => {
+  try {
+    await ElMessageBox.confirm(
+      '确定要申请退款吗？退款将在3-5个工作日内处理。',
+      '申请退款',
+      {
+        confirmButtonText: '确定',
+        cancelButtonText: '取消',
+        type: 'warning'
+      }
+    )
+    ElMessage.success('退款申请已提交')
+    await loadOrders()
+  } catch {
+    // 用户取消操作
+  }
+}
+
+/**
+ * 处理状态变化
+ */
+const handleStatusChange = () => {
   currentPage.value = 1
-  loadDownloads()
+  loadOrders()
 }
 
 /**
@@ -323,7 +366,7 @@ const handleTabChange = () => {
  */
 const handleDateChange = () => {
   currentPage.value = 1
-  loadDownloads()
+  loadOrders()
 }
 
 /**
@@ -331,51 +374,51 @@ const handleDateChange = () => {
  */
 const handleSearch = () => {
   currentPage.value = 1
-  loadDownloads()
+  loadOrders()
 }
 
 /**
  * 处理分页变化
  */
 const handlePageChange = () => {
-  loadDownloads()
+  loadOrders()
 }
 
 /**
- * 加载下载记录数据
+ * 加载订单数据
  */
-const loadDownloads = async () => {
+const loadOrders = async () => {
   loading.value = true
   try {
     // 模拟API调用
     await new Promise(resolve => setTimeout(resolve, 1000))
     
     // 模拟数据
-    downloads.value = []
+    orders.value = []
     
-    totalElements.value = downloads.value.length
+    totalElements.value = orders.value.length
     
     // 更新统计数据
     stats.value = {
-      totalDownloads: 28,
-      downloadedProjects: 12,
-      recentDownloads: 5,
-      totalSize: '2.3 GB'
+      totalOrders: 12,
+      totalAmount: 2580,
+      pendingOrders: 2,
+      completedOrders: 8
     }
   } catch (error) {
-    ElMessage.error('加载下载记录失败')
+    ElMessage.error('加载订单数据失败')
   } finally {
     loading.value = false
   }
 }
 
 onMounted(() => {
-  loadDownloads()
+  loadOrders()
 })
 </script>
 
 <style scoped>
-.downloads-tabs {
+.orders-tabs {
   padding: 0 24px;
 }
 
@@ -383,11 +426,11 @@ onMounted(() => {
   padding: 24px;
 }
 
-.downloads-list {
+.orders-list {
   padding: 0 24px 24px;
 }
 
-.download-item {
+.order-item {
   background: white;
   border: 1px solid #e4e7ed;
   border-radius: 12px;
@@ -396,12 +439,12 @@ onMounted(() => {
   transition: all 0.3s ease;
 }
 
-.download-item:hover {
+.order-item:hover {
   transform: translateY(-2px);
   box-shadow: 0 8px 24px rgba(0, 0, 0, 0.15);
 }
 
-.download-header {
+.order-header {
   display: flex;
   justify-content: space-between;
   align-items: center;
@@ -410,22 +453,22 @@ onMounted(() => {
   border-bottom: 1px solid #e4e7ed;
 }
 
-.download-info {
+.order-info {
   display: flex;
   gap: 24px;
 }
 
-.download-date {
+.order-no {
   font-weight: 600;
   color: #303133;
 }
 
-.download-version {
+.order-date {
   color: #909399;
   font-size: 14px;
 }
 
-.download-content {
+.order-content {
   padding: 24px;
   display: flex;
   justify-content: space-between;
@@ -481,7 +524,23 @@ onMounted(() => {
   font-size: 12px;
 }
 
-.download-actions {
+.order-amount {
+  text-align: center;
+}
+
+.amount {
+  font-size: 20px;
+  font-weight: 700;
+  color: #f56c6c;
+}
+
+.unit {
+  color: #909399;
+  font-size: 14px;
+  margin-left: 4px;
+}
+
+.order-actions {
   display: flex;
   flex-direction: column;
   gap: 8px;
