@@ -294,7 +294,13 @@ const handlePurchase = () => {
     return
   }
 
-  ElMessage.info('购买功能开发中...')
+  if (!project.value) {
+    ElMessage.error('项目信息加载失败')
+    return
+  }
+
+  // 跳转到购买页面
+  router.push(`/user/project/purchase/${project.value.id}`)
 }
 
 /**

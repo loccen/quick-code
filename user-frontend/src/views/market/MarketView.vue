@@ -48,6 +48,7 @@
             >
               <el-option label="最新发布" value="createdAt" />
               <el-option label="下载量" value="downloads" />
+              <el-option label="浏览量" value="viewCount" />
               <el-option label="评分" value="rating" />
               <el-option label="价格" value="price" />
             </el-select>
@@ -248,8 +249,8 @@ const handlePurchase = (project: Project) => {
     return
   }
 
-  // 跳转到购买页面或显示购买弹窗
-  ElMessage.info('购买功能开发中...')
+  // 跳转到购买页面
+  router.push(`/user/project/purchase/${project.id}`)
 }
 
 /**

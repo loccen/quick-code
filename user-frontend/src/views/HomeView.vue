@@ -318,7 +318,9 @@ const handlePurchase = (project: Project) => {
     router.push('/login')
     return
   }
-  ElMessage.info(`购买功能开发中... 项目: ${project.title}`)
+
+  // 跳转到购买页面
+  router.push(`/user/project/purchase/${project.id}`)
 }
 
 /**
