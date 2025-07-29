@@ -114,6 +114,11 @@ public class ProjectDTO {
     private Integer likeCount;
 
     /**
+     * 收藏次数
+     */
+    private Integer favoriteCount;
+
+    /**
      * 评分
      */
     private BigDecimal rating;
@@ -154,6 +159,11 @@ public class ProjectDTO {
     private LocalDateTime updatedTime;
 
     /**
+     * 收藏时间（仅在收藏列表中使用）
+     */
+    private LocalDateTime favoriteTime;
+
+    /**
      * 从Project实体转换为ProjectDTO
      */
     public static ProjectDTO fromProject(Project project) {
@@ -176,6 +186,7 @@ public class ProjectDTO {
                 .downloadCount(project.getDownloadCount())
                 .viewCount(project.getViewCount())
                 .likeCount(project.getLikeCount())
+                .favoriteCount(project.getFavoriteCount())
                 .rating(project.getRating())
                 .ratingCount(project.getRatingCount())
                 .status(project.getStatus())

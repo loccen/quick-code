@@ -149,6 +149,13 @@ public class Project extends BaseEntity {
     private Integer likeCount = 0;
 
     /**
+     * 收藏次数
+     */
+    @Builder.Default
+    @Column(name = "favorite_count", nullable = false)
+    private Integer favoriteCount = 0;
+
+    /**
      * 评分（0-5）
      */
     @Builder.Default
