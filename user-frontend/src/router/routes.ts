@@ -99,15 +99,7 @@ export const publicRoutes: RouteRecordRaw[] = [
           hidden: true
         }
       },
-      {
-        path: 'test/exception',
-        name: 'ExceptionTest',
-        component: () => import('@/dev-tools/ExceptionTest.vue'),
-        meta: {
-          title: '异常处理测试',
-          hidden: true
-        }
-      }
+
     ]
   }
 ]
@@ -192,6 +184,56 @@ export const userRoutes: RouteRecordRaw[] = [
         meta: {
           title: '积分管理',
           icon: 'Coin',
+          requiresAuth: true
+        }
+      },
+      {
+        path: 'project/purchase/:id',
+        name: 'ProjectPurchase',
+        component: () => import('@/views/project/ProjectPurchaseView.vue'),
+        meta: {
+          title: '购买项目',
+          hidden: true,
+          requiresAuth: true
+        }
+      },
+      {
+        path: 'project/download/:id',
+        name: 'ProjectDownload',
+        component: () => import('@/views/project/ProjectDownloadView.vue'),
+        meta: {
+          title: '下载项目',
+          hidden: true,
+          requiresAuth: true
+        }
+      },
+      {
+        path: 'downloads',
+        name: 'UserDownloads',
+        component: () => import('@/views/user/UserDownloadsView.vue'),
+        meta: {
+          title: '下载记录',
+          icon: 'Download',
+          requiresAuth: true
+        }
+      },
+      {
+        path: 'purchases',
+        name: 'UserPurchases',
+        component: () => import('@/views/user/UserPurchasesView.vue'),
+        meta: {
+          title: '购买记录',
+          icon: 'ShoppingBag',
+          requiresAuth: true
+        }
+      },
+      {
+        path: 'settings',
+        name: 'Settings',
+        component: () => import('@/views/user/SettingsView.vue'),
+        meta: {
+          title: '系统设置',
+          icon: 'Setting',
           requiresAuth: true
         }
       }
