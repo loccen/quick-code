@@ -5,6 +5,7 @@ import com.quickcode.dto.project.ProjectDTO;
 import com.quickcode.dto.project.ProjectDetailDTO;
 import com.quickcode.dto.project.ProjectSearchRequest;
 import com.quickcode.dto.project.ProjectUpdateRequest;
+import com.quickcode.dto.project.UserProjectStats;
 import com.quickcode.dto.common.PageResponse;
 import com.quickcode.entity.Project;
 import org.springframework.data.domain.Page;
@@ -267,6 +268,14 @@ public interface ProjectService extends BaseService<Project, Long> {
         long getTotalLikes();
         BigDecimal getAverageRating();
     }
+
+    /**
+     * 获取用户项目统计信息
+     *
+     * @param userId 用户ID
+     * @return 用户项目统计信息
+     */
+    UserProjectStats getUserProjectStats(Long userId);
 
     /**
      * 用户项目统计信息DTO

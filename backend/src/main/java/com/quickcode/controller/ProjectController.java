@@ -7,6 +7,7 @@ import com.quickcode.dto.project.ProjectDTO;
 import com.quickcode.dto.project.ProjectDetailDTO;
 import com.quickcode.dto.project.ProjectSearchRequest;
 import com.quickcode.dto.project.ProjectUpdateRequest;
+import com.quickcode.dto.project.UserProjectStats;
 import com.quickcode.dto.ProjectFileUploadResponse;
 import com.quickcode.entity.ProjectFile;
 import com.quickcode.service.ProjectService;
@@ -184,6 +185,24 @@ public class ProjectController extends BaseController {
         } catch (Exception e) {
             log.error("获取用户项目列表失败", e);
             return error("获取用户项目列表失败: " + e.getMessage());
+        }
+    }
+
+    /**
+     * 获取用户项目统计信息
+     */
+    @GetMapping("/user/stats")
+    @PreAuthorize("hasRole('USER')")
+    public ApiResponse<UserProjectStats> getUserProjectStats() {
+        log.info("获取用户项目统计信息");
+
+        try {
+            Long userId = getCurrentUserId();
+            UserProjectStats stats = projectService.getUserProjectStats(userId);
+            return success(stats);
+        } catch (Exception e) {
+            log.error("获取用户项目统计信息失败", e);
+            return error("获取统计信息失败: " + e.getMessage());
         }
     }
 

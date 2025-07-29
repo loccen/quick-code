@@ -5,6 +5,7 @@ import com.quickcode.dto.project.ProjectDTO;
 import com.quickcode.dto.project.ProjectDetailDTO;
 import com.quickcode.dto.project.ProjectSearchRequest;
 import com.quickcode.dto.project.ProjectUpdateRequest;
+import com.quickcode.dto.project.UserProjectStats;
 import com.quickcode.dto.common.PageResponse;
 import com.quickcode.entity.Project;
 import com.quickcode.entity.User;
@@ -1008,6 +1009,91 @@ public class ProjectServiceImpl implements ProjectService {
         public BigDecimal getAverageRating() {
             // TODO: 实现用户项目平均评分统计
             return BigDecimal.ZERO;
+        }
+    }
+
+    @Override
+    public UserProjectStats getUserProjectStats(Long userId) {
+        log.debug("获取用户项目统计信息: userId={}", userId);
+
+        try {
+            // 统计上传的项目数量
+            long uploadedCount = projectRepository.countByCreatedBy(userId);
+
+            // 统计已发布的项目数量
+            long publishedCount = projectRepository.countByCreatedByAndStatus(userId, 1);
+
+            // 统计待审核的项目数量
+            long pendingCount = projectRepository.countByCreatedByAndStatus(userId, 0);
+
+            // 统计收藏的项目数量（需要FavoriteService）
+            long favoritesCount = 0;
+            try {
+                // 这里需要注入FavoriteService，暂时设为0
+                // favoritesCount = favoriteService.countUserFavorites(userId);
+            } catch (Exception e) {
+                log.warn("获取用户收藏数量失败: userId={}", userId, e);
+            }
+
+            // 统计购买的项目数量（需要OrderService）
+            long purchasedCount = 0;
+            try {
+                // 这里需要注入OrderService，暂时设为0
+                // purchasedCount = orderService.countUserPurchases(userId);
+            } catch (Exception e) {
+                log.warn("获取用户购买数量失败: userId={}", userId, e);
+            }
+
+            // 统计总收益（需要OrderService）
+            BigDecimal totalEarnings = BigDecimal.ZERO;
+            try {
+                // 这里需要注入OrderService，暂时设为0
+                // totalEarnings = orderService.getUserTotalEarnings(userId);
+            } catch (Exception e) {
+                log.warn("获取用户总收益失败: userId={}", userId, e);
+            }
+
+            // 统计项目总下载次数
+            long totalDownloads = projectRepository.findByCreatedBy(userId).stream()
+                    .mapToLong(project -> project.getDownloadCount() != null ? project.getDownloadCount() : 0)
+                    .sum();
+
+            // 统计项目总浏览次数
+            long totalViews = projectRepository.findByCreatedBy(userId).stream()
+                    .mapToLong(project -> project.getViewCount() != null ? project.getViewCount() : 0)
+                    .sum();
+
+            // 统计项目总点赞次数
+            long totalLikes = projectRepository.findByCreatedBy(userId).stream()
+                    .mapToLong(project -> project.getLikeCount() != null ? project.getLikeCount() : 0)
+                    .sum();
+
+            // 计算平均评分
+            BigDecimal averageRating = projectRepository.findByCreatedBy(userId).stream()
+                    .filter(project -> project.getRating() != null)
+                    .map(Project::getRating)
+                    .reduce(BigDecimal.ZERO, BigDecimal::add)
+                    .divide(BigDecimal.valueOf(Math.max(1, publishedCount)), 2, BigDecimal.ROUND_HALF_UP);
+
+            UserProjectStats stats = UserProjectStats.builder()
+                    .uploadedCount(uploadedCount)
+                    .purchasedCount(purchasedCount)
+                    .favoritesCount(favoritesCount)
+                    .totalEarnings(totalEarnings)
+                    .publishedCount(publishedCount)
+                    .pendingCount(pendingCount)
+                    .totalDownloads(totalDownloads)
+                    .totalViews(totalViews)
+                    .totalLikes(totalLikes)
+                    .averageRating(averageRating)
+                    .build();
+
+            log.info("获取用户项目统计成功: userId={}, stats={}", userId, stats);
+            return stats;
+
+        } catch (Exception e) {
+            log.error("获取用户项目统计失败: userId={}", userId, e);
+            return UserProjectStats.empty();
         }
     }
 }
