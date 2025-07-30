@@ -40,7 +40,7 @@ import java.util.Map;
  */
 @Slf4j
 @RestController
-@RequestMapping("/api/download")
+@RequestMapping("/api/downloads")
 @RequiredArgsConstructor
 public class ProjectDownloadController extends BaseController {
 

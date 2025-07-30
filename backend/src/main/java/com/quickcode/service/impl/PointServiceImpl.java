@@ -16,6 +16,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -231,10 +232,34 @@ public class PointServiceImpl implements PointService {
     @Transactional(readOnly = true)
     public Page<PointTransaction> getUserTransactionsByType(Long userId, String type, Pageable pageable) {
         log.debug("根据类型获取用户积分交易记录: userId={}, type={}", userId, type);
-        PointTransaction.Type transactionType = PointTransaction.Type.valueOf(type.toUpperCase());
-        List<PointTransaction> transactions = pointTransactionRepository.findByUserIdAndType(userId, transactionType.getCode());
-        // 简化实现，返回空的Page对象
-        return Page.empty(pageable);
+
+        try {
+            // 支持多个类型，用逗号分隔
+            String[] typeArray = type.split(",");
+            List<Integer> typeCodes = new ArrayList<>();
+
+            for (String typeStr : typeArray) {
+                try {
+                    PointTransaction.Type transactionType = PointTransaction.Type.valueOf(typeStr.trim().toUpperCase());
+                    typeCodes.add(transactionType.getCode());
+                } catch (IllegalArgumentException e) {
+                    log.warn("无效的交易类型: {}", typeStr);
+                    // 忽略无效的类型，继续处理其他类型
+                }
+            }
+
+            if (typeCodes.isEmpty()) {
+                // 如果没有有效的类型，返回所有交易记录
+                return pointTransactionRepository.findByUserId(userId, pageable);
+            } else {
+                // 根据类型代码查询
+                return pointTransactionRepository.findByUserIdAndTypeIn(userId, typeCodes, pageable);
+            }
+        } catch (Exception e) {
+            log.error("根据类型获取用户积分交易记录失败", e);
+            // 出错时返回所有交易记录
+            return pointTransactionRepository.findByUserId(userId, pageable);
+        }
     }
 
     @Override

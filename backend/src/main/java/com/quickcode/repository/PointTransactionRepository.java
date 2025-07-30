@@ -47,6 +47,11 @@ public interface PointTransactionRepository extends BaseRepository<PointTransact
     List<PointTransaction> findByUserIdAndType(Long userId, Integer type);
 
     /**
+     * 根据用户ID和多个交易类型分页查找交易记录
+     */
+    Page<PointTransaction> findByUserIdAndTypeIn(Long userId, List<Integer> types, Pageable pageable);
+
+    /**
      * 根据用户ID和交易状态查找交易记录
      */
     List<PointTransaction> findByUserIdAndStatus(Long userId, Integer status);
