@@ -155,15 +155,18 @@
                   <p class="project-description">{{ order.projectDescription || '暂无描述' }}</p>
                   <div class="project-meta">
                     <span class="project-author">作者：{{ order.sellerNickname || order.sellerUsername || '未知' }}</span>
-                    <span class="project-price">价格：{{ order.projectPrice || order.amount }} 积分</span>
+                    <span class="project-price">
+                      <i class="fas fa-coins"></i>
+                      {{ order.projectPrice || order.amount }}
+                    </span>
                   </div>
                 </div>
               </div>
 
               <div class="order-amount">
                 <div class="amount-info">
+                  <i class="fas fa-coins"></i>
                   <span class="amount">{{ order.amount }}</span>
-                  <span class="unit">积分</span>
                 </div>
               </div>
 
@@ -579,20 +582,38 @@ onMounted(() => {
   font-size: 12px;
 }
 
+.project-meta .project-price {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  color: #409eff;
+  font-weight: 600;
+}
+
+.project-meta .project-price i {
+  color: #e6a23c;
+}
+
 .order-amount {
   text-align: center;
+}
+
+.amount-info {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+}
+
+.amount-info i {
+  color: #e6a23c;
+  font-size: 18px;
 }
 
 .amount {
   font-size: 20px;
   font-weight: 700;
-  color: #f56c6c;
-}
-
-.unit {
-  color: #909399;
-  font-size: 14px;
-  margin-left: 4px;
+  color: #409eff;
 }
 
 .order-actions {
