@@ -24,11 +24,11 @@ export enum PointTransactionType {
 export interface PointAccount {
   id: number
   userId: number
-  username: string
-  balance: number
-  frozenBalance: number
-  totalRecharge: number
-  totalConsumption: number
+  totalPoints: number
+  availablePoints: number
+  frozenPoints: number
+  totalEarned: number
+  totalSpent: number
   createdTime: string
   updatedTime: string
 }
@@ -125,8 +125,12 @@ export const pointApi = {
   /**
    * 积分充值
    */
-  rechargePoints(data: RechargeRequest): Promise<ApiResponse<PointTransaction>> {
-    return request.post('/points/recharge', data)
+  rechargePoints(data: URLSearchParams): Promise<ApiResponse<PointTransaction>> {
+    return request.post('/points/recharge', data, {
+      headers: {
+        'Content-Type': 'application/x-www-form-urlencoded'
+      }
+    })
   },
 
   /**

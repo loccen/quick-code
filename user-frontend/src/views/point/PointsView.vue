@@ -296,10 +296,12 @@ const handleRecharge = async () => {
     )
 
     if (amount) {
-      const response = await pointApi.rechargePoints({
-        amount: parseFloat(amount),
-        paymentMethod: 'ALIPAY' // 默认使用支付宝
-      })
+      // 使用URLSearchParams发送表单数据
+      const params = new URLSearchParams()
+      params.append('amount', amount)
+      params.append('description', '积分充值')
+
+      const response = await pointApi.rechargePoints(params)
 
       if (response && response.code === 200) {
         ElMessage.success('充值成功')
@@ -397,9 +399,9 @@ const loadPointAccount = async () => {
     const response = await pointApi.getPointAccount()
     if (response && response.code === 200 && response.data) {
       stats.value = {
-        currentBalance: response.data.balance || 0,
-        totalEarned: response.data.totalRecharge || 0,
-        totalSpent: response.data.totalConsumption || 0,
+        currentBalance: response.data.availablePoints || 0,
+        totalEarned: response.data.totalEarned || 0,
+        totalSpent: response.data.totalSpent || 0,
         recentTransactions: 0 // 需要单独计算本月交易
       }
     }
