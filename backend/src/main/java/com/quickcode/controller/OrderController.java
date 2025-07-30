@@ -193,6 +193,8 @@ public class OrderController extends BaseController {
             @RequestParam(defaultValue = "10") int size,
             @RequestParam(defaultValue = "createdTime") String sortBy,
             @RequestParam(defaultValue = "DESC") String sortDirection,
+            @RequestParam(required = false) Integer status,
+            @RequestParam(required = false) String keyword,
             Authentication authentication) {
         
         log.info("获取用户购买订单列表: user={}, page={}, size={}", authentication.getName(), page, size);
@@ -202,8 +204,8 @@ public class OrderController extends BaseController {
 
             Sort.Direction direction = "ASC".equals(sortDirection) ? Sort.Direction.ASC : Sort.Direction.DESC;
             Pageable pageable = PageRequest.of(page, size, Sort.by(direction, sortBy));
-            
-            PageResponse<OrderDTO> orders = orderService.getUserPurchaseOrders(userId, pageable);
+
+            PageResponse<OrderDTO> orders = orderService.getUserPurchaseOrders(userId, pageable, status, keyword);
             return success(orders);
         } catch (Exception e) {
             log.error("获取用户购买订单列表失败: user={}", authentication.getName(), e);

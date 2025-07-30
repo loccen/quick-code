@@ -408,11 +408,11 @@ const loadOrders = async () => {
 
     // 添加状态筛选
     if (activeStatus.value !== 'all') {
-      const statusMap: Record<string, string> = {
-        pending: 'PENDING',
-        paid: 'PAID',
-        cancelled: 'CANCELLED',
-        refunded: 'REFUNDED'
+      const statusMap: Record<string, number> = {
+        pending: 0,    // 待支付
+        paid: 1,       // 已支付
+        cancelled: 3,  // 已取消
+        refunded: 4    // 已退款
       }
       params.status = statusMap[activeStatus.value]
     }

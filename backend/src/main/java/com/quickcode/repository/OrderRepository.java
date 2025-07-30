@@ -285,4 +285,18 @@ public interface OrderRepository extends BaseRepository<Order, Long> {
      */
     @Query("SELECT MIN(o.amount) FROM Order o WHERE o.buyerId = :buyerId")
     BigDecimal findMinAmountByBuyerId(@Param("buyerId") Long buyerId);
+
+    /**
+     * 根据买家ID和筛选条件查找订单
+     */
+    @Query("SELECT o FROM Order o LEFT JOIN o.project p WHERE o.buyerId = :buyerId " +
+           "AND (:status IS NULL OR o.status = :status) " +
+           "AND (:keyword IS NULL OR :keyword = '' OR " +
+           "     o.orderNo LIKE %:keyword% OR " +
+           "     p.title LIKE %:keyword% OR " +
+           "     p.description LIKE %:keyword%)")
+    Page<Order> findByBuyerIdWithFilters(@Param("buyerId") Long buyerId,
+                                        @Param("status") Integer status,
+                                        @Param("keyword") String keyword,
+                                        Pageable pageable);
 }

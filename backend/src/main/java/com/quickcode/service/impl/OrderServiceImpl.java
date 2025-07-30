@@ -263,10 +263,19 @@ public class OrderServiceImpl implements OrderService {
 
     @Override
     @Transactional(readOnly = true)
-    public PageResponse<OrderDTO> getUserPurchaseOrders(Long buyerId, Pageable pageable) {
-        log.debug("获取用户购买订单列表: buyerId={}", buyerId);
+    public PageResponse<OrderDTO> getUserPurchaseOrders(Long buyerId, Pageable pageable, Integer status, String keyword) {
+        log.debug("获取用户购买订单列表: buyerId={}, status={}, keyword={}", buyerId, status, keyword);
 
-        Page<Order> orderPage = orderRepository.findByBuyerId(buyerId, pageable);
+        Page<Order> orderPage;
+
+        if (status != null || (keyword != null && !keyword.trim().isEmpty())) {
+            // 使用带筛选条件的查询
+            orderPage = orderRepository.findByBuyerIdWithFilters(buyerId, status, keyword, pageable);
+        } else {
+            // 使用原有的简单查询
+            orderPage = orderRepository.findByBuyerId(buyerId, pageable);
+        }
+
         return PageResponse.fromPage(orderPage.map(OrderDTO::fromOrder));
     }
 

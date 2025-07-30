@@ -84,12 +84,14 @@ public interface OrderService extends BaseService<Order, Long> {
 
     /**
      * 获取用户购买订单列表
-     * 
+     *
      * @param buyerId 买家用户ID
      * @param pageable 分页参数
+     * @param status 订单状态筛选（可选）
+     * @param keyword 搜索关键词（可选）
      * @return 订单列表
      */
-    PageResponse<OrderDTO> getUserPurchaseOrders(Long buyerId, Pageable pageable);
+    PageResponse<OrderDTO> getUserPurchaseOrders(Long buyerId, Pageable pageable, Integer status, String keyword);
 
     /**
      * 获取用户销售订单列表
