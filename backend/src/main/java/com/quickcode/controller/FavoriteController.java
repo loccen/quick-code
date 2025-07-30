@@ -4,8 +4,6 @@ import com.quickcode.common.response.ApiResponse;
 import com.quickcode.dto.common.PageResponse;
 import com.quickcode.dto.project.ProjectDTO;
 import com.quickcode.service.FavoriteService;
-import org.springframework.security.core.Authentication;
-import org.springframework.security.core.context.SecurityContextHolder;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.PageRequest;
@@ -29,45 +27,9 @@ import java.util.Map;
 @RequestMapping("/api/projects")
 @RequiredArgsConstructor
 @CrossOrigin(origins = {"http://localhost:3000", "http://localhost:3001"})
-public class FavoriteController {
+public class FavoriteController extends BaseController {
 
     private final FavoriteService favoriteService;
-
-    /**
-     * 获取当前用户ID
-     */
-    private Long getCurrentUserId() {
-        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-        if (authentication != null && authentication.getPrincipal() instanceof org.springframework.security.core.userdetails.User) {
-            org.springframework.security.core.userdetails.User userDetails =
-                (org.springframework.security.core.userdetails.User) authentication.getPrincipal();
-            // 这里需要根据实际的用户认证实现来获取用户ID
-            // 暂时返回一个固定值，实际应该从UserDetails中获取
-            return 1L; // TODO: 实现真实的用户ID获取逻辑
-        }
-        throw new RuntimeException("用户未登录");
-    }
-
-    /**
-     * 创建成功响应
-     */
-    private <T> ApiResponse<T> success(T data) {
-        return ApiResponse.success(data);
-    }
-
-    /**
-     * 创建成功响应（带消息）
-     */
-    private <T> ApiResponse<T> success(T data, String message) {
-        return ApiResponse.success(data, message);
-    }
-
-    /**
-     * 创建错误响应
-     */
-    private <T> ApiResponse<T> error(String message) {
-        return ApiResponse.error(message);
-    }
 
     /**
      * 收藏项目
@@ -79,6 +41,9 @@ public class FavoriteController {
 
         try {
             Long userId = getCurrentUserId();
+            if (userId == null) {
+                return error("用户未登录");
+            }
             favoriteService.favoriteProject(userId, id);
             return success(null, "收藏成功");
         } catch (RuntimeException e) {
@@ -100,6 +65,9 @@ public class FavoriteController {
 
         try {
             Long userId = getCurrentUserId();
+            if (userId == null) {
+                return error("用户未登录");
+            }
             favoriteService.unfavoriteProject(userId, id);
             return success(null, "取消收藏成功");
         } catch (RuntimeException e) {
@@ -121,6 +89,9 @@ public class FavoriteController {
 
         try {
             Long userId = getCurrentUserId();
+            if (userId == null) {
+                return error("用户未登录");
+            }
             boolean isFavorited = favoriteService.isFavorited(userId, id);
             return success(isFavorited);
         } catch (Exception e) {
@@ -141,15 +112,18 @@ public class FavoriteController {
             @RequestParam(defaultValue = "createdTime") String sortBy,
             @RequestParam(defaultValue = "DESC") String sortDir) {
 
-        log.info("获取用户收藏项目列表: page={}, size={}, keyword={}, sortBy={}, sortDir={}", 
+        log.info("获取用户收藏项目列表: page={}, size={}, keyword={}, sortBy={}, sortDir={}",
                 page, size, keyword, sortBy, sortDir);
 
         try {
             Long userId = getCurrentUserId();
-            
+            if (userId == null) {
+                return error("用户未登录");
+            }
+
             Sort.Direction direction = Sort.Direction.fromString(sortDir);
             Pageable pageable = PageRequest.of(page, size, Sort.by(direction, sortBy));
-            
+
             PageResponse<ProjectDTO> favoriteProjects = favoriteService.getUserFavoriteProjects(userId, keyword, pageable);
             return success(favoriteProjects);
         } catch (Exception e) {
@@ -170,6 +144,9 @@ public class FavoriteController {
 
         try {
             Long userId = getCurrentUserId();
+            if (userId == null) {
+                return error("用户未登录");
+            }
             List<ProjectDTO> recentFavorites = favoriteService.getUserRecentFavorites(userId, limit);
             return success(recentFavorites);
         } catch (Exception e) {
@@ -208,6 +185,9 @@ public class FavoriteController {
 
         try {
             Long userId = getCurrentUserId();
+            if (userId == null) {
+                return error("用户未登录");
+            }
             Map<Long, Boolean> favoriteStatusMap = favoriteService.batchCheckFavoriteStatus(userId, projectIds);
             return success(favoriteStatusMap);
         } catch (Exception e) {
@@ -226,13 +206,16 @@ public class FavoriteController {
 
         try {
             Long userId = getCurrentUserId();
+            if (userId == null) {
+                return error("用户未登录");
+            }
             long favoriteCount = favoriteService.countUserFavorites(userId);
-            
+
             Map<String, Object> stats = Map.of(
                     "totalFavorites", favoriteCount,
                     "userId", userId
             );
-            
+
             return success(stats);
         } catch (Exception e) {
             log.error("获取用户收藏统计失败", e);

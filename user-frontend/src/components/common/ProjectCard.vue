@@ -169,6 +169,7 @@ interface Project {
   category?: string
   createdTime?: string // 创建时间
   updatedTime?: string
+  isFavorite?: boolean // 收藏状态
   // 兼容旧字段名
   author?: string
   downloads?: number

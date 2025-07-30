@@ -115,12 +115,13 @@
 <script setup lang="ts">
 import { publicProjectApi } from '@/api/modules/public'
 import { projectApi } from '@/api/modules/project'
+import { favoriteApi } from '@/api/modules/favorite'
 import ProjectCard from '@/components/common/ProjectCard.vue'
 import CategorySelect from '@/components/project/CategorySelect.vue'
 import { useUserStore } from '@/stores/user'
 import { Search, ArrowDown, ArrowUp } from '@element-plus/icons-vue'
 import { ElMessage } from 'element-plus'
-import { computed, onMounted, ref } from 'vue'
+import { computed, onMounted, ref, watch } from 'vue'
 import { useRouter } from 'vue-router'
 
 const router = useRouter()
@@ -143,6 +144,7 @@ interface Project {
   createdAt?: string
   tags?: string[]
   category?: string
+  isFavorite?: boolean // 收藏状态
 }
 
 // 响应式数据
@@ -178,11 +180,38 @@ const fetchProjects = async () => {
     const response = await publicProjectApi.getProjects(params)
     projects.value = response.data.content
     total.value = response.data.total
+
+    // 如果用户已登录，批量检查收藏状态
+    await loadFavoriteStatus()
   } catch (error) {
     console.error('获取项目列表失败:', error)
     ElMessage.error('获取项目列表失败')
   } finally {
     loading.value = false
+  }
+}
+
+/**
+ * 加载收藏状态
+ */
+const loadFavoriteStatus = async () => {
+  if (!userStore.isAuthenticated || projects.value.length === 0) {
+    return
+  }
+
+  try {
+    const projectIds = projects.value.map(project => project.id)
+    const response = await favoriteApi.batchCheckFavoriteStatus(projectIds)
+
+    if (response && response.code === 200 && response.data) {
+      // 更新项目的收藏状态
+      projects.value.forEach(project => {
+        project.isFavorite = response.data[project.id] || false
+      })
+    }
+  } catch (error) {
+    console.error('获取收藏状态失败:', error)
+    // 收藏状态获取失败不影响主要功能，只记录错误
   }
 }
 
@@ -288,7 +317,7 @@ const handleFavorite = async (project: Project) => {
   try {
     if (project.isFavorite) {
       // 取消收藏
-      const response = await projectApi.unfavoriteProject(project.id)
+      const response = await favoriteApi.unfavoriteProject(project.id)
       if (response && response.code === 200) {
         project.isFavorite = false
         ElMessage.success('已取消收藏')
@@ -297,7 +326,7 @@ const handleFavorite = async (project: Project) => {
       }
     } else {
       // 添加收藏
-      const response = await projectApi.favoriteProject(project.id)
+      const response = await favoriteApi.favoriteProject(project.id)
       if (response && response.code === 200) {
         project.isFavorite = true
         ElMessage.success('已添加到收藏')
@@ -310,6 +339,20 @@ const handleFavorite = async (project: Project) => {
     ElMessage.error(error.response?.data?.message || error.message || '收藏操作失败')
   }
 }
+
+// 监听用户登录状态变化
+watch(() => userStore.isAuthenticated, (newValue, oldValue) => {
+  // 当用户从未登录变为已登录时，重新加载收藏状态
+  if (newValue && !oldValue && projects.value.length > 0) {
+    loadFavoriteStatus()
+  }
+  // 当用户退出登录时，清除收藏状态
+  if (!newValue && oldValue) {
+    projects.value.forEach(project => {
+      project.isFavorite = false
+    })
+  }
+})
 
 // 生命周期
 onMounted(() => {
