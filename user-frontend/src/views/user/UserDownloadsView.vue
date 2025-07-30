@@ -7,9 +7,9 @@
       :icon="Download"
     >
       <template #actions>
-        <el-button @click="$router.push('/user/my-orders')">
-          <el-icon><ShoppingCart /></el-icon>
-          查看我的订单
+        <el-button @click="$router.push('/user/purchases')">
+          <el-icon><ShoppingBag /></el-icon>
+          查看购买记录
         </el-button>
       </template>
     </PageHeader>
@@ -115,17 +115,17 @@
         <div v-else-if="downloads.length > 0" class="downloads-list">
           <div
             v-for="download in downloads"
-            :key="download.id"
+            :key="download.downloadId"
             class="download-item"
           >
             <div class="download-header">
               <div class="download-info">
-                <span class="download-date">下载时间：{{ download.downloadDate }}</span>
-                <span class="download-version">版本：{{ download.version }}</span>
+                <span class="download-date">下载时间：{{ formatDate(download.downloadTime) }}</span>
+                <span class="download-file" v-if="download.fileName">文件：{{ download.fileName }}</span>
               </div>
               <div class="download-status">
-                <el-tag :type="getStatusType(download.status)">
-                  {{ getStatusText(download.status) }}
+                <el-tag :type="getStatusType(download.downloadStatus)">
+                  {{ download.downloadStatusDesc }}
                 </el-tag>
               </div>
             </div>
@@ -134,17 +134,20 @@
               <div class="project-info">
                 <div class="project-thumbnail">
                   <img
-                    :src="download.project.thumbnail || '/images/default-project.jpg'"
-                    :alt="download.project.title"
+                    :src="'/images/default-project.svg'"
+                    :alt="download.projectTitle"
                   />
                 </div>
                 <div class="project-details">
-                  <h3 class="project-title">{{ download.project.title }}</h3>
-                  <p class="project-description">{{ download.project.description }}</p>
+                  <h3 class="project-title">{{ download.projectTitle }}</h3>
+                  <p class="project-description">项目ID：{{ download.projectId }}</p>
                   <div class="project-meta">
-                    <span class="project-author">作者：{{ download.project.author }}</span>
-                    <span class="project-size">大小：{{ download.fileSize }}</span>
-                    <span class="download-count">下载次数：{{ download.downloadCount }}</span>
+                    <span class="project-source">来源：{{ download.downloadSource }}</span>
+                    <span class="project-size" v-if="download.readableFileSize">大小：{{ download.readableFileSize }}</span>
+                    <span class="download-duration" v-if="download.readableDuration">耗时：{{ download.readableDuration }}</span>
+                    <span class="repeat-flag" v-if="download.isRepeat">
+                      <el-tag type="warning" size="small">重复下载</el-tag>
+                    </span>
                   </div>
                 </div>
               </div>
@@ -210,7 +213,7 @@
 </template>
 
 <script setup lang="ts">
-import { Search, Download, ShoppingBag, ShoppingCart, Folder, Clock, View, Delete } from '@element-plus/icons-vue'
+import { Search, Download, ShoppingBag, Folder, Clock, View, Delete } from '@element-plus/icons-vue'
 import { ElMessage, ElMessageBox } from 'element-plus'
 import { onMounted, ref } from 'vue'
 import { useRouter } from 'vue-router'
@@ -245,14 +248,41 @@ const stats = ref({
 })
 
 /**
+ * 格式化日期
+ */
+const formatDate = (dateString: string) => {
+  if (!dateString) return '未知时间'
+  try {
+    const date = new Date(dateString)
+    return date.toLocaleString('zh-CN', {
+      year: 'numeric',
+      month: '2-digit',
+      day: '2-digit',
+      hour: '2-digit',
+      minute: '2-digit'
+    })
+  } catch (error) {
+    return dateString
+  }
+}
+
+/**
  * 获取下载状态类型
  */
-const getStatusType = (status: string) => {
-  const statusMap: Record<string, string> = {
-    SUCCESS: 'success',
-    FAILED: 'danger',
-    DOWNLOADING: 'warning',
-    EXPIRED: 'info'
+const getStatusType = (status: number | string) => {
+  // 支持数字状态码和字符串状态
+  const statusMap: Record<string | number, string> = {
+    // 数字状态码（根据后端ProjectDownload.DownloadStatus枚举）
+    1: 'success',    // 下载成功
+    2: 'danger',     // 下载失败
+    3: 'warning',    // 下载中
+    4: 'info',       // 已取消
+    // 字符串状态（向后兼容）
+    'SUCCESS': 'success',
+    'FAILED': 'danger',
+    'DOWNLOADING': 'warning',
+    'CANCELLED': 'info',
+    'EXPIRED': 'info'
   }
   return statusMap[status] || 'info'
 }
@@ -260,12 +290,20 @@ const getStatusType = (status: string) => {
 /**
  * 获取下载状态文本
  */
-const getStatusText = (status: string) => {
-  const statusMap: Record<string, string> = {
-    SUCCESS: '下载成功',
-    FAILED: '下载失败',
-    DOWNLOADING: '下载中',
-    EXPIRED: '链接过期'
+const getStatusText = (status: number | string) => {
+  // 支持数字状态码和字符串状态
+  const statusMap: Record<string | number, string> = {
+    // 数字状态码
+    1: '下载成功',
+    2: '下载失败',
+    3: '下载中',
+    4: '已取消',
+    // 字符串状态（向后兼容）
+    'SUCCESS': '下载成功',
+    'FAILED': '下载失败',
+    'DOWNLOADING': '下载中',
+    'CANCELLED': '已取消',
+    'EXPIRED': '链接过期'
   }
   return statusMap[status] || '未知'
 }
@@ -285,16 +323,16 @@ const handleRedownload = async (download: any) => {
     ElMessage.info('正在准备重新下载...')
 
     // 生成下载令牌
-    const tokenResponse = await projectDownloadApi.generateDownloadToken(download.project.id)
+    const tokenResponse = await projectDownloadApi.generateDownloadToken(download.projectId)
     if (tokenResponse && tokenResponse.code === 200) {
       // 直接下载项目文件
-      const blob = await projectDownloadApi.downloadProject(download.project.id)
+      const blob = await projectDownloadApi.downloadProject(download.projectId)
 
       // 创建下载链接
       const url = window.URL.createObjectURL(blob)
       const link = document.createElement('a')
       link.href = url
-      link.download = `${download.project.title}.zip`
+      link.download = `${download.projectTitle}.zip`
       document.body.appendChild(link)
       link.click()
       document.body.removeChild(link)
@@ -335,7 +373,7 @@ const handleDeleteRecord = async (download: any) => {
       }
     )
 
-    const response = await downloadApi.deleteDownloadRecord(download.id)
+    const response = await downloadApi.deleteDownloadRecord(download.downloadId)
     if (response && response.code === 200) {
       ElMessage.success('下载记录已删除')
       await loadDownloads()
@@ -391,9 +429,9 @@ const loadDownloadStatistics = async () => {
     if (response && response.code === 200 && response.data) {
       stats.value = {
         totalDownloads: response.data.totalDownloads || 0,
-        downloadedProjects: response.data.successfulDownloads || 0,
+        downloadedProjects: response.data.uniqueDownloaders || 0,
         recentDownloads: 0, // 需要单独计算本月下载
-        totalSize: formatFileSize(response.data.totalSize || 0)
+        totalSize: response.data.readableTotalSize || formatFileSize(response.data.totalSize || 0)
       }
     }
   } catch (error: any) {

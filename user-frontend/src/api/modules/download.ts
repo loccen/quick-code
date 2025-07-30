@@ -29,17 +29,20 @@ export interface DownloadToken {
  * 下载记录
  */
 export interface DownloadRecord {
-  id: number
+  downloadId: number
   projectId: number
   projectTitle: string
-  userId: number
-  username: string
+  fileId?: number
+  fileName?: string
   downloadTime: string
-  ipAddress: string
-  userAgent: string
-  fileSize: number
-  downloadDuration: number
-  status: 'SUCCESS' | 'FAILED' | 'CANCELLED'
+  downloadStatus: number
+  downloadStatusDesc: string
+  downloadSource: string
+  fileSize?: number
+  readableFileSize?: string
+  downloadDuration?: number
+  readableDuration?: string
+  isRepeat: boolean
 }
 
 /**
@@ -47,15 +50,13 @@ export interface DownloadRecord {
  */
 export interface DownloadStatistics {
   totalDownloads: number
-  successfulDownloads: number
-  failedDownloads: number
+  uniqueDownloaders: number
   totalSize: number
-  averageSize: number
-  popularProjects: Array<{
-    projectId: number
-    projectTitle: string
-    downloadCount: number
-  }>
+  readableTotalSize: string
+  averageDuration: number
+  readableAverageDuration: string
+  downloadsBySource: Record<string, number>
+  downloadsByDate: Record<string, number>
 }
 
 /**
