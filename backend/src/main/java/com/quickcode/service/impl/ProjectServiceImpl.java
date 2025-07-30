@@ -1018,13 +1018,13 @@ public class ProjectServiceImpl implements ProjectService {
 
         try {
             // 统计上传的项目数量
-            long uploadedCount = projectRepository.countByCreatedBy(userId);
+            long uploadedCount = projectRepository.countByUserId(userId);
 
             // 统计已发布的项目数量
-            long publishedCount = projectRepository.countByCreatedByAndStatus(userId, 1);
+            long publishedCount = projectRepository.countByUserIdAndStatus(userId, 1);
 
             // 统计待审核的项目数量
-            long pendingCount = projectRepository.countByCreatedByAndStatus(userId, 0);
+            long pendingCount = projectRepository.countByUserIdAndStatus(userId, 0);
 
             // 统计收藏的项目数量（需要FavoriteService）
             long favoritesCount = 0;
@@ -1054,22 +1054,22 @@ public class ProjectServiceImpl implements ProjectService {
             }
 
             // 统计项目总下载次数
-            long totalDownloads = projectRepository.findByCreatedBy(userId).stream()
+            long totalDownloads = projectRepository.findByUserId(userId).stream()
                     .mapToLong(project -> project.getDownloadCount() != null ? project.getDownloadCount() : 0)
                     .sum();
 
             // 统计项目总浏览次数
-            long totalViews = projectRepository.findByCreatedBy(userId).stream()
+            long totalViews = projectRepository.findByUserId(userId).stream()
                     .mapToLong(project -> project.getViewCount() != null ? project.getViewCount() : 0)
                     .sum();
 
             // 统计项目总点赞次数
-            long totalLikes = projectRepository.findByCreatedBy(userId).stream()
+            long totalLikes = projectRepository.findByUserId(userId).stream()
                     .mapToLong(project -> project.getLikeCount() != null ? project.getLikeCount() : 0)
                     .sum();
 
             // 计算平均评分
-            BigDecimal averageRating = projectRepository.findByCreatedBy(userId).stream()
+            BigDecimal averageRating = projectRepository.findByUserId(userId).stream()
                     .filter(project -> project.getRating() != null)
                     .map(Project::getRating)
                     .reduce(BigDecimal.ZERO, BigDecimal::add)

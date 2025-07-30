@@ -271,10 +271,20 @@ const loadPurchasedProjects = async () => {
       // 从订单中提取项目信息
       const orders = response.data.content || []
       purchasedProjects.value = orders.map((order: any) => ({
-        ...order.project,
+        id: order.projectId,
+        title: order.projectName,
+        description: order.projectDescription,
+        price: order.projectPrice || order.amount,
+        coverImage: order.projectCoverImage || '/images/default-project.jpg',
+        thumbnail: order.projectCoverImage || '/images/default-project.jpg',
+        author: order.sellerUsername || order.sellerNickname,
+        username: order.sellerUsername,
+        categoryName: order.projectCategoryName || '未分类',
         purchaseDate: order.createdTime,
         orderNo: order.orderNo,
-        purchaseAmount: order.amount
+        purchaseAmount: order.amount,
+        status: order.status,
+        createdTime: order.createdTime
       }))
       purchasedTotal.value = response.data.total || 0
       purchasedCount.value = response.data.total || 0

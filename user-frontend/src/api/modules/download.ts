@@ -145,7 +145,7 @@ export const downloadApi = {
    * 获取用户下载统计
    */
   getUserDownloadStatistics(): Promise<ApiResponse<DownloadStatistics>> {
-    return request.get('/downloads/statistics')
+    return request.get('/downloads/statistics/user')
   },
 
   /**

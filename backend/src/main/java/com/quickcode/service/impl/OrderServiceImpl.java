@@ -762,10 +762,10 @@ public class OrderServiceImpl implements OrderService {
             }
 
             // 统计各状态订单数量
-            long pendingOrders = orderRepository.countByBuyerIdAndStatus(userId, "PENDING");
-            long completedOrders = orderRepository.countByBuyerIdAndStatus(userId, "PAID");
-            long cancelledOrders = orderRepository.countByBuyerIdAndStatus(userId, "CANCELLED");
-            long refundedOrders = orderRepository.countByBuyerIdAndStatus(userId, "REFUNDED");
+            long pendingOrders = orderRepository.countByBuyerIdAndStatus(userId, 0);  // 待支付
+            long completedOrders = orderRepository.countByBuyerIdAndStatus(userId, 1); // 已支付
+            long cancelledOrders = orderRepository.countByBuyerIdAndStatus(userId, 3); // 已取消
+            long refundedOrders = orderRepository.countByBuyerIdAndStatus(userId, 4);  // 已退款
 
             // 统计本月订单数据
             LocalDateTime monthStart = LocalDateTime.now().withDayOfMonth(1).withHour(0).withMinute(0).withSecond(0);

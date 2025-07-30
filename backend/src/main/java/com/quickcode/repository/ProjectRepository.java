@@ -306,32 +306,12 @@ public interface ProjectRepository extends BaseRepository<Project, Long> {
     Optional<Project> findByIdAndStatus(Long id, Integer status);
 
     /**
-     * 根据创建者查找项目列表
-     */
-    List<Project> findByCreatedBy(Long createdBy);
-
-    /**
-     * 统计用户创建的项目数量
-     */
-    long countByCreatedBy(Long createdBy);
-
-    /**
      * 统计用户指定状态的项目数量
      */
-    long countByCreatedByAndStatus(Long createdBy, Integer status);
+    long countByUserIdAndStatus(Long userId, Integer status);
 
     /**
-     * 根据创建者和状态查找项目列表
+     * 根据用户ID和状态查找项目列表
      */
-    List<Project> findByCreatedByAndStatus(Long createdBy, Integer status);
-
-    /**
-     * 分页查询用户创建的项目
-     */
-    Page<Project> findByCreatedBy(Long createdBy, Pageable pageable);
-
-    /**
-     * 分页查询用户指定状态的项目
-     */
-    Page<Project> findByCreatedByAndStatus(Long createdBy, Integer status, Pageable pageable);
+    List<Project> findByUserIdAndStatus(Long userId, Integer status);
 }

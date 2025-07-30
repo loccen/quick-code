@@ -14,6 +14,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.core.io.Resource;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Sort;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.http.HttpHeaders;
@@ -464,6 +465,40 @@ public class ProjectDownloadController extends BaseController {
         } catch (Exception e) {
             log.error("清理过期令牌失败", e);
             return error("清理过期令牌失败");
+        }
+    }
+
+    // ==================== 下载记录管理接口 ====================
+
+    /**
+     * 获取用户下载记录
+     */
+    @GetMapping("/records")
+    @PreAuthorize("isAuthenticated()")
+    public ApiResponse<Page<ProjectDownloadHistoryResponse>> getUserDownloadRecords(
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "10") int size,
+            @RequestParam(defaultValue = "downloadTime") String sortBy,
+            @RequestParam(defaultValue = "DESC") String sortDirection) {
+
+        Long userId = getCurrentUserId();
+        log.info("获取用户下载记录: userId={}, page={}, size={}", userId, page, size);
+
+        try {
+            PageRequest pageRequest = PageRequest.of(page, size,
+                Sort.by(Sort.Direction.fromString(sortDirection), sortBy));
+
+            Page<ProjectDownload> downloadPage = projectDownloadService.getUserDownloadHistory(userId, pageRequest);
+
+            // 转换为 ProjectDownloadHistoryResponse
+            Page<ProjectDownloadHistoryResponse> records = downloadPage.map(download ->
+                ProjectDownloadHistoryResponse.fromProjectDownload(download));
+
+            return success(records);
+
+        } catch (Exception e) {
+            log.error("获取用户下载记录失败: userId={}", userId, e);
+            return error("获取下载记录失败");
         }
     }
 

@@ -120,11 +120,7 @@ public class ProjectDownloadHistoryResponse {
      * 获取项目标题
      */
     private static String getProjectTitle(ProjectDownload download) {
-        // 这里应该通过关联查询获取项目标题
-        // 暂时返回默认值
-        if (download.getProject() != null) {
-            return download.getProject().getTitle();
-        }
+        // 暂时返回默认值，后续可以通过服务层注入项目信息
         return "项目-" + download.getProjectId();
     }
 
@@ -132,11 +128,7 @@ public class ProjectDownloadHistoryResponse {
      * 获取文件名
      */
     private static String getFileName(ProjectDownload download) {
-        // 这里应该通过关联查询获取文件名
-        // 暂时返回默认值
-        if (download.getProjectFile() != null) {
-            return download.getProjectFile().getOriginalName();
-        }
+        // 暂时返回默认值，后续可以通过服务层注入文件信息
         return "文件-" + download.getFileId();
     }
 

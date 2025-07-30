@@ -142,16 +142,16 @@
               <div class="project-info">
                 <div class="project-thumbnail">
                   <img
-                    :src="order.project.thumbnail || '/images/default-project.jpg'"
-                    :alt="order.project.title"
+                    :src="order.project?.thumbnail || order.project?.coverImage || '/images/default-project.jpg'"
+                    :alt="order.project?.title || '项目'"
                   />
                 </div>
                 <div class="project-details">
-                  <h3 class="project-title">{{ order.project.title }}</h3>
-                  <p class="project-description">{{ order.project.description }}</p>
+                  <h3 class="project-title">{{ order.project?.title || '未知项目' }}</h3>
+                  <p class="project-description">{{ order.project?.description || '暂无描述' }}</p>
                   <div class="project-meta">
-                    <span class="project-author">作者：{{ order.project.author }}</span>
-                    <span class="project-category">分类：{{ order.project.category }}</span>
+                    <span class="project-author">作者：{{ order.project?.author || order.project?.username || '未知' }}</span>
+                    <span class="project-category">分类：{{ order.project?.category || order.project?.categoryName || '未分类' }}</span>
                   </div>
                 </div>
               </div>

@@ -133,17 +133,17 @@
               <div class="project-info">
                 <div class="project-thumbnail">
                   <img
-                    :src="purchase.project.thumbnail || '/images/default-project.jpg'"
-                    :alt="purchase.project.title"
+                    :src="purchase.project?.thumbnail || purchase.project?.coverImage || '/images/default-project.jpg'"
+                    :alt="purchase.project?.title || '项目'"
                   />
                 </div>
                 <div class="project-details">
-                  <h3 class="project-title">{{ purchase.project.title }}</h3>
-                  <p class="project-description">{{ purchase.project.description }}</p>
+                  <h3 class="project-title">{{ purchase.project?.title || '未知项目' }}</h3>
+                  <p class="project-description">{{ purchase.project?.description || '暂无描述' }}</p>
                   <div class="project-meta">
-                    <span class="project-author">作者：{{ purchase.project.author }}</span>
-                    <span class="project-category">分类：{{ purchase.project.category }}</span>
-                    <span class="download-count">下载：{{ purchase.downloadCount }}次</span>
+                    <span class="project-author">作者：{{ purchase.project?.author || purchase.project?.username || '未知' }}</span>
+                    <span class="project-category">分类：{{ purchase.project?.category || purchase.project?.categoryName || '未分类' }}</span>
+                    <span class="download-count">下载：{{ purchase.downloadCount || 0 }}次</span>
                   </div>
                 </div>
               </div>

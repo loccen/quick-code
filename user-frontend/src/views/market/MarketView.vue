@@ -86,6 +86,7 @@
             :project="project"
             @purchase="handlePurchase"
             @demo="handleDemo"
+            @favorite="handleFavorite"
           />
         </div>
 
@@ -113,6 +114,7 @@
 
 <script setup lang="ts">
 import { publicProjectApi } from '@/api/modules/public'
+import { projectApi } from '@/api/modules/project'
 import ProjectCard from '@/components/common/ProjectCard.vue'
 import CategorySelect from '@/components/project/CategorySelect.vue'
 import { useUserStore } from '@/stores/user'
@@ -268,6 +270,45 @@ const handleDemo = (project: Project) => {
 
   // 打开演示页面
   ElMessage.info('演示功能开发中...')
+}
+
+/**
+ * 处理项目收藏
+ */
+const handleFavorite = async (project: Project) => {
+  if (!userStore.isAuthenticated) {
+    ElMessage.warning('请先登录后再收藏项目')
+    router.push({
+      path: '/login',
+      query: { redirect: `/market/project/${project.id}` }
+    })
+    return
+  }
+
+  try {
+    if (project.isFavorite) {
+      // 取消收藏
+      const response = await projectApi.unfavoriteProject(project.id)
+      if (response && response.code === 200) {
+        project.isFavorite = false
+        ElMessage.success('已取消收藏')
+      } else {
+        throw new Error(response?.message || '取消收藏失败')
+      }
+    } else {
+      // 添加收藏
+      const response = await projectApi.favoriteProject(project.id)
+      if (response && response.code === 200) {
+        project.isFavorite = true
+        ElMessage.success('已添加到收藏')
+      } else {
+        throw new Error(response?.message || '添加收藏失败')
+      }
+    }
+  } catch (error: any) {
+    console.error('收藏操作失败:', error)
+    ElMessage.error(error.response?.data?.message || error.message || '收藏操作失败')
+  }
 }
 
 // 生命周期

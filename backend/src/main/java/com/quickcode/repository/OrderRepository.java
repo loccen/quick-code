@@ -254,7 +254,7 @@ public interface OrderRepository extends BaseRepository<Order, Long> {
     /**
      * 统计用户指定状态的订单数量
      */
-    long countByBuyerIdAndStatus(Long buyerId, String status);
+    long countByBuyerIdAndStatus(Long buyerId, Integer status);
 
     /**
      * 统计用户指定时间范围内的订单数量

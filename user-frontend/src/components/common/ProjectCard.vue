@@ -102,6 +102,14 @@
               <i class="fas fa-shopping-cart"></i>
               购买
             </button>
+            <button
+              class="btn btn-sm btn-outline"
+              @click.stop="handleFavorite"
+              :class="{ 'btn-danger': project.isFavorite }"
+            >
+              <i :class="project.isFavorite ? 'fas fa-heart' : 'far fa-heart'"></i>
+              {{ project.isFavorite ? '已收藏' : '收藏' }}
+            </button>
           </template>
         </div>
       </div>
@@ -181,6 +189,7 @@ interface Emits {
   (e: 'edit', project: Project): void
   (e: 'delete', project: Project): void
   (e: 'download', project: Project): void
+  (e: 'favorite', project: Project): void
   (e: 'unfavorite', project: Project): void
 }
 
@@ -236,6 +245,13 @@ const handleDelete = () => {
  */
 const handleDownload = () => {
   emit('download', props.project)
+}
+
+/**
+ * 处理收藏按钮点击
+ */
+const handleFavorite = () => {
+  emit('favorite', props.project)
 }
 
 /**
