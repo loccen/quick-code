@@ -1,0 +1,30 @@
+<svg width="200" height="150" viewBox="0 0 200 150" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <!-- 背景渐变 -->
+  <defs>
+    <linearGradient id="bgGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#667eea;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#764ba2;stop-opacity:1" />
+    </linearGradient>
+    <linearGradient id="iconGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#ffffff;stop-opacity:0.9" />
+      <stop offset="100%" style="stop-color:#ffffff;stop-opacity:0.7" />
+    </linearGradient>
+  </defs>
+  
+  <!-- 背景 -->
+  <rect width="200" height="150" fill="url(#bgGradient)" rx="8"/>
+  
+  <!-- 代码图标 -->
+  <g transform="translate(100, 75)">
+    <!-- 代码符号 < -->
+    <path d="M-25 -15 L-35 0 L-25 15" stroke="url(#iconGradient)" stroke-width="3" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
+    
+    <!-- 代码符号 > -->
+    <path d="M25 -15 L35 0 L25 15" stroke="url(#iconGradient)" stroke-width="3" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
+    
+    <!-- 中间的点 -->
+    <circle cx="-8" cy="0" r="2" fill="url(#iconGradient)"/>
+    <circle cx="0" cy="0" r="2" fill="url(#iconGradient)"/>
+    <circle cx="8" cy="0" r="2" fill="url(#iconGradient)"/>
+  </g>
+</svg>

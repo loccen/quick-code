@@ -51,22 +51,38 @@ export interface PayOrderRequest {
 export interface Order {
   id: number
   orderNo: string
-  projectId: number
-  projectTitle: string
   buyerId: number
   buyerUsername: string
+  buyerNickname?: string
   sellerId: number
   sellerUsername: string
+  sellerNickname?: string
+  projectId: number
+  projectName: string
+  projectDescription: string
+  projectPrice: number
+  projectCoverImage?: string
   amount: number
-  status: OrderStatus
+  status: number
+  statusDescription: string
   paymentMethod?: string
+  paymentMethodDescription?: string
+  paymentTime?: string
+  completionTime?: string
+  cancellationTime?: string
+  refundTime?: string
+  refundAmount?: number
   remark?: string
   createdTime: string
   updatedTime: string
-  paidTime?: string
-  completedTime?: string
-  cancelledTime?: string
-  refundedTime?: string
+  canPay: boolean
+  canCancel: boolean
+  canRefund: boolean
+  cancelled: boolean
+  completed: boolean
+  pendingPayment: boolean
+  paid: boolean
+  refunded: boolean
 }
 
 /**

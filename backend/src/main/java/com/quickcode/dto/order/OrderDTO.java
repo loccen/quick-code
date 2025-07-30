@@ -82,6 +82,11 @@ public class OrderDTO {
     private BigDecimal projectPrice;
 
     /**
+     * 项目封面图片URL
+     */
+    private String projectCoverImage;
+
+    /**
      * 订单金额
      */
     private BigDecimal amount;
@@ -220,7 +225,8 @@ public class OrderDTO {
         if (order.getProject() != null) {
             builder.projectName(order.getProject().getTitle())
                    .projectDescription(order.getProject().getDescription())
-                   .projectPrice(order.getProject().getPrice());
+                   .projectPrice(order.getProject().getPrice())
+                   .projectCoverImage(order.getProject().getCoverImage());
         }
 
         return builder.build();

@@ -133,7 +133,7 @@
               </div>
               <div class="order-status">
                 <el-tag :type="getStatusType(order.status)">
-                  {{ getStatusText(order.status) }}
+                  {{ order.statusDescription || getStatusText(order.status) }}
                 </el-tag>
               </div>
             </div>
@@ -141,17 +141,21 @@
             <div class="order-content">
               <div class="project-info">
                 <div class="project-thumbnail">
-                  <img
-                    :src="order.project?.thumbnail || order.project?.coverImage || '/images/default-project.jpg'"
-                    :alt="order.project?.title || '项目'"
+                  <ImageWithFallback
+                    :src="order.projectCoverImage"
+                    :alt="order.projectName || '项目封面'"
+                    fallback-src="/images/default-project.svg"
+                    placeholder-text="暂无封面"
+                    container-class="thumbnail-container"
+                    image-class="thumbnail-image"
                   />
                 </div>
                 <div class="project-details">
-                  <h3 class="project-title">{{ order.project?.title || '未知项目' }}</h3>
-                  <p class="project-description">{{ order.project?.description || '暂无描述' }}</p>
+                  <h3 class="project-title">{{ order.projectName || '未知项目' }}</h3>
+                  <p class="project-description">{{ order.projectDescription || '暂无描述' }}</p>
                   <div class="project-meta">
-                    <span class="project-author">作者：{{ order.project?.author || order.project?.username || '未知' }}</span>
-                    <span class="project-category">分类：{{ order.project?.category || order.project?.categoryName || '未分类' }}</span>
+                    <span class="project-author">作者：{{ order.sellerNickname || order.sellerUsername || '未知' }}</span>
+                    <span class="project-price">价格：{{ order.projectPrice || order.amount }} 积分</span>
                   </div>
                 </div>
               </div>
@@ -166,13 +170,13 @@
               <div class="order-actions">
                 <el-button
                   size="small"
-                  @click="handleViewProject(order.project)"
+                  @click="handleViewProject(order)"
                 >
                   查看项目
                 </el-button>
 
                 <el-button
-                  v-if="order.status === 'PENDING'"
+                  v-if="order.canPay"
                   type="primary"
                   size="small"
                   @click="handlePayOrder(order)"
@@ -215,7 +219,8 @@ import StatsGrid from '@/components/common/StatsGrid.vue'
 import StatCard from '@/components/common/StatCard.vue'
 import ContentContainer from '@/components/common/ContentContainer.vue'
 import TabHeader from '@/components/common/TabHeader.vue'
-import { orderApi } from '@/api/modules/order'
+import ImageWithFallback from '@/components/common/ImageWithFallback.vue'
+import { orderApi, type Order } from '@/api/modules/order'
 
 const router = useRouter()
 
@@ -228,7 +233,7 @@ const currentPage = ref(1)
 const pageSize = ref(10)
 const totalElements = ref(0)
 
-const orders = ref<any[]>([])
+const orders = ref<Order[]>([])
 
 // 统计数据
 const stats = ref({
@@ -241,12 +246,21 @@ const stats = ref({
 /**
  * 获取订单状态类型
  */
-const getStatusType = (status: string) => {
-  const statusMap: Record<string, string> = {
-    PENDING: 'warning',
-    PAID: 'success',
-    CANCELLED: 'info',
-    REFUNDED: 'danger'
+const getStatusType = (status: number | string) => {
+  // 支持数字状态码和字符串状态
+  const statusMap: Record<string | number, string> = {
+    // 数字状态码
+    0: 'warning',  // 待支付
+    1: 'success',  // 已支付
+    2: 'success',  // 已完成
+    3: 'info',     // 已取消
+    4: 'danger',   // 已退款
+    // 字符串状态
+    'PENDING': 'warning',
+    'PAID': 'success',
+    'COMPLETED': 'success',
+    'CANCELLED': 'info',
+    'REFUNDED': 'danger'
   }
   return statusMap[status] || 'info'
 }
@@ -254,12 +268,21 @@ const getStatusType = (status: string) => {
 /**
  * 获取订单状态文本
  */
-const getStatusText = (status: string) => {
-  const statusMap: Record<string, string> = {
-    PENDING: '待支付',
-    PAID: '已支付',
-    CANCELLED: '已取消',
-    REFUNDED: '已退款'
+const getStatusText = (status: number | string) => {
+  // 支持数字状态码和字符串状态
+  const statusMap: Record<string | number, string> = {
+    // 数字状态码
+    0: '待支付',
+    1: '已支付',
+    2: '已完成',
+    3: '已取消',
+    4: '已退款',
+    // 字符串状态
+    'PENDING': '待支付',
+    'PAID': '已支付',
+    'COMPLETED': '已完成',
+    'CANCELLED': '已取消',
+    'REFUNDED': '已退款'
   }
   return statusMap[status] || '未知'
 }
@@ -282,14 +305,14 @@ const formatDate = (dateString: string) => {
 /**
  * 查看项目详情
  */
-const handleViewProject = (project: any) => {
-  router.push(`/market/project/${project.id}`)
+const handleViewProject = (order: Order) => {
+  router.push(`/market/project/${order.projectId}`)
 }
 
 /**
  * 支付订单
  */
-const handlePayOrder = async (order: any) => {
+const handlePayOrder = async (order: Order) => {
   try {
     await ElMessageBox.confirm(
       `确定要支付订单"${order.orderNo}"吗？需要消费 ${order.amount} 积分。`,
@@ -499,10 +522,31 @@ onMounted(() => {
   overflow: hidden;
 }
 
-.project-thumbnail img {
+.project-thumbnail :deep(.thumbnail-container) {
+  width: 100%;
+  height: 100%;
+}
+
+.project-thumbnail :deep(.thumbnail-image) {
   width: 100%;
   height: 100%;
   object-fit: cover;
+}
+
+.project-thumbnail :deep(.image-placeholder) {
+  width: 100%;
+  height: 100%;
+  border-radius: 8px;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  border: none;
+}
+
+.project-thumbnail :deep(.placeholder-icon) {
+  font-size: 1.5rem;
+}
+
+.project-thumbnail :deep(.placeholder-text) {
+  font-size: 10px;
 }
 
 .project-details {

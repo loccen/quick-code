@@ -36,10 +36,11 @@
       <div class="detail-section">
         <h3 class="section-title">项目信息</h3>
         <div class="project-info">
-          <img 
-            :src="order.projectCoverImage || '/default-project.png'" 
+          <img
+            :src="order.projectCoverImage || '/images/default-project.svg'"
             :alt="order.projectName"
             class="project-cover"
+            @error="handleImageError"
           />
           <div class="project-details">
             <h4 class="project-title">{{ order.projectName }}</h4>
@@ -204,6 +205,13 @@ const formatDateTime = (dateString) => {
     minute: '2-digit',
     second: '2-digit'
   })
+}
+
+const handleImageError = (event) => {
+  const img = event.target
+  if (!img.src.includes('/images/default-project.svg')) {
+    img.src = '/images/default-project.svg'
+  }
 }
 
 const handleClose = () => {
