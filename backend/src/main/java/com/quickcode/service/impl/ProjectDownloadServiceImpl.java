@@ -911,4 +911,101 @@ public class ProjectDownloadServiceImpl implements ProjectDownloadService {
             return new HashMap<>();
         }
     }
+
+    @Override
+    @Transactional
+    public void deleteDownloadRecord(Long recordId, Long userId) {
+        log.debug("删除下载记录: recordId={}, userId={}", recordId, userId);
+
+        try {
+            // 查找下载记录
+            ProjectDownload downloadRecord = projectDownloadRepository.findById(recordId)
+                    .orElseThrow(() -> new RuntimeException("下载记录不存在"));
+
+            // 验证权限：只能删除自己的下载记录
+            if (!downloadRecord.getUserId().equals(userId)) {
+                throw new RuntimeException("无权限删除此下载记录");
+            }
+
+            // 删除记录
+            projectDownloadRepository.delete(downloadRecord);
+
+            log.info("删除下载记录成功: recordId={}, userId={}", recordId, userId);
+
+        } catch (RuntimeException e) {
+            log.warn("删除下载记录失败: recordId={}, userId={}, error={}", recordId, userId, e.getMessage());
+            throw e;
+        } catch (Exception e) {
+            log.error("删除下载记录失败: recordId={}, userId={}", recordId, userId, e);
+            throw new RuntimeException("删除下载记录失败: " + e.getMessage());
+        }
+    }
+
+    @Override
+    @Transactional
+    public int batchDeleteDownloadRecords(java.util.List<Long> recordIds, Long userId) {
+        log.debug("批量删除下载记录: recordIds={}, userId={}", recordIds, userId);
+
+        if (recordIds == null || recordIds.isEmpty()) {
+            return 0;
+        }
+
+        try {
+            // 查找用户的下载记录
+            List<ProjectDownload> userRecords = projectDownloadRepository.findByIdInAndUserId(recordIds, userId);
+
+            if (userRecords.isEmpty()) {
+                throw new RuntimeException("未找到可删除的下载记录");
+            }
+
+            // 验证所有记录都属于当前用户
+            List<Long> validRecordIds = userRecords.stream()
+                    .map(ProjectDownload::getId)
+                    .collect(java.util.stream.Collectors.toList());
+
+            if (validRecordIds.size() != recordIds.size()) {
+                log.warn("部分下载记录不属于当前用户: userId={}, requestedIds={}, validIds={}",
+                        userId, recordIds, validRecordIds);
+            }
+
+            // 批量删除
+            projectDownloadRepository.deleteAll(userRecords);
+
+            log.info("批量删除下载记录成功: userId={}, deletedCount={}", userId, userRecords.size());
+            return userRecords.size();
+
+        } catch (RuntimeException e) {
+            log.warn("批量删除下载记录失败: userId={}, error={}", userId, e.getMessage());
+            throw e;
+        } catch (Exception e) {
+            log.error("批量删除下载记录失败: userId={}", userId, e);
+            throw new RuntimeException("批量删除下载记录失败: " + e.getMessage());
+        }
+    }
+
+    @Override
+    @Transactional
+    public int clearUserDownloadRecords(Long userId) {
+        log.debug("清空用户下载记录: userId={}", userId);
+
+        try {
+            // 统计要删除的记录数
+            long recordCount = projectDownloadRepository.countByUserId(userId);
+
+            if (recordCount == 0) {
+                log.info("用户没有下载记录: userId={}", userId);
+                return 0;
+            }
+
+            // 删除用户的所有下载记录
+            int deletedCount = projectDownloadRepository.deleteByUserId(userId);
+
+            log.info("清空用户下载记录成功: userId={}, deletedCount={}", userId, deletedCount);
+            return deletedCount;
+
+        } catch (Exception e) {
+            log.error("清空用户下载记录失败: userId={}", userId, e);
+            throw new RuntimeException("清空下载记录失败: " + e.getMessage());
+        }
+    }
 }

@@ -331,4 +331,21 @@ public interface ProjectDownloadRepository extends BaseRepository<ProjectDownloa
      */
     @Query("SELECT COUNT(DISTINCT pd.projectId) FROM ProjectDownload pd WHERE pd.downloadTime >= :startTime AND pd.downloadStatus = 1")
     Long countDistinctProjectsByDownloadTimeGreaterThanEqual(@Param("startTime") LocalDateTime startTime);
+
+    /**
+     * 根据ID列表和用户ID查找下载记录
+     */
+    List<ProjectDownload> findByIdInAndUserId(List<Long> ids, Long userId);
+
+    /**
+     * 统计用户的下载记录数量
+     */
+    long countByUserId(Long userId);
+
+    /**
+     * 删除用户的所有下载记录
+     */
+    @Modifying
+    @Query("DELETE FROM ProjectDownload pd WHERE pd.userId = :userId")
+    int deleteByUserId(@Param("userId") Long userId);
 }

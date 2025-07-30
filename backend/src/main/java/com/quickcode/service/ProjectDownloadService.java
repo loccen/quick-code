@@ -366,4 +366,30 @@ public interface ProjectDownloadService extends BaseService<ProjectDownload, Lon
         public boolean isProjectPublished() { return isProjectPublished; }
         public java.math.BigDecimal getProjectPrice() { return projectPrice; }
     }
+
+    /**
+     * 删除下载记录
+     *
+     * @param recordId 下载记录ID
+     * @param userId 用户ID
+     * @throws RuntimeException 如果记录不存在或无权限删除
+     */
+    void deleteDownloadRecord(Long recordId, Long userId);
+
+    /**
+     * 批量删除用户的下载记录
+     *
+     * @param recordIds 下载记录ID列表
+     * @param userId 用户ID
+     * @return 删除的记录数量
+     */
+    int batchDeleteDownloadRecords(java.util.List<Long> recordIds, Long userId);
+
+    /**
+     * 清空用户的所有下载记录
+     *
+     * @param userId 用户ID
+     * @return 删除的记录数量
+     */
+    int clearUserDownloadRecords(Long userId);
 }

@@ -623,4 +623,77 @@ public class ProjectDownloadController extends BaseController {
             return error("检测异常下载行为失败");
         }
     }
+
+    /**
+     * 删除下载记录
+     */
+    @DeleteMapping("/record/{id}")
+    @PreAuthorize("hasRole('USER')")
+    public ApiResponse<Void> deleteDownloadRecord(@PathVariable Long id) {
+        log.info("删除下载记录: recordId={}", id);
+
+        try {
+            Long userId = getCurrentUserId();
+            projectDownloadService.deleteDownloadRecord(id, userId);
+            return success(null, "删除下载记录成功");
+        } catch (RuntimeException e) {
+            log.warn("删除下载记录失败: recordId={}, error={}", id, e.getMessage());
+            return error(e.getMessage());
+        } catch (Exception e) {
+            log.error("删除下载记录失败: recordId={}", id, e);
+            return error("删除下载记录失败: " + e.getMessage());
+        }
+    }
+
+    /**
+     * 批量删除下载记录
+     */
+    @DeleteMapping("/records/batch")
+    @PreAuthorize("hasRole('USER')")
+    public ApiResponse<Map<String, Object>> batchDeleteDownloadRecords(
+            @RequestBody List<Long> recordIds) {
+        log.info("批量删除下载记录: recordIds={}", recordIds);
+
+        try {
+            Long userId = getCurrentUserId();
+            int deletedCount = projectDownloadService.batchDeleteDownloadRecords(recordIds, userId);
+
+            Map<String, Object> result = Map.of(
+                    "deletedCount", deletedCount,
+                    "requestedCount", recordIds.size()
+            );
+
+            return success(result, "批量删除下载记录成功");
+        } catch (RuntimeException e) {
+            log.warn("批量删除下载记录失败: error={}", e.getMessage());
+            return error(e.getMessage());
+        } catch (Exception e) {
+            log.error("批量删除下载记录失败", e);
+            return error("批量删除下载记录失败: " + e.getMessage());
+        }
+    }
+
+    /**
+     * 清空用户的所有下载记录
+     */
+    @DeleteMapping("/records/clear")
+    @PreAuthorize("hasRole('USER')")
+    public ApiResponse<Map<String, Object>> clearUserDownloadRecords() {
+        log.info("清空用户下载记录");
+
+        try {
+            Long userId = getCurrentUserId();
+            int deletedCount = projectDownloadService.clearUserDownloadRecords(userId);
+
+            Map<String, Object> result = Map.of(
+                    "deletedCount", deletedCount,
+                    "userId", userId
+            );
+
+            return success(result, "清空下载记录成功");
+        } catch (Exception e) {
+            log.error("清空下载记录失败", e);
+            return error("清空下载记录失败: " + e.getMessage());
+        }
+    }
 }
