@@ -68,15 +68,21 @@ export interface PointAccount {
 export interface PointTransaction {
   id: number
   userId: number
-  username: string
-  type: PointTransactionType
+  type: number
+  typeName: string
+  typeDescription: string
   amount: number
   balanceBefore: number
   balanceAfter: number
   description: string
-  relatedOrderNo?: string
-  relatedProjectId?: number
+  referenceId?: number
+  referenceType?: string
+  status: number
+  statusDescription: string
+  isIncome: boolean
+  isExpense: boolean
   createdTime: string
+  updatedTime: string
 }
 
 /**

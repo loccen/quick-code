@@ -3,6 +3,7 @@ package com.quickcode.controller;
 import com.quickcode.common.response.ApiResponse;
 import com.quickcode.common.response.PageResponse;
 import com.quickcode.dto.point.PointAccountDTO;
+import com.quickcode.dto.point.PointTransactionDTO;
 import com.quickcode.entity.PointAccount;
 import com.quickcode.entity.PointTransaction;
 import com.quickcode.service.PointService;
@@ -17,6 +18,7 @@ import org.springframework.web.bind.annotation.*;
 
 import java.math.BigDecimal;
 import java.util.List;
+import java.util.stream.Collectors;
 
 /**
  * 积分管理控制器
@@ -178,7 +180,7 @@ public class PointController extends BaseController {
      */
     @GetMapping("/transactions")
     @PreAuthorize("hasRole('USER')")
-    public ApiResponse<PageResponse<PointTransaction>> getUserTransactions(
+    public ApiResponse<PageResponse<PointTransactionDTO>> getUserTransactions(
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "10") int size,
             @RequestParam(required = false) String type,
@@ -199,8 +201,13 @@ public class PointController extends BaseController {
                 transactionPage = pointService.getUserTransactions(userId, pageable);
             }
 
-            PageResponse<PointTransaction> pageResponse = PageResponse.<PointTransaction>builder()
-                    .content(transactionPage.getContent())
+            // 转换为DTO避免序列化问题
+            List<PointTransactionDTO> transactionDTOs = transactionPage.getContent().stream()
+                    .map(PointTransactionDTO::fromPointTransaction)
+                    .toList();
+
+            PageResponse<PointTransactionDTO> pageResponse = PageResponse.<PointTransactionDTO>builder()
+                    .content(transactionDTOs)
                     .page(transactionPage.getNumber() + 1) // PageResponse页码从1开始
                     .size(transactionPage.getSize())
                     .total(transactionPage.getTotalElements())

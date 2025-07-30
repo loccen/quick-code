@@ -119,10 +119,10 @@
           >
             <div class="transaction-header">
               <div class="transaction-info">
-                <span class="transaction-date">{{ transaction.createdAt }}</span>
-                <span class="transaction-id">交易号：{{ transaction.transactionId }}</span>
+                <span class="transaction-date">{{ transaction.createdTime }}</span>
+                <span class="transaction-id">交易号：{{ transaction.id }}</span>
               </div>
-              <div class="transaction-amount" :class="getAmountClass(transaction.type)">
+              <div class="transaction-amount" :class="getAmountClass(transaction.isIncome)">
                 <span class="amount">{{ getAmountText(transaction) }}</span>
                 <span class="unit">积分</span>
               </div>
@@ -131,19 +131,19 @@
             <div class="transaction-content">
               <div class="transaction-details">
                 <div class="transaction-type">
-                  <el-tag :type="getTypeColor(transaction.type)">
-                    {{ getTypeText(transaction.type) }}
+                  <el-tag :type="getTypeColor(transaction.typeName)">
+                    {{ getTypeText(transaction) }}
                   </el-tag>
                 </div>
                 <div class="transaction-description">
                   <h4 class="description-title">{{ transaction.description }}</h4>
                   <p v-if="transaction.remark" class="description-remark">{{ transaction.remark }}</p>
                   <div class="transaction-meta">
-                    <span v-if="transaction.relatedProject" class="related-project">
-                      相关项目：{{ transaction.relatedProject }}
+                    <span v-if="transaction.referenceType" class="related-info">
+                      关联：{{ transaction.referenceType }}
                     </span>
                     <span class="transaction-status">
-                      状态：{{ getStatusText(transaction.status) }}
+                      状态：{{ transaction.statusDescription }}
                     </span>
                   </div>
                 </div>
@@ -229,46 +229,34 @@ const stats = ref({
 /**
  * 获取交易类型颜色
  */
-const getTypeColor = (type: string) => {
-  const config = getTransactionTypeConfig(type)
+const getTypeColor = (typeName: string) => {
+  const config = getTransactionTypeConfig(typeName)
   return config.color
 }
 
 /**
  * 获取交易类型文本
  */
-const getTypeText = (type: string) => {
-  const config = getTransactionTypeConfig(type)
-  return config.label
+const getTypeText = (transaction: any) => {
+  // 优先使用后端返回的typeDescription，如果没有则使用配置
+  return transaction.typeDescription || getTransactionTypeConfig(transaction.typeName).label
 }
 
 /**
  * 获取金额样式类
  */
-const getAmountClass = (type: string) => {
-  const config = getTransactionTypeConfig(type)
-  return config.isIncome ? 'income' : 'expense'
+const getAmountClass = (isIncome: boolean) => {
+  return isIncome ? 'income' : 'expense'
 }
 
 /**
  * 获取金额文本
  */
 const getAmountText = (transaction: any) => {
-  return formatTransactionAmount(transaction.amount, transaction.type)
+  return formatTransactionAmount(transaction.amount, transaction.isIncome)
 }
 
-/**
- * 获取状态文本
- */
-const getStatusText = (status: string) => {
-  const statusMap: Record<string, string> = {
-    SUCCESS: '成功',
-    PENDING: '处理中',
-    FAILED: '失败',
-    CANCELLED: '已取消'
-  }
-  return statusMap[status] || '未知'
-}
+
 
 /**
  * 充值积分
@@ -287,10 +275,12 @@ const handleRecharge = async () => {
     )
 
     if (amount) {
-      const response = await pointApi.rechargePoints({
-        amount: parseFloat(amount),
-        paymentMethod: 'ALIPAY' // 默认使用支付宝
-      })
+      // 使用URLSearchParams发送表单数据
+      const params = new URLSearchParams()
+      params.append('amount', amount)
+      params.append('description', '积分充值')
+
+      const response = await pointApi.rechargePoints(params)
 
       if (response && response.code === 200) {
         ElMessage.success('充值成功')
@@ -447,7 +437,7 @@ const loadTransactions = async () => {
       params.type = 'RECHARGE,REFUND,REWARD'
     } else if (activeTab.value === 'expense') {
       // 支出记录：消费
-      params.type = 'PURCHASE'
+      params.type = 'CONSUME,WITHDRAW'
     }
 
     const response = await pointApi.getPointTransactions(params)
@@ -470,9 +460,9 @@ const loadTransactions = async () => {
 /**
  * 获取交易类型显示配置
  */
-const getTransactionTypeConfig = (type: string) => {
-  return POINT_TRANSACTION_TYPE_CONFIG[type as PointTransactionType] || {
-    label: type,
+const getTransactionTypeConfig = (typeName: string) => {
+  return POINT_TRANSACTION_TYPE_CONFIG[typeName as PointTransactionType] || {
+    label: typeName,
     color: 'info',
     isIncome: false
   }
@@ -481,9 +471,8 @@ const getTransactionTypeConfig = (type: string) => {
 /**
  * 格式化交易金额显示
  */
-const formatTransactionAmount = (amount: number, type: string) => {
-  const config = getTransactionTypeConfig(type)
-  const prefix = config.isIncome ? '+' : '-'
+const formatTransactionAmount = (amount: number, isIncome: boolean) => {
+  const prefix = isIncome ? '+' : '-'
   return `${prefix}${Math.abs(amount)}`
 }
 
