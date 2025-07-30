@@ -65,10 +65,7 @@
                       <el-icon><ShoppingCart /></el-icon>
                       我的订单
                     </el-dropdown-item>
-                    <el-dropdown-item command="purchases">
-                      <el-icon><ShoppingBag /></el-icon>
-                      购买记录
-                    </el-dropdown-item>
+
                     <el-dropdown-item command="downloads">
                       <el-icon><Download /></el-icon>
                       下载记录
@@ -117,7 +114,7 @@ import PageBackground from '@/components/common/PageBackground.vue'
 import UploadProgressFloat from '@/components/upload/UploadProgressFloat.vue'
 import { useUserStore } from '@/stores/user'
 import { generateLoginUrl, generateRegisterUrl } from '@/utils/redirect'
-import { ArrowDown, Coin, Download, FolderOpened, Setting, ShoppingBag, ShoppingCart, SwitchButton, Upload, User } from '@element-plus/icons-vue'
+import { ArrowDown, Coin, Download, FolderOpened, Setting, ShoppingCart, SwitchButton, User } from '@element-plus/icons-vue'
 import { ElMessage } from 'element-plus'
 import { ref } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
@@ -162,9 +159,6 @@ const handleUserCommand = (command: string) => {
       break
     case 'my-orders':
       router.push('/user/my-orders')
-      break
-    case 'purchases':
-      router.push('/user/purchases')
       break
     case 'downloads':
       router.push('/user/downloads')

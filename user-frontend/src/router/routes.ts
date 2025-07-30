@@ -217,16 +217,7 @@ export const userRoutes: RouteRecordRaw[] = [
           requiresAuth: true
         }
       },
-      {
-        path: 'purchases',
-        name: 'UserPurchases',
-        component: () => import('@/views/user/UserPurchasesView.vue'),
-        meta: {
-          title: '购买记录',
-          icon: 'ShoppingBag',
-          requiresAuth: true
-        }
-      },
+
       {
         path: 'settings',
         name: 'Settings',

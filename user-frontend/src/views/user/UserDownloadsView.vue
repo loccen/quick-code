@@ -7,9 +7,9 @@
       :icon="Download"
     >
       <template #actions>
-        <el-button @click="$router.push('/user/purchases')">
-          <el-icon><ShoppingBag /></el-icon>
-          查看购买记录
+        <el-button @click="$router.push('/user/my-orders')">
+          <el-icon><ShoppingCart /></el-icon>
+          查看我的订单
         </el-button>
       </template>
     </PageHeader>
@@ -210,7 +210,7 @@
 </template>
 
 <script setup lang="ts">
-import { Search, Download, ShoppingBag, Folder, Clock, View, Delete } from '@element-plus/icons-vue'
+import { Search, Download, ShoppingBag, ShoppingCart, Folder, Clock, View, Delete } from '@element-plus/icons-vue'
 import { ElMessage, ElMessageBox } from 'element-plus'
 import { onMounted, ref } from 'vue'
 import { useRouter } from 'vue-router'

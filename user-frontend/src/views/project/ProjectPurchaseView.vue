@@ -394,8 +394,8 @@ const confirmPurchase = async () => {
 
     if (paymentResponse.success) {
       ElMessage.success('购买成功！')
-      // 跳转到项目详情页或我的购买页面
-      router.push(`/user/purchases`)
+      // 跳转到我的订单页面
+      router.push(`/user/my-orders`)
     } else {
       throw new Error(paymentResponse.message || '支付失败')
     }
