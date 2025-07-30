@@ -15,6 +15,7 @@ import com.quickcode.repository.PointAccountRepository;
 import com.quickcode.repository.ProjectRepository;
 import com.quickcode.repository.UserRepository;
 import com.quickcode.service.OrderService;
+import com.quickcode.service.PointService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
@@ -46,6 +47,7 @@ public class OrderServiceImpl implements OrderService {
     private final ProjectRepository projectRepository;
     private final UserRepository userRepository;
     private final PointAccountRepository pointAccountRepository;
+    private final PointService pointService;
 
     @Override
     @Transactional
@@ -619,18 +621,9 @@ public class OrderServiceImpl implements OrderService {
     private void executePointsPayment(Order order, BigDecimal amount, Long userId) {
         log.debug("执行积分支付: orderNo={}, amount={}, userId={}", order.getOrderNo(), amount, userId);
 
-        // 获取用户积分账户
-        PointAccount pointAccount = pointAccountRepository.findByUserId(userId)
-                .orElseThrow(() -> new RuntimeException("用户积分账户不存在"));
-
-        // 检查积分余额
-        if (!pointAccount.hasEnoughPoints(amount)) {
-            throw new RuntimeException("积分余额不足，当前可用积分: " + pointAccount.getAvailablePoints());
-        }
-
-        // 扣减积分
-        pointAccount.deductPoints(amount);
-        pointAccountRepository.save(pointAccount);
+        // 使用PointService消费积分，这会自动创建交易记录
+        String description = String.format("购买项目: %s", order.getProject() != null ? order.getProject().getTitle() : "项目ID-" + order.getProjectId());
+        pointService.consumePoints(userId, amount, description, order.getOrderNo());
 
         // 给卖家增加积分（可选，根据业务需求）
         addPointsToSeller(order.getSellerId(), amount);
@@ -655,11 +648,9 @@ public class OrderServiceImpl implements OrderService {
      */
     private void addPointsToSeller(Long sellerId, BigDecimal amount) {
         try {
-            PointAccount sellerAccount = pointAccountRepository.findByUserId(sellerId)
-                    .orElseGet(() -> createPointAccount(sellerId));
-
-            sellerAccount.addPoints(amount);
-            pointAccountRepository.save(sellerAccount);
+            // 使用PointService增加积分，这会自动创建交易记录
+            String description = "项目销售收入";
+            pointService.rechargePoints(sellerId, amount, description);
 
             log.debug("给卖家增加积分成功: sellerId={}, amount={}", sellerId, amount);
         } catch (Exception e) {
@@ -719,23 +710,26 @@ public class OrderServiceImpl implements OrderService {
      * 退还积分
      */
     private void refundPoints(Long userId, BigDecimal amount) {
-        PointAccount pointAccount = pointAccountRepository.findByUserId(userId)
-                .orElseThrow(() -> new RuntimeException("用户积分账户不存在"));
-
-        pointAccount.addPoints(amount);
-        pointAccountRepository.save(pointAccount);
+        // 使用PointService退还积分，这会自动创建退款交易记录
+        String description = "订单退款";
+        pointService.refundPoints(userId, amount, description, null);
     }
 
     /**
      * 从卖家扣减积分
      */
     private void deductPointsFromSeller(Long sellerId, BigDecimal amount) {
-        PointAccount sellerAccount = pointAccountRepository.findByUserId(sellerId)
-                .orElse(null);
-
-        if (sellerAccount != null && sellerAccount.hasEnoughPoints(amount)) {
-            sellerAccount.deductPoints(amount);
-            pointAccountRepository.save(sellerAccount);
+        try {
+            // 检查卖家是否有足够积分
+            if (pointService.checkBalance(sellerId, amount)) {
+                // 使用PointService扣减积分，这会自动创建交易记录
+                String description = "订单退款扣减";
+                pointService.consumePoints(sellerId, amount, description, null);
+            } else {
+                log.warn("卖家积分余额不足，无法扣减: sellerId={}, amount={}", sellerId, amount);
+            }
+        } catch (Exception e) {
+            log.warn("从卖家扣减积分失败: sellerId={}, amount={}", sellerId, amount, e);
         }
     }
 
