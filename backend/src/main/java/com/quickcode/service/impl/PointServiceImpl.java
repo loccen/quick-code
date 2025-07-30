@@ -144,15 +144,20 @@ public class PointServiceImpl implements PointService {
         pointAccountRepository.save(account);
 
         // 创建交易记录
+        String finalDescription = description != null ? description : "积分消费";
+        if (relatedOrderNo != null) {
+            finalDescription += " (订单号: " + relatedOrderNo + ")";
+        }
+
         PointTransaction transaction = PointTransaction.builder()
                 .userId(userId)
                 .type(PointTransaction.Type.CONSUME.getCode())
                 .amount(amount.negate()) // 消费记录为负数
                 .balanceBefore(balanceBefore)
                 .balanceAfter(account.getAvailablePoints())
-                .description(description != null ? description : "积分消费")
+                .description(finalDescription)
                 .referenceType("ORDER")
-                .referenceId(relatedOrderNo != null ? Long.parseLong(relatedOrderNo) : null)
+                .referenceId(null) // 暂时设为null，避免Long解析错误
                 .status(PointTransaction.Status.SUCCESS.getCode())
                 .build();
 
