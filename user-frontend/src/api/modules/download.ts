@@ -221,5 +221,28 @@ export const adminDownloadApi = {
    */
   cleanupExpiredTokens(): Promise<ApiResponse<{ cleanedCount: number }>> {
     return request.post('/downloads/admin/cleanup-tokens')
+  },
+
+  /**
+   * 删除下载记录
+   */
+  deleteDownloadRecord(recordId: number): Promise<ApiResponse<void>> {
+    return request.delete(`/downloads/record/${recordId}`)
+  },
+
+  /**
+   * 批量删除下载记录
+   */
+  batchDeleteDownloadRecords(recordIds: number[]): Promise<ApiResponse<{ deletedCount: number; requestedCount: number }>> {
+    return request.delete('/downloads/records/batch', {
+      data: recordIds
+    })
+  },
+
+  /**
+   * 清空用户的所有下载记录
+   */
+  clearUserDownloadRecords(): Promise<ApiResponse<{ deletedCount: number; userId: number }>> {
+    return request.delete('/downloads/records/clear')
   }
 }

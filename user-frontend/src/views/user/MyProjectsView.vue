@@ -165,6 +165,8 @@ import {
 import ProjectList from '@/components/project/ProjectList.vue'
 import { projectApi } from '@/api/modules/project'
 import { orderApi } from '@/api/modules/order'
+import { favoriteApi } from '@/api/modules/favorite'
+import { userStatsApi } from '@/api/modules/userStats'
 import type { ProjectManagement } from '@/types/project'
 
 // 路由
@@ -294,19 +296,52 @@ const loadPurchasedProjects = async () => {
 const loadFavoriteProjects = async () => {
   favoritesLoading.value = true
   try {
-    // TODO: 收藏功能待后端实现，暂时使用空数据
-    console.log('收藏功能待后端实现')
+    const response = await favoriteApi.getUserFavoriteProjects({
+      page: favoritesParams.value.page - 1, // 后端页码从0开始
+      size: favoritesParams.value.size,
+      keyword: favoritesParams.value.keyword,
+      sortBy: favoritesParams.value.sortBy,
+      sortDir: favoritesParams.value.sortDir as 'ASC' | 'DESC'
+    })
 
-    favoriteProjects.value = []
-    favoritesTotal.value = 0
-    favoritesCount.value = 0
+    if (response.code === 200 && response.data) {
+      // 转换数据格式
+      favoriteProjects.value = response.data.content.map(project => ({
+        id: project.id,
+        title: project.title,
+        description: project.description,
+        categoryId: project.categoryId || 0,
+        categoryName: project.categoryName || '',
+        userId: project.userId,
+        username: project.username || '',
+        coverImage: project.coverImage,
+        price: project.price,
+        isFree: project.price === 0,
+        status: project.status || 0,
+        statusDesc: project.status === 1 ? '已发布' : '待审核',
+        isFeatured: project.isFeatured || false,
+        viewCount: project.viewCount || 0,
+        downloadCount: project.downloadCount || 0,
+        likeCount: project.likeCount || 0,
+        rating: project.rating,
+        ratingCount: project.ratingCount || 0,
+        publishedTime: project.publishedTime,
+        createdTime: project.createdTime,
+        updatedTime: project.updatedTime,
+        tags: project.tags || [],
+        techStack: project.techStack || []
+      }))
 
-    // 显示提示信息
-    if (favoriteProjects.value.length === 0) {
-      console.info('收藏功能即将上线，敬请期待！')
+      favoritesTotal.value = response.data.total
+      favoritesCount.value = response.data.total
+    } else {
+      favoriteProjects.value = []
+      favoritesTotal.value = 0
+      favoritesCount.value = 0
     }
   } catch (error: any) {
     console.error('加载收藏项目失败:', error)
+    ElMessage.error(error.response?.data?.message || '加载收藏项目失败')
     favoriteProjects.value = []
     favoritesTotal.value = 0
     favoritesCount.value = 0
@@ -481,9 +516,34 @@ const handleProjectDownload = async (project: ProjectManagement) => {
 }
 
 const handleProjectUnfavorite = async (project: ProjectManagement) => {
-  // TODO: 收藏功能待后端实现
-  ElMessage.info('收藏功能即将上线，敬请期待！')
-  console.log('取消收藏项目:', project.title, '- 功能待实现')
+  try {
+    await ElMessageBox.confirm(
+      `确定要取消收藏项目"${project.title}"吗？`,
+      '确认取消收藏',
+      {
+        confirmButtonText: '确定',
+        cancelButtonText: '取消',
+        type: 'warning'
+      }
+    )
+
+    const response = await favoriteApi.unfavoriteProject(project.id)
+
+    if (response.code === 200) {
+      ElMessage.success('取消收藏成功')
+      // 重新加载收藏列表
+      loadFavoriteProjects()
+      // 更新统计数据
+      loadUserProjectStats()
+    } else {
+      ElMessage.error(response.message || '取消收藏失败')
+    }
+  } catch (error: any) {
+    if (error !== 'cancel') {
+      console.error('取消收藏失败:', error)
+      ElMessage.error(error.response?.data?.message || '取消收藏失败')
+    }
+  }
 }
 
 // 项目发布和下架功能已移除
@@ -492,16 +552,15 @@ const handleProjectUnfavorite = async (project: ProjectManagement) => {
 // 加载用户项目统计数据
 const loadUserProjectStats = async () => {
   try {
-    // TODO: 用户项目统计API待后端实现，暂时使用基础统计
-    console.log('用户项目统计API待后端实现')
+    const response = await userStatsApi.getUserProjectStats()
 
-    // 可以通过现有API获取部分统计数据
-    // uploadedCount 通过上传项目列表长度获取
-    // purchasedCount 通过购买项目列表长度获取
-    // favoritesCount 暂时为0
-    // totalEarnings 暂时为0
-
-    // 保持默认值，等待后端API实现
+    if (response.code === 200 && response.data) {
+      const stats = response.data
+      uploadedCount.value = stats.uploadedCount
+      purchasedCount.value = stats.purchasedCount
+      favoritesCount.value = stats.favoritesCount
+      totalEarnings.value = stats.totalEarnings
+    }
   } catch (error: any) {
     console.error('加载用户统计数据失败:', error)
     // 统计数据加载失败不显示错误消息，保持默认值0

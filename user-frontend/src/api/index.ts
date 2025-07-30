@@ -14,6 +14,15 @@ export { default as userApi } from './user'
 // 导出项目服务
 export { default as projectApi } from './modules/project'
 
+// 导出收藏服务
+export { default as favoriteApi } from './modules/favorite'
+
+// 导出用户统计服务
+export { default as userStatsApi } from './modules/userStats'
+
+// 导出下载服务
+export { default as downloadApi } from './modules/download'
+
 // 导出公开服务
 export { publicProjectApi, publicContentApi } from './modules/public'
 
