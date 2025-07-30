@@ -57,9 +57,10 @@
                 >
                   <el-option label="全部类型" value="" />
                   <el-option label="充值" value="RECHARGE" />
-                  <el-option label="消费" value="PURCHASE" />
+                  <el-option label="消费" value="CONSUME" />
                   <el-option label="退款" value="REFUND" />
                   <el-option label="奖励" value="REWARD" />
+                  <el-option label="提现" value="WITHDRAW" />
                 </el-select>
                 <el-date-picker
                   v-model="dateRange"
@@ -202,7 +203,7 @@ import StatsGrid from '@/components/common/StatsGrid.vue'
 import StatCard from '@/components/common/StatCard.vue'
 import ContentContainer from '@/components/common/ContentContainer.vue'
 import TabHeader from '@/components/common/TabHeader.vue'
-import { pointApi } from '@/api/modules/point'
+import { pointApi, PointTransactionType, POINT_TRANSACTION_TYPE_CONFIG } from '@/api/modules/point'
 
 const router = useRouter()
 
@@ -229,41 +230,31 @@ const stats = ref({
  * 获取交易类型颜色
  */
 const getTypeColor = (type: string) => {
-  const colorMap: Record<string, string> = {
-    RECHARGE: 'success',
-    PURCHASE: 'warning',
-    REFUND: 'info',
-    REWARD: 'primary'
-  }
-  return colorMap[type] || 'default'
+  const config = getTransactionTypeConfig(type)
+  return config.color
 }
 
 /**
  * 获取交易类型文本
  */
 const getTypeText = (type: string) => {
-  const textMap: Record<string, string> = {
-    RECHARGE: '充值',
-    PURCHASE: '消费',
-    REFUND: '退款',
-    REWARD: '奖励'
-  }
-  return textMap[type] || '未知'
+  const config = getTransactionTypeConfig(type)
+  return config.label
 }
 
 /**
  * 获取金额样式类
  */
 const getAmountClass = (type: string) => {
-  return type === 'RECHARGE' || type === 'REFUND' || type === 'REWARD' ? 'income' : 'expense'
+  const config = getTransactionTypeConfig(type)
+  return config.isIncome ? 'income' : 'expense'
 }
 
 /**
  * 获取金额文本
  */
 const getAmountText = (transaction: any) => {
-  const prefix = getAmountClass(transaction.type) === 'income' ? '+' : '-'
-  return `${prefix}${transaction.amount}`
+  return formatTransactionAmount(transaction.amount, transaction.type)
 }
 
 /**
@@ -296,12 +287,10 @@ const handleRecharge = async () => {
     )
 
     if (amount) {
-      // 使用URLSearchParams发送表单数据
-      const params = new URLSearchParams()
-      params.append('amount', amount)
-      params.append('description', '积分充值')
-
-      const response = await pointApi.rechargePoints(params)
+      const response = await pointApi.rechargePoints({
+        amount: parseFloat(amount),
+        paymentMethod: 'ALIPAY' // 默认使用支付宝
+      })
 
       if (response && response.code === 200) {
         ElMessage.success('充值成功')
@@ -365,6 +354,23 @@ const handleRequestRefund = async (transaction: any) => {
  */
 const handleTabChange = () => {
   currentPage.value = 1
+
+  // 根据tab页自动设置交易类型筛选
+  switch (activeTab.value) {
+    case 'income':
+      // 收入类型：充值、奖励、退款
+      transactionType.value = 'RECHARGE,REWARD,REFUND'
+      break
+    case 'expense':
+      // 支出类型：消费、提现
+      transactionType.value = 'CONSUME,WITHDRAW'
+      break
+    default:
+      // 全部记录
+      transactionType.value = ''
+      break
+  }
+
   loadTransactions()
 }
 
@@ -459,6 +465,26 @@ const loadTransactions = async () => {
   } finally {
     loading.value = false
   }
+}
+
+/**
+ * 获取交易类型显示配置
+ */
+const getTransactionTypeConfig = (type: string) => {
+  return POINT_TRANSACTION_TYPE_CONFIG[type as PointTransactionType] || {
+    label: type,
+    color: 'info',
+    isIncome: false
+  }
+}
+
+/**
+ * 格式化交易金额显示
+ */
+const formatTransactionAmount = (amount: number, type: string) => {
+  const config = getTransactionTypeConfig(type)
+  const prefix = config.isIncome ? '+' : '-'
+  return `${prefix}${Math.abs(amount)}`
 }
 
 onMounted(() => {

@@ -55,7 +55,6 @@ public class PointTransaction extends BaseEntity {
    * 交易金额
    */
   @NotNull(message = "交易金额不能为空")
-  @DecimalMin(value = "0.01", message = "交易金额必须大于0")
   @Column(name = "amount", nullable = false, precision = 15, scale = 2)
   private BigDecimal amount;
 

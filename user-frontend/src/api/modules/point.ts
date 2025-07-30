@@ -6,16 +6,45 @@ import type { ApiResponse, PageResponse } from '@/types/api'
 import { request } from '../request'
 
 /**
- * 积分交易类型枚举
+ * 积分交易类型枚举（与后端PointTransaction.Type保持一致）
  */
 export enum PointTransactionType {
   RECHARGE = 'RECHARGE',           // 充值
-  PURCHASE = 'PURCHASE',           // 购买消费
+  CONSUME = 'CONSUME',             // 消费
+  REWARD = 'REWARD',               // 奖励
   REFUND = 'REFUND',              // 退款
-  REWARD = 'REWARD',              // 奖励
-  PENALTY = 'PENALTY',            // 扣罚
-  TRANSFER_IN = 'TRANSFER_IN',    // 转入
-  TRANSFER_OUT = 'TRANSFER_OUT'   // 转出
+  WITHDRAW = 'WITHDRAW'            // 提现
+}
+
+/**
+ * 积分交易类型显示配置
+ */
+export const POINT_TRANSACTION_TYPE_CONFIG = {
+  [PointTransactionType.RECHARGE]: {
+    label: '充值',
+    color: 'success',
+    isIncome: true
+  },
+  [PointTransactionType.CONSUME]: {
+    label: '消费',
+    color: 'danger',
+    isIncome: false
+  },
+  [PointTransactionType.REWARD]: {
+    label: '奖励',
+    color: 'warning',
+    isIncome: true
+  },
+  [PointTransactionType.REFUND]: {
+    label: '退款',
+    color: 'info',
+    isIncome: true
+  },
+  [PointTransactionType.WITHDRAW]: {
+    label: '提现',
+    color: 'danger',
+    isIncome: false
+  }
 }
 
 /**
