@@ -1,0 +1,348 @@
+# 文件上传专用配置文件
+# 包含所有文件上传、安全检查、内容过滤相关配置
+
+app:
+  file:
+    # 基础配置
+    upload-path: ${UPLOAD_PATH:./uploads}
+    max-file-size: ${MAX_FILE_SIZE:104857600}  # 100MB
+    max-request-size: ${MAX_REQUEST_SIZE:209715200}  # 200MB
+    base-url: ${FILE_BASE_URL:http://localhost:8080}
+    
+    # 文件处理配置
+    enable-compression: ${FILE_ENABLE_COMPRESSION:true}
+    compression-quality: ${FILE_COMPRESSION_QUALITY:0.8}
+    
+    # 安全检查配置
+    security:
+      enabled: ${FILE_SECURITY_ENABLED:true}
+      max-file-size: ${FILE_SECURITY_MAX_SIZE:524288000}  # 500MB
+      max-files-per-project: ${FILE_SECURITY_MAX_FILES:50}
+      
+      # 允许的文件类型
+      allowed-source-types:
+        - zip
+        - rar
+        - 7z
+        - tar.gz
+        - tar
+        - gz
+        - bz2
+        - xz
+        
+      allowed-image-types:
+        - jpg
+        - jpeg
+        - png
+        - gif
+        - webp
+        - svg
+        - bmp
+        - tiff
+        - ico
+        
+      allowed-document-types:
+        - pdf
+        - doc
+        - docx
+        - txt
+        - md
+        - rtf
+        - odt
+        - ods
+        - odp
+        - xls
+        - xlsx
+        - ppt
+        - pptx
+        
+      # 危险文件扩展名黑名单（完整版）
+      dangerous-extensions:
+        # Windows可执行文件
+        - exe
+        - bat
+        - cmd
+        - scr
+        - vbs
+        - js
+        - jar
+        - com
+        - pif
+        - msi
+        - dll
+        - app
+        - gadget
+        - msc
+        - msp
+        - mst
+        - application
+        - appx
+        - msix
+        - xap
+        - cpl
+        - scf
+        - lnk
+        - inf
+        - reg
+        # PowerShell脚本
+        - ps1
+        - psm1
+        - psd1
+        - ps1xml
+        - psc1
+        - psc2
+        - msh
+        - msh1
+        - msh2
+        - mshxml
+        - msh1xml
+        - msh2xml
+        # Linux/Unix可执行文件
+        - deb
+        - dmg
+        - pkg
+        - rpm
+        - run
+        - bin
+        - elf
+        - so
+        - dylib
+        
+      # 危险MIME类型黑名单（完整版）
+      dangerous-mime-types:
+        - application/x-executable
+        - application/x-msdownload
+        - application/x-msdos-program
+        - application/x-winexe
+        - application/x-dosexec
+        - application/x-exe
+        - application/x-msi
+        - application/octet-stream
+        - application/x-sharedlib
+        - application/x-object
+        - application/x-coredump
+        - application/x-shellscript
+        - text/x-shellscript
+        - application/x-perl
+        - application/x-python-code
+        - application/x-ruby
+        - application/javascript
+        - text/javascript
+        - application/x-java-archive
+        - application/java-archive
+        
+      # 内容检查配置
+      content-check:
+        enabled: ${FILE_CONTENT_CHECK_ENABLED:false}
+        header-bytes-to-check: ${FILE_CONTENT_CHECK_BYTES:2048}
+        max-text-scan-size: ${FILE_MAX_TEXT_SCAN_SIZE:10485760}  # 10MB
+        
+        # 恶意文件特征码（完整版）
+        malicious-signatures:
+          - "4D5A"        # PE executable (Windows)
+          - "7F454C46"    # ELF executable (Linux)
+          - "CAFEBABE"    # Java class file
+          - "FEEDFACE"    # Mach-O binary (macOS)
+          - "FEEDFACF"    # Mach-O 64-bit binary
+          - "CE4E5446"    # .NET assembly
+          - "504B0304"    # ZIP file (potential executable)
+          - "504B0506"    # ZIP file end
+          - "504B0708"    # ZIP file spanned
+          - "52617221"    # RAR archive
+          - "377ABCAF"    # 7-Zip archive
+          - "1F8B08"      # GZIP compressed
+          - "425A68"      # BZIP2 compressed
+          - "FD377A58"    # XZ compressed
+          - "213C617263683E"  # Unix archive
+          - "EDABEEDB"    # RPM package
+          
+        # 可执行文件扩展名模式（完整版）
+        executable-patterns:
+          - ".*\\.exe$"
+          - ".*\\.bat$"
+          - ".*\\.cmd$"
+          - ".*\\.scr$"
+          - ".*\\.com$"
+          - ".*\\.pif$"
+          - ".*\\.msi$"
+          - ".*\\.dll$"
+          - ".*\\.so$"
+          - ".*\\.dylib$"
+          - ".*\\.app$"
+          - ".*\\.deb$"
+          - ".*\\.rpm$"
+          - ".*\\.dmg$"
+          - ".*\\.pkg$"
+          - ".*\\.run$"
+          - ".*\\.bin$"
+          - ".*\\.elf$"
+          - ".*\\.out$"
+          - ".*\\.jar$"
+          - ".*\\.war$"
+          - ".*\\.ear$"
+
+        # 敏感关键词检查（完整版）
+        sensitive-keywords:
+          # 密码相关
+          - password
+          - passwd
+          - pwd
+          - secret
+          - private_key
+          - private-key
+          - api_key
+          - api-key
+          - apikey
+          - token
+          - access_token
+          - refresh_token
+          - auth_token
+          - bearer
+          - jwt
+          - session_id
+          - session-id
+          # 数据库连接
+          - database_url
+          - db_password
+          - db_user
+          - connection_string
+          - mysql_password
+          - postgres_password
+          - mongodb_uri
+          - redis_password
+          # 云服务密钥
+          - aws_access_key
+          - aws_secret_key
+          - azure_client_secret
+          - google_api_key
+          - gcp_service_account
+          - alibaba_access_key
+          - tencent_secret_key
+          - baidu_api_key
+          # 加密相关
+          - private_key_file
+          - certificate
+          - ssl_key
+          - tls_key
+          - rsa_private
+          - encryption_key
+          - decrypt
+          - cipher
+          - hash_salt
+          # 敏感配置
+          - admin_password
+          - root_password
+          - master_key
+          - signing_key
+          - webhook_secret
+          - oauth_secret
+          - client_secret
+
+        # 敏感文件名模式（完整版）
+        sensitive-file-patterns:
+          # 密钥文件
+          - ".*\\.key$"
+          - ".*\\.pem$"
+          - ".*\\.p12$"
+          - ".*\\.pfx$"
+          - ".*\\.jks$"
+          - ".*\\.keystore$"
+          - ".*\\.truststore$"
+          - ".*\\.crt$"
+          - ".*\\.cer$"
+          - ".*\\.der$"
+          - ".*\\.csr$"
+          - ".*\\.p7b$"
+          - ".*\\.p7c$"
+          - ".*\\.p7s$"
+          # SSH密钥
+          - ".*id_rsa.*"
+          - ".*id_dsa.*"
+          - ".*id_ecdsa.*"
+          - ".*id_ed25519.*"
+          - ".*\\.ssh.*"
+          # 加密文件
+          - ".*\\.gpg$"
+          - ".*\\.pgp$"
+          - ".*\\.asc$"
+          # 配置文件
+          - ".*config.*"
+          - ".*secret.*"
+          - ".*credential.*"
+          - ".*password.*"
+          - ".*\\.env$"
+          - ".*\\.env\\..*"
+          - ".*\\.properties$"
+          - ".*\\.conf$"
+          - ".*\\.ini$"
+
+        # 恶意代码模式（完整版）
+        malicious-code-patterns:
+          # 系统命令执行
+          - "Runtime\\.getRuntime\\(\\)\\.exec"
+          - "ProcessBuilder"
+          - "system\\("
+          - "shell_exec"
+          - "exec\\("
+          - "eval\\("
+          - "assert\\("
+          - "passthru\\("
+          - "popen\\("
+          - "proc_open\\("
+          - "file_get_contents\\(.*http"
+          # 网络请求
+          - "curl_exec"
+          - "file_get_contents.*://"
+          - "fopen.*://"
+          - "include.*://"
+          - "require.*://"
+          - "HttpURLConnection"
+          - "URLConnection"
+          - "Socket\\("
+          - "ServerSocket\\("
+          - "DatagramSocket\\("
+          # 文件操作
+          - "file_put_contents"
+          - "fwrite"
+          - "fputs"
+          - "move_uploaded_file"
+          - "copy\\("
+          - "unlink\\("
+          - "rmdir\\("
+          - "mkdir\\("
+          - "chmod\\("
+          - "chown\\("
+          - "chgrp\\("
+          # 数据库操作
+          - "mysql_query"
+          - "mysqli_query"
+          - "pg_query"
+          - "sqlite_query"
+          - "execute\\("
+          - "prepare\\("
+          - "query\\("
+          - "SELECT.*FROM.*WHERE"
+          - "INSERT.*INTO"
+          - "UPDATE.*SET"
+          - "DELETE.*FROM"
+          - "DROP.*TABLE"
+          - "CREATE.*TABLE"
+          # 反序列化
+          - "unserialize\\("
+          - "pickle\\.loads"
+          - "yaml\\.load"
+          - "json\\.loads"
+          - "ObjectInputStream"
+          - "readObject\\("
+          - "deserialize\\("
+          # 代码注入
+          - "\\$\\{.*\\}"
+          - "<%.*%>"
+          - "\\{\\{.*\\}\\}"
+          - "\\[\\[.*\\]\\]"
+          # 脚本执行
+          - "<script.*>"
+          - "javascript:"
+          - "vbscript:"
+          - "data:text/html"
+          - "data:application/javascript"

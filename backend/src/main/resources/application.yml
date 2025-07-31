@@ -14,6 +14,7 @@ spring:
 
   profiles:
     active: dev
+    include: file-upload
 
   # 数据源配置
   datasource:
@@ -115,68 +116,10 @@ app:
     expiration: ${JWT_EXPIRE_HOURS:24}
     refresh-expiration: ${JWT_REFRESH_EXPIRE_DAYS:7}
 
-  # 文件存储配置
+  # 文件存储基础配置（详细配置见application-file-upload.yml）
   file:
     upload-path: ${UPLOAD_PATH:./uploads}
-    max-file-size: ${MAX_FILE_SIZE:104857600}
-    max-request-size: ${MAX_REQUEST_SIZE:209715200}
     base-url: ${app.base-url}
-
-    # 安全检查配置
-    security:
-      enabled: ${FILE_SECURITY_ENABLED:true}
-      max-file-size: ${FILE_SECURITY_MAX_SIZE:524288000}  # 500MB
-      max-files-per-project: ${FILE_SECURITY_MAX_FILES:50}
-      allowed-source-types:
-        - zip
-        - rar
-        - 7z
-        - tar.gz
-        - tar
-        - gz
-      allowed-image-types:
-        - jpg
-        - jpeg
-        - png
-        - gif
-        - webp
-        - svg
-      allowed-document-types:
-        - pdf
-        - doc
-        - docx
-        - txt
-        - md
-        - rtf
-      dangerous-extensions:
-        - exe
-        - bat
-        - cmd
-        - scr
-        - vbs
-        - js
-        - jar
-        - com
-        - pif
-        - msi
-        - dll
-      dangerous-mime-types:
-        - application/x-executable
-        - application/x-msdownload
-        - application/x-msdos-program
-        - application/x-winexe
-      content-check:
-        enabled: ${FILE_CONTENT_CHECK_ENABLED:true}
-        header-bytes-to-check: ${FILE_CONTENT_CHECK_BYTES:1024}
-        malicious-signatures:
-          - "4D5A"      # PE executable
-          - "7F454C46"  # ELF executable
-        sensitive-keywords:
-          - password
-          - secret
-          - private_key
-          - api_key
-          - token
 
   # MinIO配置
   minio:
