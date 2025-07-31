@@ -120,7 +120,6 @@
             <div class="transaction-header">
               <div class="transaction-info">
                 <span class="transaction-date">{{ transaction.createdTime }}</span>
-                <span class="transaction-id">交易号：{{ transaction.id }}</span>
               </div>
               <div class="transaction-amount" :class="getAmountClass(transaction.isIncome)">
                 <span class="amount">{{ getAmountText(transaction) }}</span>
@@ -138,14 +137,6 @@
                 <div class="transaction-description">
                   <h4 class="description-title">{{ transaction.description }}</h4>
                   <p v-if="transaction.remark" class="description-remark">{{ transaction.remark }}</p>
-                  <div class="transaction-meta">
-                    <span v-if="transaction.referenceType" class="related-info">
-                      关联：{{ transaction.referenceType }}
-                    </span>
-                    <span class="transaction-status">
-                      状态：{{ transaction.statusDescription }}
-                    </span>
-                  </div>
                 </div>
               </div>
 
