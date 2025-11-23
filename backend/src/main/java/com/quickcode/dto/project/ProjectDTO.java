@@ -164,6 +164,16 @@ public class ProjectDTO {
     private LocalDateTime favoriteTime;
 
     /**
+     * 购买时间（仅在购买列表中使用）
+     */
+    private LocalDateTime purchaseTime;
+
+    /**
+     * 购买价格（仅在购买列表中使用）
+     */
+    private BigDecimal purchasePrice;
+
+    /**
      * 从Project实体转换为ProjectDTO
      */
     public static ProjectDTO fromProject(Project project) {

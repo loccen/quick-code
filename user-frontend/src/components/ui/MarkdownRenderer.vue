@@ -37,7 +37,7 @@ interface Props {
   /** 错误信息 */
   error?: string
   /** Markdown-it配置选项 */
-  options?: MarkdownIt.Options
+  options?: any
 }
 
 const props = withDefaults(defineProps<Props>(), {

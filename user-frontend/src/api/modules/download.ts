@@ -9,10 +9,13 @@ import { request } from '../request'
  * 下载权限检查结果
  */
 export interface DownloadPermission {
-  canDownload: boolean
-  reason?: string
-  requiresPurchase?: boolean
-  projectPrice?: number
+  hasPermission: boolean
+  reason: string
+  isProjectOwner: boolean
+  isFreeProject: boolean
+  hasPurchased: boolean
+  isProjectPublished: boolean
+  projectPrice: number | null
 }
 
 /**
@@ -247,3 +250,5 @@ export const adminDownloadApi = {
     return request.delete('/downloads/records/clear')
   }
 }
+
+export default downloadApi

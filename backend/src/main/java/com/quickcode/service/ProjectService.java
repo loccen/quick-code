@@ -278,6 +278,26 @@ public interface ProjectService extends BaseService<Project, Long> {
     UserProjectStats getUserProjectStats(Long userId);
 
     /**
+     * 获取用户收藏的项目列表
+     *
+     * @param userId 用户ID
+     * @param pageable 分页参数
+     * @param keyword 搜索关键词
+     * @return 收藏的项目列表
+     */
+    PageResponse<ProjectDTO> getFavoriteProjectsByUser(Long userId, Pageable pageable, String keyword);
+
+    /**
+     * 获取用户购买的项目列表
+     *
+     * @param userId 用户ID
+     * @param pageable 分页参数
+     * @param keyword 搜索关键词
+     * @return 购买的项目列表
+     */
+    PageResponse<ProjectDTO> getPurchasedProjectsByUser(Long userId, Pageable pageable, String keyword);
+
+    /**
      * 用户项目统计信息DTO
      */
     interface UserProjectStatistics {

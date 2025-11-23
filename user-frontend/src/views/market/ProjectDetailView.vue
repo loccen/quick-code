@@ -539,7 +539,7 @@ const handleDownload = async () => {
   try {
     // 检查下载权限
     const permissionResponse = await downloadApi.checkDownloadPermission(project.value.id)
-    if (!permissionResponse.data.canDownload) {
+    if (!permissionResponse.data.hasPermission) {
       ElMessage.error(permissionResponse.data.reason || '您没有下载此项目的权限')
       return
     }

@@ -315,6 +315,56 @@ public interface ProjectDownloadRepository extends BaseRepository<ProjectDownloa
     Page<ProjectDownload> findByUserIdOrderByDownloadTimeDesc(Long userId, Pageable pageable);
 
     /**
+     * 根据用户ID和筛选条件查找下载记录
+     */
+    @Query("SELECT pd FROM ProjectDownload pd LEFT JOIN pd.project p WHERE pd.userId = :userId " +
+           "AND (:keyword IS NULL OR :keyword = '' OR " +
+           "     p.title LIKE %:keyword% OR " +
+           "     p.description LIKE %:keyword%) " +
+           "AND (:startDate IS NULL OR pd.downloadTime >= :startDate) " +
+           "AND (:endDate IS NULL OR pd.downloadTime <= :endDate) " +
+           "ORDER BY pd.downloadTime DESC")
+    Page<ProjectDownload> findUserDownloadHistoryWithFilters(@Param("userId") Long userId,
+                                                           @Param("keyword") String keyword,
+                                                           @Param("startDate") LocalDateTime startDate,
+                                                           @Param("endDate") LocalDateTime endDate,
+                                                           Pageable pageable);
+
+    /**
+     * 根据用户ID查找下载记录，按项目下载次数排序（降序）
+     */
+    @Query("SELECT pd, p.downloadCount FROM ProjectDownload pd " +
+           "LEFT JOIN pd.project p WHERE pd.userId = :userId " +
+           "AND (:keyword IS NULL OR :keyword = '' OR " +
+           "     p.title LIKE %:keyword% OR " +
+           "     p.description LIKE %:keyword%) " +
+           "AND (:startDate IS NULL OR pd.downloadTime >= :startDate) " +
+           "AND (:endDate IS NULL OR pd.downloadTime <= :endDate) " +
+           "ORDER BY p.downloadCount DESC, pd.downloadTime DESC")
+    Page<Object[]> findUserDownloadHistoryOrderByProjectDownloadCountDesc(@Param("userId") Long userId,
+                                                                         @Param("keyword") String keyword,
+                                                                         @Param("startDate") LocalDateTime startDate,
+                                                                         @Param("endDate") LocalDateTime endDate,
+                                                                         Pageable pageable);
+
+    /**
+     * 根据用户ID查找下载记录，按项目下载次数排序（升序）
+     */
+    @Query("SELECT pd, p.downloadCount FROM ProjectDownload pd " +
+           "LEFT JOIN pd.project p WHERE pd.userId = :userId " +
+           "AND (:keyword IS NULL OR :keyword = '' OR " +
+           "     p.title LIKE %:keyword% OR " +
+           "     p.description LIKE %:keyword%) " +
+           "AND (:startDate IS NULL OR pd.downloadTime >= :startDate) " +
+           "AND (:endDate IS NULL OR pd.downloadTime <= :endDate) " +
+           "ORDER BY p.downloadCount ASC, pd.downloadTime DESC")
+    Page<Object[]> findUserDownloadHistoryOrderByProjectDownloadCountAsc(@Param("userId") Long userId,
+                                                                        @Param("keyword") String keyword,
+                                                                        @Param("startDate") LocalDateTime startDate,
+                                                                        @Param("endDate") LocalDateTime endDate,
+                                                                        Pageable pageable);
+
+    /**
      * 统计指定时间后的总下载数
      */
     @Query("SELECT COUNT(pd) FROM ProjectDownload pd WHERE pd.downloadTime >= :startTime AND pd.downloadStatus = :status")

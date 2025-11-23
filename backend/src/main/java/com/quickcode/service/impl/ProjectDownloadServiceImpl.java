@@ -1,5 +1,6 @@
 package com.quickcode.service.impl;
 
+import com.quickcode.dto.ProjectDownloadHistoryResponse;
 import com.quickcode.entity.Project;
 import com.quickcode.entity.ProjectDownload;
 import com.quickcode.entity.ProjectFile;
@@ -1006,6 +1007,93 @@ public class ProjectDownloadServiceImpl implements ProjectDownloadService {
         } catch (Exception e) {
             log.error("清空用户下载记录失败: userId={}", userId, e);
             throw new RuntimeException("清空下载记录失败: " + e.getMessage());
+        }
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public Page<ProjectDownload> getUserDownloadHistoryWithFilters(Long userId, Pageable pageable,
+                                                                 String keyword, String startDate, String endDate) {
+        log.debug("获取用户下载历史（带筛选）: userId={}, keyword={}, startDate={}, endDate={}",
+                userId, keyword, startDate, endDate);
+
+        try {
+            // 如果没有筛选条件，使用原有方法
+            if ((keyword == null || keyword.trim().isEmpty()) &&
+                (startDate == null || startDate.trim().isEmpty()) &&
+                (endDate == null || endDate.trim().isEmpty())) {
+                return getUserDownloadHistory(userId, pageable);
+            }
+
+            // 构建查询条件
+            LocalDateTime start = null;
+            LocalDateTime end = null;
+
+            if (startDate != null && !startDate.trim().isEmpty()) {
+                start = LocalDateTime.parse(startDate + "T00:00:00");
+            }
+            if (endDate != null && !endDate.trim().isEmpty()) {
+                end = LocalDateTime.parse(endDate + "T23:59:59");
+            }
+
+            return projectDownloadRepository.findUserDownloadHistoryWithFilters(
+                userId, keyword != null ? keyword.trim() : null, start, end, pageable);
+
+        } catch (Exception e) {
+            log.error("获取用户下载历史失败: userId={}", userId, e);
+            throw new RuntimeException("获取下载历史失败: " + e.getMessage());
+        }
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public Page<ProjectDownloadHistoryResponse> getUserDownloadHistoryOrderByProjectDownloadCount(
+            Long userId, int page, int size, String sortDirection,
+            String keyword, String startDate, String endDate) {
+
+        log.debug("获取用户下载历史（按项目下载次数排序）: userId={}, page={}, size={}, sortDirection={}",
+                userId, page, size, sortDirection);
+
+        try {
+            // 构建查询条件
+            LocalDateTime start = null;
+            LocalDateTime end = null;
+
+            if (startDate != null && !startDate.trim().isEmpty()) {
+                start = LocalDateTime.parse(startDate + "T00:00:00");
+            }
+            if (endDate != null && !endDate.trim().isEmpty()) {
+                end = LocalDateTime.parse(endDate + "T23:59:59");
+            }
+
+            // 使用Repository查询按项目下载次数排序的记录
+            Pageable pageable = PageRequest.of(page, size);
+
+            Page<Object[]> results;
+            if ("ASC".equalsIgnoreCase(sortDirection)) {
+                results = projectDownloadRepository.findUserDownloadHistoryOrderByProjectDownloadCountAsc(
+                    userId, keyword != null ? keyword.trim() : null, start, end, pageable);
+            } else {
+                results = projectDownloadRepository.findUserDownloadHistoryOrderByProjectDownloadCountDesc(
+                    userId, keyword != null ? keyword.trim() : null, start, end, pageable);
+            }
+
+            // 转换为ProjectDownloadHistoryResponse
+            Page<ProjectDownloadHistoryResponse> response = results.map(result -> {
+                ProjectDownload download = (ProjectDownload) result[0];
+                Integer projectDownloadCount = (Integer) result[1];
+
+                ProjectDownloadHistoryResponse dto = ProjectDownloadHistoryResponse.fromProjectDownload(download);
+                // 设置项目下载次数
+                dto.setProjectDownloadCount(projectDownloadCount);
+                return dto;
+            });
+
+            return response;
+
+        } catch (Exception e) {
+            log.error("获取用户下载历史（按项目下载次数排序）失败: userId={}", userId, e);
+            throw new RuntimeException("获取下载历史失败: " + e.getMessage());
         }
     }
 }

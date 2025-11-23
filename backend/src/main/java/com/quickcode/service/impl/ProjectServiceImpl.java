@@ -7,16 +7,20 @@ import com.quickcode.dto.project.ProjectSearchRequest;
 import com.quickcode.dto.project.ProjectUpdateRequest;
 import com.quickcode.dto.project.UserProjectStats;
 import com.quickcode.dto.common.PageResponse;
-import com.quickcode.entity.Project;
-import com.quickcode.entity.User;
-import com.quickcode.entity.Category;
-import com.quickcode.entity.ProjectReview;
+import com.quickcode.entity.*;
 import com.quickcode.repository.ProjectRepository;
 import com.quickcode.repository.UserRepository;
 import com.quickcode.repository.CategoryRepository;
 import com.quickcode.repository.ProjectReviewRepository;
 import com.quickcode.service.ProjectService;
 import com.quickcode.service.RedisService;
+import com.quickcode.service.FavoriteService;
+import com.quickcode.service.OrderService;
+import com.quickcode.dto.order.OrderDTO;
+
+import java.util.*;
+import java.util.stream.Collectors;
+
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
@@ -26,7 +30,6 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
-import java.util.List;
 import java.util.Optional;
 
 /**
@@ -47,6 +50,8 @@ public class ProjectServiceImpl implements ProjectService {
     private final CategoryRepository categoryRepository;
     private final ProjectReviewRepository projectReviewRepository;
     private final RedisService redisService;
+    private final FavoriteService favoriteService;
+    private final OrderService orderService;
 
     @Override
     public ProjectDTO createProject(ProjectCreateRequest request, Long userId) {
@@ -1094,6 +1099,76 @@ public class ProjectServiceImpl implements ProjectService {
         } catch (Exception e) {
             log.error("获取用户项目统计失败: userId={}", userId, e);
             return UserProjectStats.empty();
+        }
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public PageResponse<ProjectDTO> getFavoriteProjectsByUser(Long userId, Pageable pageable, String keyword) {
+        log.debug("获取用户收藏项目列表: userId={}, keyword={}, page={}, size={}",
+                userId, keyword, pageable.getPageNumber(), pageable.getPageSize());
+
+        try {
+            return favoriteService.getUserFavoriteProjects(userId, keyword, pageable);
+        } catch (Exception e) {
+            log.error("获取用户收藏项目列表失败: userId={}", userId, e);
+            throw new RuntimeException("获取收藏项目列表失败: " + e.getMessage());
+        }
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public PageResponse<ProjectDTO> getPurchasedProjectsByUser(Long userId, Pageable pageable, String keyword) {
+        log.debug("获取用户购买项目列表: userId={}, keyword={}, page={}, size={}",
+                userId, keyword, pageable.getPageNumber(), pageable.getPageSize());
+
+        try {
+            // 通过OrderService获取用户的购买订单，然后提取项目信息
+            com.quickcode.common.response.PageResponse<OrderDTO> orderPage =
+                orderService.getUserPurchaseOrders(userId, pageable, Order.OrderStatus.PAID.getCode(), keyword); // status=1表示已支付
+
+            // 转换为ProjectDTO列表
+            // 批量获取项目ID列表
+            List<Long> projectIds = orderPage.getContent().stream()
+                .map(OrderDTO::getProjectId)
+                .distinct()
+                .collect(Collectors.toList());
+            
+            // 批量查询项目信息，避免N+1查询问题
+            List<Project> projects = projectRepository.findAllById(projectIds);
+            Map<Long, Project> projectMap = projects.stream()
+                .collect(Collectors.toMap(Project::getId, project -> project));
+            
+            // 构建ProjectDTO列表
+            List<ProjectDTO> projectDTOList = orderPage.getContent().stream()
+                .map(order -> {
+                    Project project = projectMap.get(order.getProjectId());
+                    if (project != null) {
+                        ProjectDTO dto = ProjectDTO.fromProject(project);
+                        // 设置购买相关信息
+                        dto.setPurchaseTime(order.getCreatedTime());
+                        dto.setPurchasePrice(order.getAmount());
+                        return dto;
+                    }
+                    return null;
+                })
+                .filter(Objects::nonNull)
+                .collect(Collectors.toList());
+
+            // 构建PageResponse
+            return PageResponse.<ProjectDTO>builder()
+                .content(projectDTOList)
+                .page(orderPage.getPage())
+                .size(orderPage.getSize())
+                .totalElements((long) projects.size())
+                .totalPages(orderPage.getTotalPages())
+                .first(orderPage.getPage() == 0)
+                .last(orderPage.getPage() >= orderPage.getTotalPages() - 1)
+                .build();
+
+        } catch (Exception e) {
+            log.error("获取用户购买项目列表失败: userId={}", userId, e);
+            throw new RuntimeException("获取购买项目列表失败: " + e.getMessage());
         }
     }
 }

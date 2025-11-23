@@ -91,6 +91,11 @@ public class ProjectDownloadHistoryResponse {
     private Boolean isRepeat;
 
     /**
+     * 项目下载次数（仅在按下载次数排序时使用）
+     */
+    private Integer projectDownloadCount;
+
+    /**
      * 从ProjectDownload实体转换
      */
     public static ProjectDownloadHistoryResponse fromProjectDownload(ProjectDownload download) {

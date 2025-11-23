@@ -12,6 +12,7 @@ import com.quickcode.dto.ProjectFileUploadResponse;
 import com.quickcode.entity.ProjectFile;
 import com.quickcode.service.ProjectService;
 import com.quickcode.service.ProjectFileService;
+import com.quickcode.service.FavoriteService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
@@ -42,6 +43,7 @@ public class ProjectController extends BaseController {
 
     private final ProjectService projectService;
     private final ProjectFileService projectFileService;
+    private final FavoriteService favoriteService;
 
     /**
      * 创建项目
@@ -153,15 +155,20 @@ public class ProjectController extends BaseController {
     public ApiResponse<PageResponse<ProjectDTO>> getMyProjects(
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "12") int size,
-            @RequestParam(required = false) Integer status) {
+            @RequestParam(required = false) Integer status,
+            @RequestParam(required = false) String keyword,
+            @RequestParam(defaultValue = "createdTime") String sortBy,
+            @RequestParam(defaultValue = "DESC") String sortDir) {
         
-        log.info("获取用户项目列表: page={}, size={}, status={}", page, size, status);
+        log.info("获取用户项目列表: page={}, size={}, status={}, keyword={}, sortBy={}, sortDir={}",
+                page, size, status, keyword, sortBy, sortDir);
 
         try {
 
             Long userId = getCurrentUserId();
             
-            Pageable pageable = PageRequest.of(page, size, Sort.by(Sort.Direction.DESC, "createdTime"));
+            Sort.Direction direction = "ASC".equalsIgnoreCase(sortDir) ? Sort.Direction.ASC : Sort.Direction.DESC;
+            Pageable pageable = PageRequest.of(page, size, Sort.by(direction, sortBy));
             com.quickcode.dto.common.PageResponse<ProjectDTO> serviceResponse;
             
             if (status != null) {
@@ -185,6 +192,80 @@ public class ProjectController extends BaseController {
         } catch (Exception e) {
             log.error("获取用户项目列表失败", e);
             return error("获取用户项目列表失败: " + e.getMessage());
+        }
+    }
+
+    /**
+     * 获取用户收藏的项目列表
+     */
+    @GetMapping("/favorites")
+    @PreAuthorize("hasRole('USER')")
+    public ApiResponse<com.quickcode.dto.common.PageResponse<ProjectDTO>> getUserFavoriteProjects(
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "12") int size,
+            @RequestParam(required = false) String keyword,
+            @RequestParam(defaultValue = "createdTime") String sortBy,
+            @RequestParam(defaultValue = "DESC") String sortDir) {
+
+        log.info("获取用户收藏项目列表: page={}, size={}, keyword={}, sortBy={}, sortDir={}",
+                page, size, keyword, sortBy, sortDir);
+
+        try {
+            Long userId = getCurrentUserId();
+            if (userId == null) {
+                return error("用户未登录");
+            }
+
+            Sort.Direction direction = Sort.Direction.fromString(sortDir);
+            Pageable pageable = PageRequest.of(page, size, Sort.by(direction, sortBy));
+
+            com.quickcode.dto.common.PageResponse<ProjectDTO> favoriteProjects = favoriteService.getUserFavoriteProjects(userId, keyword, pageable);
+            return success(favoriteProjects);
+        } catch (Exception e) {
+            log.error("获取用户收藏项目列表失败", e);
+            return error("获取收藏列表失败: " + e.getMessage());
+        }
+    }
+
+    /**
+     * 获取用户购买的项目列表
+     */
+    @GetMapping("/purchased")
+    @PreAuthorize("hasRole('USER')")
+    public ApiResponse<PageResponse<ProjectDTO>> getPurchasedProjects(
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "12") int size,
+            @RequestParam(required = false) String keyword,
+            @RequestParam(defaultValue = "createdTime") String sortBy,
+            @RequestParam(defaultValue = "DESC") String sortDir) {
+
+        log.info("获取用户购买项目列表: page={}, size={}, keyword={}, sortBy={}, sortDir={}",
+                page, size, keyword, sortBy, sortDir);
+
+        try {
+            Long userId = getCurrentUserId();
+
+            Sort.Direction direction = "ASC".equalsIgnoreCase(sortDir) ? Sort.Direction.ASC : Sort.Direction.DESC;
+            Pageable pageable = PageRequest.of(page, size, Sort.by(direction, sortBy));
+
+            com.quickcode.dto.common.PageResponse<ProjectDTO> serviceResponse =
+                projectService.getPurchasedProjectsByUser(userId, pageable, keyword);
+
+            // 转换为Controller层的PageResponse格式
+            PageResponse<ProjectDTO> pageResponse = PageResponse.<ProjectDTO>builder()
+                    .content(serviceResponse.getContent())
+                    .page(serviceResponse.getPage() + 1) // 前端页码从1开始
+                    .size(serviceResponse.getSize())
+                    .total(serviceResponse.getTotalElements())
+                    .totalPages(serviceResponse.getTotalPages())
+                    .first(serviceResponse.getFirst())
+                    .last(serviceResponse.getLast())
+                    .build();
+
+            return success(pageResponse);
+        } catch (Exception e) {
+            log.error("获取用户购买项目列表失败", e);
+            return error("获取购买项目列表失败: " + e.getMessage());
         }
     }
 
@@ -654,6 +735,168 @@ public class ProjectController extends BaseController {
         } catch (Exception e) {
             log.error("获取项目文件统计失败: projectId={}, userId={}", projectId, userId, e);
             return error("获取文件统计失败");
+        }
+    }
+
+    // ==================== 收藏功能相关接口 ====================
+
+    /**
+     * 收藏项目
+     */
+    @PostMapping("/{id}/favorite")
+    @PreAuthorize("hasRole('USER')")
+    public ApiResponse<Void> favoriteProject(@PathVariable Long id) {
+        log.info("收藏项目: projectId={}", id);
+
+        try {
+            Long userId = getCurrentUserId();
+            if (userId == null) {
+                return error("用户未登录");
+            }
+            favoriteService.favoriteProject(userId, id);
+            return success(null, "收藏成功");
+        } catch (RuntimeException e) {
+            log.warn("收藏项目失败: projectId={}, error={}", id, e.getMessage());
+            return error(e.getMessage());
+        } catch (Exception e) {
+            log.error("收藏项目失败: projectId={}", id, e);
+            return error("收藏失败: " + e.getMessage());
+        }
+    }
+
+    /**
+     * 取消收藏项目
+     */
+    @DeleteMapping("/{id}/favorite")
+    @PreAuthorize("hasRole('USER')")
+    public ApiResponse<Void> unfavoriteProject(@PathVariable Long id) {
+        log.info("取消收藏项目: projectId={}", id);
+
+        try {
+            Long userId = getCurrentUserId();
+            if (userId == null) {
+                return error("用户未登录");
+            }
+            favoriteService.unfavoriteProject(userId, id);
+            return success(null, "取消收藏成功");
+        } catch (RuntimeException e) {
+            log.warn("取消收藏项目失败: projectId={}, error={}", id, e.getMessage());
+            return error(e.getMessage());
+        } catch (Exception e) {
+            log.error("取消收藏项目失败: projectId={}", id, e);
+            return error("取消收藏失败: " + e.getMessage());
+        }
+    }
+
+    /**
+     * 检查项目收藏状态
+     */
+    @GetMapping("/{id}/favorite/status")
+    @PreAuthorize("hasRole('USER')")
+    public ApiResponse<Boolean> checkFavoriteStatus(@PathVariable Long id) {
+        log.info("检查项目收藏状态: projectId={}", id);
+
+        try {
+            Long userId = getCurrentUserId();
+            if (userId == null) {
+                return error("用户未登录");
+            }
+            boolean isFavorited = favoriteService.isFavorited(userId, id);
+            return success(isFavorited);
+        } catch (Exception e) {
+            log.error("检查项目收藏状态失败: projectId={}", id, e);
+            return error("检查收藏状态失败: " + e.getMessage());
+        }
+    }
+
+    /**
+     * 获取用户最近收藏的项目
+     */
+    @GetMapping("/favorites/recent")
+    @PreAuthorize("hasRole('USER')")
+    public ApiResponse<List<ProjectDTO>> getUserRecentFavorites(
+            @RequestParam(defaultValue = "5") int limit) {
+
+        log.info("获取用户最近收藏项目: limit={}", limit);
+
+        try {
+            Long userId = getCurrentUserId();
+            if (userId == null) {
+                return error("用户未登录");
+            }
+            List<ProjectDTO> recentFavorites = favoriteService.getUserRecentFavorites(userId, limit);
+            return success(recentFavorites);
+        } catch (Exception e) {
+            log.error("获取用户最近收藏项目失败", e);
+            return error("获取最近收藏失败: " + e.getMessage());
+        }
+    }
+
+    /**
+     * 获取热门收藏项目（公开接口）
+     */
+    @GetMapping("/favorites/popular")
+    public ApiResponse<List<ProjectDTO>> getPopularFavoriteProjects(
+            @RequestParam(defaultValue = "10") int limit) {
+
+        log.info("获取热门收藏项目: limit={}", limit);
+
+        try {
+            List<ProjectDTO> popularProjects = favoriteService.getPopularFavoriteProjects(limit);
+            return success(popularProjects);
+        } catch (Exception e) {
+            log.error("获取热门收藏项目失败", e);
+            return error("获取热门收藏项目失败: " + e.getMessage());
+        }
+    }
+
+    /**
+     * 批量检查项目收藏状态
+     */
+    @PostMapping("/favorites/batch-check")
+    @PreAuthorize("hasRole('USER')")
+    public ApiResponse<Map<Long, Boolean>> batchCheckFavoriteStatus(
+            @RequestBody List<Long> projectIds) {
+
+        log.info("批量检查项目收藏状态: projectIds={}", projectIds);
+
+        try {
+            Long userId = getCurrentUserId();
+            if (userId == null) {
+                return error("用户未登录");
+            }
+            Map<Long, Boolean> favoriteStatusMap = favoriteService.batchCheckFavoriteStatus(userId, projectIds);
+            return success(favoriteStatusMap);
+        } catch (Exception e) {
+            log.error("批量检查项目收藏状态失败", e);
+            return error("批量检查收藏状态失败: " + e.getMessage());
+        }
+    }
+
+    /**
+     * 获取用户收藏统计
+     */
+    @GetMapping("/favorites/stats")
+    @PreAuthorize("hasRole('USER')")
+    public ApiResponse<Map<String, Object>> getUserFavoriteStats() {
+        log.info("获取用户收藏统计");
+
+        try {
+            Long userId = getCurrentUserId();
+            if (userId == null) {
+                return error("用户未登录");
+            }
+            long favoriteCount = favoriteService.countUserFavorites(userId);
+
+            Map<String, Object> stats = Map.of(
+                    "totalFavorites", favoriteCount,
+                    "userId", userId
+            );
+
+            return success(stats);
+        } catch (Exception e) {
+            log.error("获取用户收藏统计失败", e);
+            return error("获取收藏统计失败: " + e.getMessage());
         }
     }
 

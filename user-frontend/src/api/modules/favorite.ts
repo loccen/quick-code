@@ -2,8 +2,7 @@
  * 收藏功能API模块
  * 提供项目收藏相关的接口
  */
-import type { ApiResponse, PageResponse } from '@/types/api'
-import type { Project } from '@/types/project'
+import type { ApiResponse, PageResponse, Project } from '@/types/api'
 import { request } from '../request'
 
 /**

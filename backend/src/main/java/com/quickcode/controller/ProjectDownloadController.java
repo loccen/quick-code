@@ -479,26 +479,40 @@ public class ProjectDownloadController extends BaseController {
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "10") int size,
             @RequestParam(defaultValue = "downloadTime") String sortBy,
-            @RequestParam(defaultValue = "DESC") String sortDirection) {
+            @RequestParam(defaultValue = "DESC") String sortDirection,
+            @RequestParam(required = false) String keyword,
+            @RequestParam(required = false) String startDate,
+            @RequestParam(required = false) String endDate) {
 
         Long userId = getCurrentUserId();
-        log.info("获取用户下载记录: userId={}, page={}, size={}", userId, page, size);
+        log.info("获取用户下载记录: userId={}, page={}, size={}, sortBy={}, keyword={}",
+                userId, page, size, sortBy, keyword);
 
         try {
-            PageRequest pageRequest = PageRequest.of(page, size,
-                Sort.by(Sort.Direction.fromString(sortDirection), sortBy));
+            // 特殊处理按项目下载次数排序
+            if ("downloadCount".equals(sortBy)) {
+                // 按项目下载次数排序需要特殊查询
+                Page<ProjectDownloadHistoryResponse> records = projectDownloadService
+                    .getUserDownloadHistoryOrderByProjectDownloadCount(userId, page, size, sortDirection, keyword, startDate, endDate);
+                return success(records);
+            } else {
+                // 普通排序
+                PageRequest pageRequest = PageRequest.of(page, size,
+                    Sort.by(Sort.Direction.fromString(sortDirection), sortBy));
 
-            Page<ProjectDownload> downloadPage = projectDownloadService.getUserDownloadHistory(userId, pageRequest);
+                Page<ProjectDownload> downloadPage = projectDownloadService
+                    .getUserDownloadHistoryWithFilters(userId, pageRequest, keyword, startDate, endDate);
 
-            // 转换为 ProjectDownloadHistoryResponse
-            Page<ProjectDownloadHistoryResponse> records = downloadPage.map(download ->
-                ProjectDownloadHistoryResponse.fromProjectDownload(download));
+                // 转换为 ProjectDownloadHistoryResponse
+                Page<ProjectDownloadHistoryResponse> records = downloadPage.map(download ->
+                    ProjectDownloadHistoryResponse.fromProjectDownload(download));
 
-            return success(records);
+                return success(records);
+            }
 
         } catch (Exception e) {
             log.error("获取用户下载记录失败: userId={}", userId, e);
-            return error("获取下载记录失败");
+            return error("获取下载记录失败: " + e.getMessage());
         }
     }
 

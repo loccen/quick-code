@@ -1,5 +1,6 @@
 package com.quickcode.service;
 
+import com.quickcode.dto.ProjectDownloadHistoryResponse;
 import com.quickcode.entity.ProjectDownload;
 import org.springframework.core.io.Resource;
 import org.springframework.data.domain.Page;
@@ -131,12 +132,41 @@ public interface ProjectDownloadService extends BaseService<ProjectDownload, Lon
 
     /**
      * 获取用户下载历史
-     * 
+     *
      * @param userId 用户ID
      * @param pageable 分页参数
      * @return 下载历史
      */
     Page<ProjectDownload> getUserDownloadHistory(Long userId, Pageable pageable);
+
+    /**
+     * 获取用户下载历史（带筛选条件）
+     *
+     * @param userId 用户ID
+     * @param pageable 分页参数
+     * @param keyword 搜索关键词
+     * @param startDate 开始日期
+     * @param endDate 结束日期
+     * @return 下载历史
+     */
+    Page<ProjectDownload> getUserDownloadHistoryWithFilters(Long userId, Pageable pageable,
+                                                          String keyword, String startDate, String endDate);
+
+    /**
+     * 获取用户下载历史（按项目下载次数排序）
+     *
+     * @param userId 用户ID
+     * @param page 页码
+     * @param size 页大小
+     * @param sortDirection 排序方向
+     * @param keyword 搜索关键词
+     * @param startDate 开始日期
+     * @param endDate 结束日期
+     * @return 下载历史
+     */
+    Page<ProjectDownloadHistoryResponse> getUserDownloadHistoryOrderByProjectDownloadCount(
+            Long userId, int page, int size, String sortDirection,
+            String keyword, String startDate, String endDate);
 
     /**
      * 获取项目下载记录
@@ -358,12 +388,12 @@ public interface ProjectDownloadService extends BaseService<ProjectDownload, Lon
         }
 
         // Getters
-        public boolean hasPermission() { return hasPermission; }
+        public boolean getHasPermission() { return hasPermission; }
         public String getReason() { return reason; }
-        public boolean isProjectOwner() { return isProjectOwner; }
-        public boolean isFreeProject() { return isFreeProject; }
-        public boolean hasPurchased() { return hasPurchased; }
-        public boolean isProjectPublished() { return isProjectPublished; }
+        public boolean getIsProjectOwner() { return isProjectOwner; }
+        public boolean getIsFreeProject() { return isFreeProject; }
+        public boolean getHasPurchased() { return hasPurchased; }
+        public boolean getIsProjectPublished() { return isProjectPublished; }
         public java.math.BigDecimal getProjectPrice() { return projectPrice; }
     }
 

@@ -299,4 +299,20 @@ public interface OrderRepository extends BaseRepository<Order, Long> {
                                         @Param("status") Integer status,
                                         @Param("keyword") String keyword,
                                         Pageable pageable);
+
+    /**
+     * 查找用户已支付的订单（用于获取购买的项目）
+     */
+    @Query("SELECT o FROM Order o WHERE o.buyerId = :buyerId AND o.status IN (1, 2) ORDER BY o.createdTime DESC")
+    Page<Order> findPaidOrdersByBuyerId(@Param("buyerId") Long buyerId, Pageable pageable);
+
+    /**
+     * 根据关键词查找用户已支付的订单
+     */
+    @Query("SELECT o FROM Order o LEFT JOIN o.project p WHERE o.buyerId = :buyerId AND o.status IN (1, 2) " +
+           "AND (p.title LIKE %:keyword% OR p.description LIKE %:keyword%) " +
+           "ORDER BY o.createdTime DESC")
+    Page<Order> findPaidOrdersByBuyerIdWithKeyword(@Param("buyerId") Long buyerId,
+                                                   @Param("keyword") String keyword,
+                                                   Pageable pageable);
 }

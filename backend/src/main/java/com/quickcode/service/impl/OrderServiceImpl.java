@@ -6,6 +6,7 @@ import com.quickcode.dto.order.OrderDTO;
 import com.quickcode.dto.order.OrderSearchRequest;
 import com.quickcode.dto.order.PaymentRequest;
 import com.quickcode.dto.order.UserOrderStats;
+import com.quickcode.dto.project.ProjectDTO;
 import com.quickcode.entity.Order;
 import com.quickcode.entity.PointAccount;
 import com.quickcode.entity.Project;
@@ -815,6 +816,40 @@ public class OrderServiceImpl implements OrderService {
         } catch (Exception e) {
             log.error("获取用户订单统计失败: userId={}", userId, e);
             return UserOrderStats.empty();
+        }
+    }
+
+    @Transactional(readOnly = true)
+    public com.quickcode.dto.common.PageResponse<ProjectDTO> getUserPurchasedProjects(Long userId, String keyword, Pageable pageable) {
+        log.debug("获取用户购买项目列表: userId={}, keyword={}, page={}, size={}",
+                userId, keyword, pageable.getPageNumber(), pageable.getPageSize());
+
+        try {
+            // 查询用户已完成支付的订单
+            Page<Order> orderPage;
+            if (keyword != null && !keyword.trim().isEmpty()) {
+                orderPage = orderRepository.findPaidOrdersByBuyerIdWithKeyword(userId, keyword.trim(), pageable);
+            } else {
+                orderPage = orderRepository.findPaidOrdersByBuyerId(userId, pageable);
+            }
+
+            // 转换为ProjectDTO
+            Page<ProjectDTO> projectPage = orderPage.map(order -> {
+                Project project = order.getProject();
+                if (project != null) {
+                    ProjectDTO dto = ProjectDTO.fromProject(project);
+                    // 设置购买时间
+                    dto.setPurchaseTime(order.getCreatedTime());
+                    dto.setPurchasePrice(order.getAmount());
+                    return dto;
+                }
+                return null;
+            }).map(dto -> dto); // 过滤null值
+
+            return com.quickcode.dto.common.PageResponse.fromPage(projectPage);
+        } catch (Exception e) {
+            log.error("获取用户购买项目列表失败: userId={}", userId, e);
+            throw new RuntimeException("获取购买项目列表失败: " + e.getMessage());
         }
     }
 }
